@@ -95,23 +95,15 @@ def test_signature_failure_has_actionable_secret_safe_message():
     assert 'PRIVATE-SECRET' not in message
 
 
-def test_token_conversion_only_retained_after_verified_auth(app,monkeypatch):
-    import hashlib
+def test_authentication_never_converts_or_mutates_credentials(app,monkeypatch):
     from backend import storage
-    raw='example-api-token';derived=hashlib.sha256(raw.encode()).hexdigest()
-    app.config['R2_SECRET_ACCESS_KEY']=raw
-    def authenticate():
-        if app.config['R2_SECRET_ACCESS_KEY']!=derived:
-            raise storage.StorageError('SignatureDoesNotMatch')
-    monkeypatch.setattr(storage,'check_access',authenticate)
-    with app.app_context():assert storage.authenticate_or_convert_token() is True
-    assert app.config['R2_SECRET_ACCESS_KEY']==derived
-    app.config['R2_SECRET_ACCESS_KEY']=raw
+    raw='example-api-token';app.config['R2_SECRET_ACCESS_KEY']=raw
     def fail():raise storage.StorageError('SignatureDoesNotMatch')
     monkeypatch.setattr(storage,'check_access',fail)
-    with app.app_context():
-        import pytest
-        with pytest.raises(storage.StorageError):storage.authenticate_or_convert_token()
+    with pytest.raises(storage.StorageError):storage.authenticate_or_convert_token()
+    assert app.config['R2_SECRET_ACCESS_KEY']==raw
+    monkeypatch.setattr(storage,'check_access',lambda:None)
+    assert storage.authenticate_or_convert_token() is False
     assert app.config['R2_SECRET_ACCESS_KEY']==raw
 
 
@@ -119,3 +111,22 @@ def test_network_error_sanitization_handles_null_response():
     from backend.storage import failure
     error=RuntimeError('private details');error.response=None
     assert 'private details' not in str(failure(error,'authentication'))
+
+
+def test_production_sync_preflight_missing_source_prevents_all_writes(app,remote,monkeypatch):
+    from scripts import sync_r2
+    monkeypatch.setattr(sync_r2,'check_access',lambda:None)
+    root=Path(app.config['UPLOAD_DIR']);root.mkdir(exist_ok=True);(root/'exists.pdf').write_bytes(b'%PDF-existing')
+    result=sync_r2.sync_assets(['exists.pdf','missing.png'])
+    assert result['status']=='LOCAL_ASSETS_MISSING' and remote.puts==0
+    assert result['missing_local_assets']==['missing.png']
+
+
+def test_production_sync_dry_run_then_missing_only_upload(app,remote,monkeypatch):
+    from scripts import sync_r2
+    monkeypatch.setattr(sync_r2,'check_access',lambda:None)
+    root=Path(app.config['UPLOAD_DIR']);root.mkdir(exist_ok=True);(root/'paper.pdf').write_bytes(b'%PDF-existing')
+    result=sync_r2.sync_assets(['paper.pdf'],dry_run=True)
+    assert result['missing']==1 and remote.puts==0
+    assert sync_r2.sync_assets(['paper.pdf'])['uploaded']==1
+    assert sync_r2.sync_assets(['paper.pdf'])['already_present']==1 and remote.puts==1

@@ -2,7 +2,7 @@ import {describe,it,expect,vi,beforeEach} from 'vitest';
 import {mount,flushPromises} from '@vue/test-utils';
 import PaperProgress from '../src/PaperProgress.vue';import ExamBrowser from '../src/ExamBrowser.vue';import Records from '../src/Records.vue';
 const mocks=vi.hoisted(()=>({api:vi.fn(),go:vi.fn(),session:{user:{id:1,name:'Student'}}}));
-vi.mock('../src/api',()=>mocks);
+vi.mock('../src/api',()=>({...mocks,loadCatalog:async()=>{const [c,m]=await Promise.all([mocks.api('/courses?limit=100'),mocks.api('/metadata')]);return {courses:c.items,meta:m}}}));
 beforeEach(()=>{mocks.api.mockReset();mocks.go.mockReset()});
 describe('latest paper progress',()=>{
  it('shows the exact latest percentage and preserves zero/unknown',async()=>{

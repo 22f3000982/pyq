@@ -72,27 +72,9 @@ def check_access():
     except Exception as exc:raise failure(exc,'authentication') from None
 
 def authenticate_or_convert_token():
-    """Accept S3 keys; repair a pasted API token only after server verification.
-
-    Cloudflare documents Secret Access Key = SHA256(API token value).
-    https://developers.cloudflare.com/r2/api/tokens/
-    No account or permission is changed; a failed conversion is discarded.
-    """
-    try:
-        check_access();return False
-    except StorageError as original:
-        raw=current_app.config.get('R2_SECRET_ACCESS_KEY','')
-        if 'SignatureDoesNotMatch' not in str(original) or re.fullmatch(r'[0-9a-fA-F]{64}',raw):
-            raise
-        old_client=current_app.extensions.pop('_r2_client',None)
-        current_app.config['R2_SECRET_ACCESS_KEY']=hashlib.sha256(raw.encode()).hexdigest()
-        try:check_access()
-        except StorageError:
-            current_app.config['R2_SECRET_ACCESS_KEY']=raw
-            current_app.extensions.pop('_r2_client',None)
-            if old_client is not None:current_app.extensions['_r2_client']=old_client
-            raise original from None
-        return True
+    """Compatibility entry point: authentication never rewrites private credentials."""
+    check_access()
+    return False
 
 def remote_head(name):
     try:return client().head_object(**object_args(name))

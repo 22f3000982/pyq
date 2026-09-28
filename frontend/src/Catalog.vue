@@ -7,7 +7,11 @@ const featured=ref([]);
 const isCourse=props.route.startsWith('/course/'),isPaper=props.route.startsWith('/paper/');
 async function load(){loading.value=true;try{if(isCourse){const d=await api('/papers?'+new URLSearchParams({course_id:course.value.id,exam:exam.value,year:year.value,term_id:term.value,page:page.value,limit:16}));papers.value=d.items;total.value=d.total}else if(!isPaper){const d=await api('/courses?'+new URLSearchParams({q:q.value,level:level.value,sort:sort.value,page:page.value,limit:12}));courses.value=d.items;total.value=d.total}}catch(e){error.value=e.message}finally{loading.value=false}}
 async function filter(){page.value=1;await load()}
-onMounted(async()=>{try{stats.value=await api('/stats');if(!isCourse&&!isPaper)featured.value=(await api('/demo-papers')).items||[];meta.value=await api('/metadata');if(isCourse){course.value=await api('/courses/'+props.route.split('/')[2]);topics.value=await api('/courses/'+course.value.id+'/topics')}if(isPaper)paper.value=await api('/papers/'+props.route.split('/')[2]);await load()}catch(e){error.value=e.message;loading.value=false}});
+onMounted(async()=>{try{
+ if(isPaper){paper.value=await api('/papers/'+props.route.split('/')[2]);loading.value=false;return}
+ if(isCourse){[course.value,meta.value]=await Promise.all([api('/courses/'+props.route.split('/')[2]),api('/metadata')]);await Promise.all([load(),api('/courses/'+course.value.id+'/topics').then(d=>topics.value=d)]);return}
+ await Promise.all([load(),api('/stats').then(d=>stats.value=d),api('/demo-papers').then(d=>featured.value=d.items||[]),api('/metadata').then(d=>meta.value=d)]);
+}catch(e){error.value=e.message;loading.value=false}});
 async function start(mode){if(!session.user)return go('/login');try{const a=await api('/attempts',{method:'POST',body:{paper_id:paper.value.id,mode,duration_seconds:Number(timedMinutes.value)*60}});go('/attempt/'+a.id)}catch(e){error.value=e.message}}
 async function topicStart(topic){if(!session.user)return go('/login');try{const a=await api('/attempts',{method:'POST',body:{collection:'topic',course_id:course.value.id,topic,mode:'practice'}});go('/attempt/'+a.id)}catch(e){error.value=e.message}}
 </script>

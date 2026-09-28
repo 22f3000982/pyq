@@ -2,6 +2,7 @@ from .storage import send_asset,private_asset_url,StorageError
 import time
 from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory
 from sqlalchemy import or_
+from sqlalchemy.orm import selectinload,joinedload
 from .models import *
 from .api import integer_argument,require_user,body,paginate
 from .engine import *
@@ -19,13 +20,13 @@ def attempt_json(a):return {'id':a.id,'paper_id':a.paper_id,'title':a.title,'mod
 
 def question_with_image_urls(snapshot):
     result=public_question(snapshot)
-    ids=[image.get('id') for image in result.get('images',[]) if image.get('id') is not None]
-    records={image.id:image for image in QuestionImage.query.filter(QuestionImage.id.in_(ids)).all()} if ids else {}
-    for image in result.get('images',[]):
-        record=records.get(image.get('id'))
-        if not record:continue
-        try:image['url']=private_asset_url(record.path,record.id)
-        except StorageError:image['url']='/api/images/'+str(record.id)
+    result['images']=[{**image,'url':'/api/images/'+str(image['id'])} for image in snapshot.get('images',[]) if image.get('id') is not None]
+    return result
+
+def item_json(a,i,bookmarks):
+    result={'question':question_with_image_urls(i.snapshot),'answer':i.answer,'marked':i.marked,'status':a.status,'bookmarked':i.question_id in bookmarks}
+    if a.status!='ACTIVE' or (a.mode=='practice' and i.answer is not None):
+        result['feedback']={**grade(i.snapshot,i.answer),'answers':i.snapshot['answers'],'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}
     return result
 
 def collection_query(kind):
@@ -71,7 +72,7 @@ def start():
                 if not 60<=duration<=28800:abort(409,description='Source duration is unavailable. Choose a timed-practice duration of 1–480 minutes.')
                 title+=' · timed practice (user-selected duration)'
             deadline=time.time()+duration
-    questions=sorted(q.limit(500).all(),key=lambda q:(q.paper_id,question_order(q.number),q.id))
+    questions=sorted(q.options(selectinload(Question.options),selectinload(Question.images)).limit(500).all(),key=lambda q:(q.paper_id,question_order(q.number),q.id))
     if not questions:abort(409,description='Questions not imported yet.')
     snapshots=[question_snapshot(q) for q in questions]
     # Unknown keys/marks remain ungraded; the result reports them separately.
@@ -94,10 +95,15 @@ def attempt(id):return jsonify(attempt_json(owned(id)))
 @require_user()
 def attempt_question(id,qid):
     a=owned(id);i=AttemptAnswer.query.filter_by(attempt_id=a.id,question_id=qid).first_or_404()
-    result={'question':question_with_image_urls(i.snapshot),'answer':i.answer,'marked':i.marked,'status':a.status,'bookmarked':db.session.get(Bookmark,(g.user.id,qid)) is not None}
-    if a.status!='ACTIVE' or (a.mode=='practice' and i.answer is not None):
-        result['feedback']={**grade(i.snapshot,i.answer),'answers':i.snapshot['answers'],'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}
-    return jsonify(result)
+    return jsonify(item_json(a,i,{qid} if db.session.get(Bookmark,(g.user.id,qid)) else set()))
+
+@exams.get('/attempts/<int:id>/questions')
+@require_user()
+def attempt_questions(id):
+    a=owned(id)
+    bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter_by(user_id=g.user.id)}
+    items=sorted(a.items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))
+    return jsonify(items=[item_json(a,i,bookmarks) for i in items],status=a.status)
 
 @exams.post('/attempts/<int:id>/answers')
 @require_user()
@@ -144,7 +150,7 @@ def bookmark(id):
 @require_user()
 def collections():
     kind=request.path.rsplit('/',1)[1]
-    return jsonify(paginate(collection_query(kind).order_by(Question.id),lambda q:public_question(question_snapshot(q))))
+    return jsonify(paginate(collection_query(kind).order_by(Question.id),lambda q:question_with_image_urls(question_snapshot(q))))
 
 @exams.get('/courses/<int:id>/topics')
 def topics(id):
@@ -173,12 +179,15 @@ def question_image(id):
     if q.status!='AVAILABLE' and g.user.role!='ADMIN':
         prior=AttemptAnswer.query.join(Attempt).filter(Attempt.user_id==g.user.id,AttemptAnswer.question_id==q.id).first()
         if not prior:abort(404)
-    return send_asset(image.path,mimetype='image/png')
+    response=send_asset(image.path,mimetype='image/png',conditional=True)
+    response.headers['Cache-Control']='private, max-age=3600'
+    response.vary.add('Cookie')
+    return response
 
 @exams.get('/papers/<int:id>/questions')
 def paper_questions(id):
     db.get_or_404(Paper,id)
-    return jsonify(paginate(Question.query.filter_by(paper_id=db.get_or_404(Paper,id).canonical_paper_id or id,status='AVAILABLE').order_by(Question.id),lambda q:public_question(question_snapshot(q))))
+    return jsonify(paginate(Question.query.options(selectinload(Question.options),selectinload(Question.images)).filter_by(paper_id=db.get_or_404(Paper,id).canonical_paper_id or id,status='AVAILABLE').order_by(Question.id),lambda q:question_with_image_urls(question_snapshot(q))))
 
 @exams.get('/papers/<int:id>/source')
 def source_pdf(id):

@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.exceptions import HTTPException
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError,SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 from .models import db
 
@@ -45,6 +45,12 @@ def create_app(config=None):
     app.config.update(STORAGE_BACKEND=os.getenv('STORAGE_BACKEND','local').lower(),R2_ENDPOINT_URL=os.getenv('R2_ENDPOINT_URL',''),R2_ACCESS_KEY_ID=os.getenv('R2_ACCESS_KEY_ID',''),R2_SECRET_ACCESS_KEY=os.getenv('R2_SECRET_ACCESS_KEY',''),R2_BUCKET_NAME=legacy_bucket,R2_PDF_BUCKET_NAME=os.getenv('R2_PDF_BUCKET_NAME',''),R2_IMAGE_BUCKET_NAME=os.getenv('R2_IMAGE_BUCKET_NAME',''),R2_PREFIX=os.getenv('R2_PREFIX','pyq'))
     if config: app.config.update(config)
     if app.config['STORAGE_BACKEND'] not in ('local','r2'):raise ValueError('STORAGE_BACKEND must be local or r2')
+    if production_env:
+        from sqlalchemy.engine import make_url
+        if make_url(app.config['SQLALCHEMY_DATABASE_URI']).get_backend_name()!='postgresql':
+            raise RuntimeError('Production requires PostgreSQL; SQLite fallback is disabled.')
+        if app.config['STORAGE_BACKEND']!='r2':
+            raise RuntimeError('Production requires private R2 storage; local fallback is disabled.')
     if production_env and app.config['STORAGE_BACKEND']=='r2':
         required_r2=('R2_ENDPOINT_URL','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','R2_PDF_BUCKET_NAME','R2_IMAGE_BUCKET_NAME')
         if any(not app.config.get(key) for key in required_r2):
@@ -66,7 +72,7 @@ def create_app(config=None):
         response.headers['Referrer-Policy']='same-origin'
         response.headers['X-Frame-Options']='SAMEORIGIN'
         response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'"
-        if request.path.startswith('/api/'): response.headers['Cache-Control']='no-store'
+        if request.path.startswith('/api/') and not request.path.startswith('/api/images/'): response.headers['Cache-Control']='no-store'
         return response
     @app.get('/healthz')
     def healthz():
@@ -78,7 +84,14 @@ def create_app(config=None):
             return jsonify(status='unavailable'),503
     from .storage import StorageError
     @app.errorhandler(StorageError)
-    def storage_error(e):return jsonify(error=str(e)),503
+    def storage_error(e):
+        app.logger.warning('Asset delivery failed: %s',str(e))
+        return jsonify(error='Source asset is temporarily unavailable. Please retry.'),503
+    @app.errorhandler(SQLAlchemyError)
+    def database_error(e):
+        db.session.rollback()
+        app.logger.error('Database request failed (%s)',type(e).__name__)
+        return jsonify(error='Database is temporarily unavailable. Please retry.'),503
     @app.errorhandler(HTTPException)
     def http_error(e): return jsonify(error=e.description),e.code
     @app.errorhandler(IntegrityError)

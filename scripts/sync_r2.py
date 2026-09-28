@@ -1,49 +1,77 @@
-"""Idempotently copy/verify local assets in private R2; never delete originals."""
-import json,os,sys,time,shutil
+"""Publish missing source assets after read-only PostgreSQL and R2 preflight.
+
+Uses the existing storage layer, never changes credentials/configuration, never
+writes database rows, and never reparses PDFs or overwrites conflicting objects.
+"""
+import argparse,json,sys,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
-from dotenv import load_dotenv,set_key
-load_dotenv(ROOT/'.env')
 from backend import create_app
-from backend.storage import configured,identity,publish,StorageError,authenticate_or_convert_token
+from backend.models import db,QuestionImage,IngestionFile
+from backend.storage import configured,identity,publish,remote_head,check_access,StorageError,local_path
+from sqlalchemy import text
 
 
-def run():
-    app=create_app({'STORAGE_BACKEND':'r2'})
-    if not configured(app.config) or not (app.config.get('R2_PDF_BUCKET_NAME') and app.config.get('R2_IMAGE_BUCKET_NAME')):
-        print('R2 PENDING: set R2_ENDPOINT_URL, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PDF_BUCKET_NAME and R2_IMAGE_BUCKET_NAME privately in Final-App/.env. Database readiness is unchanged.')
-        return 2
-    folder=ROOT/'storage-reports';folder.mkdir(exist_ok=True)
-    report={'status':'RUNNING','uploaded':0,'already_present':0,'verified':0,'originals_deleted':False}
-    destination=folder/(str(time.time_ns())+'.json')
+def asset_manifest():
+    if db.engine.dialect.name!='postgresql':
+        raise StorageError('Asset sync requires the current PostgreSQL database. SQLite is not a production fallback.')
+    with db.engine.connect() as connection:
+        connection.execute(text('SET TRANSACTION READ ONLY'))
+        assert connection.execute(text('SELECT 1')).scalar_one()==1
+        names={row[0] for row in connection.execute(db.select(QuestionImage.path))}
+        names.update(row[0] for row in connection.execute(db.select(IngestionFile.path).where(IngestionFile.path.isnot(None))))
+        connection.rollback()
+    return sorted(names)
+
+
+def sync_assets(names,dry_run=False):
+    check_access()  # Both configured buckets must be readable before any upload.
+    missing=[];present=[];unavailable=[]
+    for name in names:
+        if remote_head(name) is None:
+            missing.append(name)
+            if not local_path(name).is_file():unavailable.append(name)
+        else:present.append(name)
+    result={'status':'DRY_RUN' if dry_run else 'PREFLIGHT','referenced':len(names),'existing':len(present),'missing':len(missing),'missing_local_assets':unavailable,'uploaded':0,'already_present':0,'verified':0,'originals_deleted':False}
+    if unavailable:
+        result['status']='LOCAL_ASSETS_MISSING';return result
+    if dry_run:return result
+    # publish() checks immutable SHA-256 metadata and uses a conditional PUT;
+    # existing objects are read back, but are never uploaded again.
+    for name in names:
+        if local_path(name).is_file():
+            state=publish(name,verify=True);result[state]+=1;result['verified']+=1
+        else:
+            # A remote-only asset is valid: verify its stored checksum directly.
+            from backend.storage import remote_bytes
+            remote_bytes(name);result['already_present']+=1;result['verified']+=1
+        if result['verified']%20==0 or result['verified']==len(names):
+            print(f"R2 assets verified: {result['verified']}/{len(names)}",flush=True)
+    result['status']='PASSED';return result
+
+
+def run(argv=None):
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source-dir',type=Path,help='Existing uploads folder containing PDFs and extracted images')
+    parser.add_argument('--dry-run',action='store_true',help='Read-only inventory; do not upload')
+    parser.add_argument('--report',type=Path,help='Optional sanitized local JSON report')
+    args=parser.parse_args(argv)
     try:
+        config={'STORAGE_BACKEND':'r2'}
+        if args.source_dir:config['UPLOAD_DIR']=str(args.source_dir.resolve())
+        app=create_app(config)
+        if not configured(app.config) or not all(app.config.get(k) for k in ('R2_PDF_BUCKET_NAME','R2_IMAGE_BUCKET_NAME')):
+            raise StorageError('Configure the private R2 endpoint, S3 credentials and separate PDF/image bucket names.')
         with app.app_context():
-            if authenticate_or_convert_token():
-                private_backup=ROOT/'update-backups'/('r2-private-'+str(time.time_ns())+'.env')
-                private_backup.parent.mkdir(parents=True,exist_ok=True)
-                if (ROOT/'.env').is_file():
-                    shutil.copy2(ROOT/'.env',private_backup)
-                    private_backup.chmod(0o600)
-                set_key(str(ROOT/'.env'),'R2_SECRET_ACCESS_KEY',app.config['R2_SECRET_ACCESS_KEY'])
-                print('R2 credentials repaired using documented API-token conversion; authenticated successfully. No secrets displayed.',flush=True)
-            root=Path(app.config['UPLOAD_DIR']).resolve()
-            files=sorted(p for p in root.rglob('*') if p.is_file() and p.suffix.lower() in ('.pdf','.png','.jpg','.jpeg','.webp','.gif'))
-            if not files:raise StorageError('No local PDF/image assets found; R2 was not enabled.')
-            for i,p in enumerate(files,1):
-                result=publish(p.relative_to(root).as_posix(),verify=True)
-                report[result]+=1;report['verified']+=1
-                if i%20==0 or i==len(files):print(f'R2 assets verified: {i}/{len(files)}',flush=True)
-                destination.write_text(json.dumps(report,indent=2),encoding='utf-8')
-            report['status']='PASSED';report['target_identity']=identity(app.config)
-        destination.write_text(json.dumps(report,indent=2),encoding='utf-8')
-        (ROOT/'r2-ready.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
-        set_key(str(ROOT/'.env'),'STORAGE_BACKEND','r2',quote_mode='never')
-        print('R2 PASSED: every asset read back and checksum verified; local originals preserved. R2 enabled for future uploads and asset delivery.')
-        return 0
+            names=asset_manifest()
+            if not names:raise StorageError('Current PostgreSQL database has no source asset references; refusing an unrelated folder upload.')
+            report=sync_assets(names,args.dry_run)
+            report['target_identity']=identity(app.config)
     except Exception as exc:
-        report['status']='FAILED';report['error']=str(exc) if isinstance(exc,StorageError) else type(exc).__name__+' during asset sync'
-        destination.write_text(json.dumps(report,indent=2),encoding='utf-8')
-        print('R2 STOPPED: '+report['error']);print('Sanitized report:',destination)
-        return 1
+        report={'status':'FAILED','error':str(exc) if isinstance(exc,StorageError) else type(exc).__name__+' during asset sync; check private configuration/connectivity','originals_deleted':False}
+    if args.report:
+        args.report.parent.mkdir(parents=True,exist_ok=True);args.report.write_text(json.dumps(report,indent=2))
+    print(json.dumps(report,indent=2))
+    return 0 if report['status'] in ('PASSED','DRY_RUN') else 1
 
 if __name__=='__main__':raise SystemExit(run())

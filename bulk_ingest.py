@@ -12,6 +12,7 @@ from backend import create_app
 from backend.acquisition import queue_catalog,download_pending
 from backend.ingestion import work_once
 from backend.models import db,IngestionFile,Paper
+from sqlalchemy import func
 
 SUCCESS={'AVAILABLE','PARTIAL','DUPLICATE'}
 ACTIVE={'QUEUED','FETCHING','PROCESSING','FETCH_QUEUED'}
@@ -19,8 +20,12 @@ FAILURES={'PROCESSING_FAILED','EXTRACTION_FAILED'}
 
 def candidates(limit,retry_failed):
     ids=[]
+    latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
+    latest_by_paper={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids))}
     for paper in Paper.query.filter(Paper.source_url.isnot(None)).order_by(Paper.id):
-        latest=IngestionFile.query.filter_by(paper_id=paper.id).order_by(IngestionFile.id.desc()).first()
+        if paper.status in ('AVAILABLE','PARTIALLY_AVAILABLE') or paper.canonical_paper_id:continue
+        latest=latest_by_paper.get(paper.id)
+        if retry_failed and (not latest or latest.status not in FAILURES):continue
         if latest and latest.status in SUCCESS|ACTIVE:continue
         if latest and latest.status in FAILURES and not retry_failed:continue
         if latest and latest.status=='PAUSED':continue
@@ -31,7 +36,7 @@ def candidates(limit,retry_failed):
 def main():
     parser=argparse.ArgumentParser(description='Process a bounded batch of new catalog papers.')
     parser.add_argument('--limit',type=int,default=20)
-    parser.add_argument('--retry-failed',action='store_true')
+    parser.add_argument('--retry-failed',action='store_true',help='Select only failed papers; do not include new catalog entries')
     parser.add_argument('--dry-run',action='store_true')
     args=parser.parse_args()
     if args.limit<1:parser.error('--limit must be positive')

@@ -24,7 +24,7 @@ def test_production_upload_directory_is_created_and_writable(monkeypatch,tmp_pat
     production_uploads=tmp_path/'data'/'uploads'
     monkeypatch.setenv('RENDER','true')
     monkeypatch.setenv('UPLOAD_DIR',str(production_uploads))
-    app=create_app({'TESTING':True,'SQLALCHEMY_DATABASE_URI':'sqlite:///'+str(tmp_path/'app.db'),'RATELIMIT_ENABLED':False,
+    app=create_app({'TESTING':True,'SQLALCHEMY_DATABASE_URI':'postgresql+psycopg://test:test@db.example.test/test','RATELIMIT_ENABLED':False,
                     'STORAGE_BACKEND':'r2','R2_ENDPOINT_URL':'https://test.r2.cloudflarestorage.com',
                     'R2_ACCESS_KEY_ID':'test-key','R2_SECRET_ACCESS_KEY':'test-secret',
                     'R2_PDF_BUCKET_NAME':'pyq-pdfs','R2_IMAGE_BUCKET_NAME':'pyq-images'})
@@ -36,7 +36,7 @@ def test_production_upload_directory_is_created_and_writable(monkeypatch,tmp_pat
 def test_render_r2_configuration_fails_fast_without_separate_buckets(monkeypatch,tmp_path):
     monkeypatch.setenv('RENDER','true')
     with pytest.raises(RuntimeError,match='R2 production configuration'):
-        create_app({'TESTING':True,'UPLOAD_DIR':str(tmp_path),'RATELIMIT_ENABLED':False,
+        create_app({'TESTING':True,'SQLALCHEMY_DATABASE_URI':'postgresql+psycopg://test:test@db.example.test/test','UPLOAD_DIR':str(tmp_path),'RATELIMIT_ENABLED':False,
                     'STORAGE_BACKEND':'r2','R2_PDF_BUCKET_NAME':'','R2_IMAGE_BUCKET_NAME':''})
 
 def test_read_only_connection_check_and_secret_redaction(app,tmp_path,monkeypatch):

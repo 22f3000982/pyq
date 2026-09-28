@@ -1,0 +1,41 @@
+import {describe,it,expect,vi,beforeEach,afterEach} from 'vitest';
+import {mount,flushPromises} from '@vue/test-utils';
+import Exam from '../src/Exam.vue';import QuestionContent from '../src/QuestionContent.vue';import MathText from '../src/MathText.vue';
+const mocks=vi.hoisted(()=>({api:vi.fn(),go:vi.fn(),session:{user:{name:'Student'}}}));vi.mock('../src/api',()=>mocks);
+let attempt;
+beforeEach(()=>{vi.useFakeTimers();sessionStorage.clear();mocks.go.mockReset();mocks.api.mockReset();attempt={id:4,title:'Source paper',mode:'exam',status:'ACTIVE',deadline:Date.now()/1000+600,server_time:Date.now()/1000,palette:[1,2].map(id=>({question_id:id,number:String(id),state:'NOT_VISITED'}))};
+ mocks.api.mockImplementation(async(path)=>path==='/attempts/4'?structuredClone(attempt):path==='/attempts/4/questions'?{status:'ACTIVE',items:[1,2].map(id=>({question:{id,number:String(id),kind:'NAT',text:'Source question '+id,images:[],options:[],marks:1},answer:null,marked:false}))}:{state:'ANSWERED'});
+});
+afterEach(()=>vi.useRealTimers());
+const button=(w,label)=>w.findAll('button').find(b=>b.text()===label);
+describe('nonblocking exam navigation',()=>{
+ it('navigates immediately while save is unresolved; serializes newer responses and submit',async()=>{
+  const w=mount(Exam,{props:{id:4}});await flushPromises();let release;
+  const base=mocks.api.getMockImplementation();mocks.api.mockImplementation((path,o)=>path.endsWith('/answers')&&o.body.answer==='3/4'?new Promise(r=>release=r):base(path,o));
+  await w.get('input.numeric-answer').setValue('3/4');await vi.advanceTimersByTimeAsync(400);
+  await button(w,'Save & next').trigger('click');expect(w.text()).toContain('QUESTION 2');
+  await w.get('input.numeric-answer').setValue('0');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('3/4');
+  await button(w,'Submit exam').trigger('click');await button(w,'Submit attempt').trigger('click');expect(mocks.api.mock.calls.some(c=>c[0].endsWith('/submit'))).toBe(false);
+  release({state:'ANSWERED'});await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/attempts/4/answers',expect.objectContaining({body:expect.objectContaining({question_id:2,answer:'0'})}));
+  expect(mocks.go).toHaveBeenCalledWith('/result/4');expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/questions')).toHaveLength(1);w.unmount();
+ });
+ it('keeps offline responses across navigation and restores them after remount',async()=>{
+  let w=mount(Exam,{props:{id:4}});await flushPromises();const base=mocks.api.getMockImplementation();mocks.api.mockImplementation((path,o)=>path.endsWith('/answers')?Promise.reject(new Error('Offline')):base(path,o));
+  await w.get('input.numeric-answer').setValue('-2.5');await vi.advanceTimersByTimeAsync(400);await button(w,'Save & next').trigger('click');await w.get('input.numeric-answer').setValue('7');w.unmount();
+  w=mount(Exam,{props:{id:4}});await flushPromises();expect(w.get('input.numeric-answer').element.value).toBe('7');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('-2.5');
+  mocks.api.mockImplementation(base);await button(w,'Retry save').trigger('click');await flushPromises();expect(sessionStorage.getItem('pyq-pending-4')).toBeNull();w.unmount();
+ });
+ it('submits only once when the timer expires while the response is pending',async()=>{
+  attempt.deadline=Date.now()/1000+1;const base=mocks.api.getMockImplementation();let release;
+  mocks.api.mockImplementation((p,o)=>p.endsWith('/submit')?new Promise(r=>release=r):base(p,o));
+  const w=mount(Exam,{props:{id:4}});await flushPromises();await vi.advanceTimersByTimeAsync(6000);expect(mocks.api.mock.calls.filter(c=>c[0].endsWith('/submit'))).toHaveLength(1);release({});await flushPromises();w.unmount();
+ });
+});
+describe('visible source fidelity',()=>{
+ it('shows an explicit recoverable error instead of silently removing source notation',async()=>{
+  const w=mount(QuestionContent,{props:{text:'Function [[IMAGE:x]] at [[IMAGE:missing]]',images:[{id:1,token:'x',inline:true,width:3}]}});await w.get('img').trigger('error');expect(w.find('img').exists()).toBe(false);expect(w.text()).toContain('Source diagram or notation unavailable');expect(w.text()).toContain('[Source notation unavailable]');await w.get('button').trigger('click');expect(w.get('img').attributes('src')).toBe('/api/images/1');w.unmount();
+ });
+ it('renders source fractions, Greek letters and matrices without trusting HTML',async()=>{
+  const w=mount(MathText,{props:{text:String.raw`Inline \(\frac{\alpha_1^2}{2}\) display \[\begin{pmatrix}1&2\\3&4\end{pmatrix}\] <img src=x onerror=alert(1)>`}});await flushPromises();expect(w.findAll('.katex')).toHaveLength(2);expect(w.find('img').exists()).toBe(false);expect(w.text()).toContain('<img src=x');w.unmount();
+ });
+});
