@@ -1,0 +1,14 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+ RUN  v3.2.7 /workspace/scratch/7e7dc298d313/current-upload/PYQ-Studio-Final-App/frontend
+
+ ✓ tests/layout.spec.js (2 tests) 41ms
+ ✓ tests/progress.spec.js (4 tests) 76ms
+ ✓ tests/nat.spec.js (3 tests) 119ms
+ ✓ tests/components.spec.js (9 tests) 166ms
+
+ Test Files  4 passed (4)
+      Tests  18 passed (18)
+   Start at  02:19:36
+   Duration  1.17s (transform 498ms, setup 0ms, collect 1.61s, tests 402ms, environment 1.36s, prepare 307ms)
+

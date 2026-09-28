@@ -1,0 +1,115 @@
+import os, secrets
+from pathlib import Path
+from flask import Flask, jsonify, request, session, send_from_directory
+from sqlalchemy import text
+from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
+from .models import db
+
+limiter = Limiter(key_func=get_remote_address, default_limits=['300 per minute'])
+
+def create_app(config=None):
+    from .database_config import database_url,engine_options
+    from dotenv import load_dotenv
+    load_dotenv()
+    root = Path(__file__).resolve().parent.parent
+    app = Flask(__name__, static_folder=None, instance_path=str(root / 'instance'))
+    Path(app.instance_path).mkdir(exist_ok=True)
+    supplied=config or {}
+    secret = os.getenv('SECRET_KEY')
+    if not secret and not (config or {}).get('TESTING'):
+        raise RuntimeError('Set SECRET_KEY to a random value (see README).')
+    configured_uri=supplied.get('SQLALCHEMY_DATABASE_URI')
+    production_env=os.getenv('RENDER','').lower()=='true' or os.getenv('FLASK_ENV','').lower()=='production' or os.getenv('APP_ENV','').lower()=='production'
+    if not (os.getenv('DATABASE_URL','').strip() or configured_uri) and production_env:
+        raise RuntimeError('DATABASE_URL is required on Render; refusing an implicit SQLite production fallback.')
+    app.config.update(SECRET_KEY=secret or secrets.token_hex(32),
+        SQLALCHEMY_DATABASE_URI=database_url(os.getenv('DATABASE_URL'),'sqlite:///' + str(root/'instance/app.db')),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False, MAX_CONTENT_LENGTH=110*1024*1024,
+        UPLOAD_DIR=os.getenv('UPLOAD_DIR', str(root/'uploads')),
+        MAX_UPLOAD_SIZE=int(os.getenv('MAX_UPLOAD_SIZE', 20*1024*1024)),
+        SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SECURE=os.getenv('COOKIE_SECURE','false').lower()=='true',
+        PERMANENT_SESSION_LIFETIME=86400,
+        RATELIMIT_STORAGE_URI=os.getenv('RATELIMIT_STORAGE_URI','memory://'),
+        LLM_PROVIDER=os.getenv('LLM_PROVIDER','none'), LLM_API_KEY=os.getenv('LLM_API_KEY',''),
+        LLM_MODEL=os.getenv('LLM_MODEL',''), LLM_BASE_URL=os.getenv('LLM_BASE_URL',''),
+        OCR_ENABLED=os.getenv('OCR_ENABLED','true').lower()=='true',
+        CATALOG_AUTO_PROCESS=os.getenv('CATALOG_AUTO_PROCESS','false').lower()=='true')
+    legacy_bucket=os.getenv('R2_BUCKET_NAME','')
+    app.config.update(STORAGE_BACKEND=os.getenv('STORAGE_BACKEND','local').lower(),R2_ENDPOINT_URL=os.getenv('R2_ENDPOINT_URL',''),R2_ACCESS_KEY_ID=os.getenv('R2_ACCESS_KEY_ID',''),R2_SECRET_ACCESS_KEY=os.getenv('R2_SECRET_ACCESS_KEY',''),R2_BUCKET_NAME=legacy_bucket,R2_PDF_BUCKET_NAME=os.getenv('R2_PDF_BUCKET_NAME',''),R2_IMAGE_BUCKET_NAME=os.getenv('R2_IMAGE_BUCKET_NAME',''),R2_PREFIX=os.getenv('R2_PREFIX','pyq'))
+    if config: app.config.update(config)
+    if app.config['STORAGE_BACKEND'] not in ('local','r2'):raise ValueError('STORAGE_BACKEND must be local or r2')
+    if production_env and app.config['STORAGE_BACKEND']=='r2':
+        required_r2=('R2_ENDPOINT_URL','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','R2_PDF_BUCKET_NAME','R2_IMAGE_BUCKET_NAME')
+        if any(not app.config.get(key) for key in required_r2):
+            raise RuntimeError('R2 production configuration requires the endpoint, credential pair, and separate PDF/image bucket names.')
+    app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS',engine_options(app.config['SQLALCHEMY_DATABASE_URI']))
+    upload_path=Path(app.config['UPLOAD_DIR'])
+    app.config['UPLOAD_DIR']=str((root/upload_path).resolve() if not upload_path.is_absolute() else upload_path)
+    Path(app.config['UPLOAD_DIR']).mkdir(parents=True, exist_ok=True)
+    db.init_app(app); Migrate(app, db); limiter.init_app(app)
+    @app.before_request
+    def csrf():
+        if request.path.startswith('/api/') and request.method in ('POST','PUT','PATCH','DELETE'):
+            expected=session.get('csrf','')
+            if not expected or not secrets.compare_digest(expected,request.headers.get('X-CSRF-Token','')):
+                return jsonify(error='Refresh the page and try again.', code='CSRF'),403
+    @app.after_request
+    def security(response):
+        response.headers['X-Content-Type-Options']='nosniff'
+        response.headers['Referrer-Policy']='same-origin'
+        response.headers['X-Frame-Options']='SAMEORIGIN'
+        response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'"
+        if request.path.startswith('/api/'): response.headers['Cache-Control']='no-store'
+        return response
+    @app.get('/healthz')
+    def healthz():
+        try:
+            with db.engine.connect() as connection:
+                connection.execute(text('SELECT 1'))
+            return jsonify(status='ok'),200
+        except Exception:
+            return jsonify(status='unavailable'),503
+    from .storage import StorageError
+    @app.errorhandler(StorageError)
+    def storage_error(e):return jsonify(error=str(e)),503
+    @app.errorhandler(HTTPException)
+    def http_error(e): return jsonify(error=e.description),e.code
+    @app.errorhandler(IntegrityError)
+    def conflict(e):
+        db.session.rollback(); return jsonify(error='This record already exists or conflicts with related data.'),409
+    @app.errorhandler(StaleDataError)
+    def stale(e):
+        db.session.rollback(); return jsonify(error='Attempt changed in another request. Reload and retry.'),409
+    @app.errorhandler(ValueError)
+    def invalid(e):
+        db.session.rollback(); return jsonify(error=str(e)),400
+    from .api import api
+    app.register_blueprint(api)
+    try:
+        from .exam_api import exams
+        app.register_blueprint(exams)
+    except ModuleNotFoundError as e:
+        if e.name!='backend.exam_api': raise
+    try:
+        from .admin_api import admin
+        app.register_blueprint(admin)
+    except ModuleNotFoundError as e:
+        if e.name!='backend.admin_api': raise
+    @app.route('/', defaults={'path':''})
+    @app.route('/<path:path>')
+    def frontend(path):
+        if path.startswith('api/'): return jsonify(error='Not found'),404
+        dist=root/'frontend/dist'
+        if path and (dist/path).is_file() and (dist/path).resolve().is_relative_to(dist):
+            return send_from_directory(dist,path)
+        if not (dist/'index.html').exists(): return jsonify(message='Build frontend with npm run build'),503
+        return send_from_directory(dist,'index.html')
+    from .cli import register_cli
+    register_cli(app)
+    return app

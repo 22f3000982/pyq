@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: pyq
+      POSTGRES_USER: pyq
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pyq"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+  web:
+    build: .
+    ports: ["127.0.0.1:5000:5000"]
+    environment: &app_environment
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+      DATABASE_URL: postgresql+psycopg://pyq:${POSTGRES_PASSWORD}@db:5432/pyq
+      UPLOAD_DIR: /data/uploads
+      RATELIMIT_STORAGE_URI: redis://redis:6379/0
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      LLM_PROVIDER: ${LLM_PROVIDER:-none}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      OCR_ENABLED: "true"
+      MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-20971520}
+    volumes: ["uploads:/data/uploads"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+  worker:
+    build: .
+    command: ["python", "-m", "flask", "--app", "backend:create_app", "worker"]
+    environment: *app_environment
+    volumes: ["uploads:/data/uploads"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+volumes:
+  postgres_data:
+  redis_data:
+  uploads:

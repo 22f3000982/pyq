@@ -1,0 +1,1 @@
+Boto3 request-contract test: 1 passed with botocore Stubber (no live credentials/network).

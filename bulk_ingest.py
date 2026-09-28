@@ -1,0 +1,56 @@
+"""Bounded, resumable catalog ingestion.
+
+This command only claims eligible paper records. It never resets completed
+imports and isolates acquisition/extraction failures per paper.
+"""
+import argparse,json,sys,time
+from pathlib import Path
+
+ROOT=Path(__file__).resolve().parent
+sys.path.insert(0,str(ROOT))
+from backend import create_app
+from backend.acquisition import queue_catalog,download_pending
+from backend.ingestion import work_once
+from backend.models import db,IngestionFile,Paper
+
+SUCCESS={'AVAILABLE','PARTIAL','DUPLICATE'}
+ACTIVE={'QUEUED','FETCHING','PROCESSING','FETCH_QUEUED'}
+FAILURES={'PROCESSING_FAILED','EXTRACTION_FAILED'}
+
+def candidates(limit,retry_failed):
+    ids=[]
+    for paper in Paper.query.filter(Paper.source_url.isnot(None)).order_by(Paper.id):
+        latest=IngestionFile.query.filter_by(paper_id=paper.id).order_by(IngestionFile.id.desc()).first()
+        if latest and latest.status in SUCCESS|ACTIVE:continue
+        if latest and latest.status in FAILURES and not retry_failed:continue
+        if latest and latest.status=='PAUSED':continue
+        ids.append(paper.id)
+        if len(ids)>=limit:break
+    return ids
+
+def main():
+    parser=argparse.ArgumentParser(description='Process a bounded batch of new catalog papers.')
+    parser.add_argument('--limit',type=int,default=20)
+    parser.add_argument('--retry-failed',action='store_true')
+    parser.add_argument('--dry-run',action='store_true')
+    args=parser.parse_args()
+    if args.limit<1:parser.error('--limit must be positive')
+    app=create_app()
+    with app.app_context():
+        ids=candidates(args.limit,args.retry_failed)
+        if args.dry_run:
+            rows=[{'id':p.id,'name':p.name,'status':p.status} for p in Paper.query.filter(Paper.id.in_(ids)).order_by(Paper.id)] if ids else []
+            print(json.dumps({'dry_run':True,'limit':args.limit,'retry_failed':args.retry_failed,'papers':rows},indent=2))
+            return 0
+        if not ids:
+            print(json.dumps({'processed':0,'message':'No eligible papers.'}));return 0
+        batch,count=queue_catalog(retry=args.retry_failed,limit=args.limit,paper_ids=ids)
+        download_pending(app,workers=4,paper_ids=ids)
+        processed=0
+        while work_once(paper_ids=ids):
+            processed+=1
+            db.session.remove()
+        print(json.dumps({'batch_id':batch,'queued_papers':count,'processed_files':processed,'paper_ids':ids},indent=2))
+        return 0
+
+if __name__=='__main__':raise SystemExit(main())

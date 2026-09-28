@@ -1,0 +1,10 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+ RUN  v5.0.1 /workspace/scratch/7e7dc298d313/pyq-platform/frontend
+
+
+ Test Files  4 passed (4)
+      Tests  18 passed (18)
+   Start at  01:22:57
+   Duration  1.13s (environment 55%, transform 23%, import 12%, tests 10%, worker 1%)
+

@@ -1,0 +1,22 @@
+[
+  {
+    "paper_id": 13,
+    "file": "sample-data/deep-learning.pdf"
+  },
+  {
+    "paper_id": 1,
+    "file": "sample-data/software-engineering.pdf"
+  },
+  {
+    "paper_id": 50,
+    "file": "sample-data/game-theory.pdf"
+  },
+  {
+    "paper_id": 54,
+    "file": "sample-data/managerial-economics.pdf"
+  },
+  {
+    "paper_id": 7,
+    "file": "sample-data/ai.pdf"
+  }
+]

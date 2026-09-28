@@ -1,0 +1,61 @@
+services:
+  - type: web
+    name: pyq-studio-web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    preDeployCommand: python -m flask --app backend:create_app db upgrade
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: STORAGE_BACKEND
+        value: r2
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_PDF_BUCKET_NAME
+        value: pyq-pdfs
+      - key: R2_IMAGE_BUCKET_NAME
+        value: pyq-images
+      - key: R2_PREFIX
+        value: pyq
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: UPLOAD_DIR
+        value: /data/uploads
+
+  - type: worker
+    name: pyq-studio-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: python -m flask --app backend:create_app worker
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: STORAGE_BACKEND
+        value: r2
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_PDF_BUCKET_NAME
+        value: pyq-pdfs
+      - key: R2_IMAGE_BUCKET_NAME
+        value: pyq-images
+      - key: R2_PREFIX
+        value: pyq
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: UPLOAD_DIR
+        value: /data/uploads
