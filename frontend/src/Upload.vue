@@ -1,11 +1,11 @@
 <script setup>
-import {ref,onMounted,onUnmounted,computed} from 'vue';import {api} from './api';
+import {ref,onMounted,onUnmounted,computed} from 'vue';import {api,loadCatalog} from './api';
 const courses=ref([]),meta=ref({exams:[],terms:[]}),form=ref({course_id:'',exam_type_id:'',term_id:'',name:''}),file=ref(null),job=ref(null),paper=ref(null),busy=ref(false),error=ref('');let poll;
 const status=computed(()=>job.value?.effective_status||job.value?.status||'');
 const failed=computed(()=>['EXTRACTION_FAILED','PROCESSING_FAILED'].includes(status.value));
 const done=computed(()=>['AVAILABLE','PARTIAL'].includes(status.value));
 const stage=computed(()=>busy.value?'Uploading…':failed.value?'Extraction Failed ✗':done.value?'Completed ✓':status.value==='QUEUED'?'Waiting for processing worker…':job.value?.events?.at(-1)?.stage==='VALIDATING'?'Validating…':job.value?.events?.at(-1)?.stage==='DETECTING_ANSWERS'?'Detecting answers…':status.value==='PROCESSING'?'Processing PDF / extracting questions…':'');
-onMounted(async()=>{try{courses.value=(await api('/courses?limit=100')).items;meta.value=await api('/metadata')}catch(e){error.value=e.message}});
+onMounted(async()=>{try{const catalog=await loadCatalog();courses.value=catalog.courses;meta.value=catalog.meta}catch(e){error.value=e.message}});
 onUnmounted(()=>clearInterval(poll));
 async function refresh(){try{const d=await api('/admin/ingestion/'+job.value.id);job.value=d.file;paper.value=d.paper;if(done.value||failed.value)clearInterval(poll)}catch(e){error.value=e.message}}
 function watchJob(){clearInterval(poll);poll=setInterval(refresh,1500);refresh()}

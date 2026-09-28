@@ -14,10 +14,13 @@ class MemoryR2:
     def get_object(self,Bucket,Key):
         if Key not in self.objects:raise ClientError({'Error':{'Code':'NoSuchKey'}},'GetObject')
         data,meta=self.objects[Key];return {'Body':io.BytesIO(data),'Metadata':meta}
+    def generate_presigned_url(self,operation,Params,ExpiresIn):
+        assert operation=='get_object' and ExpiresIn==600
+        return f"https://signed.test/{Params['Bucket']}/{Params['Key']}?expires={ExpiresIn}"
 
 @pytest.fixture
 def remote(app):
-    app.config.update(STORAGE_BACKEND='r2',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com',R2_ACCESS_KEY_ID='test-key',R2_SECRET_ACCESS_KEY='test-secret',R2_BUCKET_NAME='test',R2_PREFIX='pyq')
+    app.config.update(STORAGE_BACKEND='r2',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com',R2_ACCESS_KEY_ID='test-key',R2_SECRET_ACCESS_KEY='test-secret',R2_BUCKET_NAME='test',R2_PDF_BUCKET_NAME='test',R2_IMAGE_BUCKET_NAME='test',R2_PREFIX='pyq')
     fake=MemoryR2();app.extensions['_r2_client']=fake;return fake
 
 def test_r2_persistence_cache_recovery_dedup_and_integrity(app,remote):
@@ -38,6 +41,10 @@ def test_storage_rejects_path_escape(app,remote,name):
 
 def test_local_backend_works_without_r2(app):
     p=write_asset('plain.pdf',b'%PDF-local');assert ensure_local('plain.pdf')==p
+
+def test_r2_private_image_url_uses_existing_object_key(app,remote):
+    from backend.storage import private_asset_url
+    assert private_asset_url('diagram.png',image_id=17)=='https://signed.test/test/pyq/diagram.png?expires=600'
 
 def test_real_upload_ingestion_then_cold_cache_student_assets(app,client,remote):
     from test_automatic import ingest_real
@@ -67,7 +74,7 @@ def test_storage_failure_does_not_leak_secrets(app,remote):
 def test_real_boto3_request_contract_with_stubbed_transport(app):
     from botocore.stub import Stubber
     from backend.storage import client
-    app.config.update(STORAGE_BACKEND='r2',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com',R2_ACCESS_KEY_ID='test-key',R2_SECRET_ACCESS_KEY='test-secret',R2_BUCKET_NAME='test',R2_PREFIX='pyq')
+    app.config.update(STORAGE_BACKEND='r2',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com',R2_ACCESS_KEY_ID='test-key',R2_SECRET_ACCESS_KEY='test-secret',R2_BUCKET_NAME='test',R2_PDF_BUCKET_NAME='test',R2_IMAGE_BUCKET_NAME='test',R2_PREFIX='pyq')
     sdk=client();data=b'%PDF-sdk';digest=hashlib.sha256(data).hexdigest();args={'Bucket':'test','Key':'pyq/sdk.pdf'}
     with Stubber(sdk) as stub:
         stub.add_client_error('head_object',service_error_code='404',http_status_code=404,expected_params=args)

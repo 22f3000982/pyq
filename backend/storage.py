@@ -167,3 +167,10 @@ def send_asset(name,**kwargs):
     try:path=ensure_local(name)
     except FileNotFoundError:abort(404)
     return send_file(path,**kwargs)
+
+def private_asset_url(name,image_id=None,expires=600):
+    if enabled():
+        try:return client().generate_presigned_url('get_object',Params=object_args(name),ExpiresIn=expires)
+        except StorageError:raise
+        except Exception as exc:raise failure(exc,'signed URL generation') from None
+    return '/api/images/'+str(image_id) if image_id is not None else None

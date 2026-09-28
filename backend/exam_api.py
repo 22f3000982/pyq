@@ -1,4 +1,4 @@
-from .storage import send_asset
+from .storage import send_asset,private_asset_url,StorageError
 import time
 from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory
 from sqlalchemy import or_
@@ -16,6 +16,17 @@ def owned(id):
     return a
 
 def attempt_json(a):return {'id':a.id,'paper_id':a.paper_id,'title':a.title,'mode':a.mode,'status':a.status,'started_at':a.started_at,'deadline':a.deadline,'submitted_at':a.submitted_at,'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,'records_progress':a.records_progress,'palette':[{'question_id':i.question_id,'number':i.snapshot['number'],'state':palette_state(i),'visited':i.visited,'marked':i.marked} for i in sorted(a.items,key=lambda i:(i.snapshot.get("paper_id",0),question_order(i.snapshot["number"]),i.position))]}
+
+def question_with_image_urls(snapshot):
+    result=public_question(snapshot)
+    ids=[image.get('id') for image in result.get('images',[]) if image.get('id') is not None]
+    records={image.id:image for image in QuestionImage.query.filter(QuestionImage.id.in_(ids)).all()} if ids else {}
+    for image in result.get('images',[]):
+        record=records.get(image.get('id'))
+        if not record:continue
+        try:image['url']=private_asset_url(record.path,record.id)
+        except StorageError:image['url']='/api/images/'+str(record.id)
+    return result
 
 def collection_query(kind):
     q=Question.query.filter(Question.status=='AVAILABLE')
@@ -83,7 +94,7 @@ def attempt(id):return jsonify(attempt_json(owned(id)))
 @require_user()
 def attempt_question(id,qid):
     a=owned(id);i=AttemptAnswer.query.filter_by(attempt_id=a.id,question_id=qid).first_or_404()
-    result={'question':public_question(i.snapshot),'answer':i.answer,'marked':i.marked,'status':a.status,'bookmarked':db.session.get(Bookmark,(g.user.id,qid)) is not None}
+    result={'question':question_with_image_urls(i.snapshot),'answer':i.answer,'marked':i.marked,'status':a.status,'bookmarked':db.session.get(Bookmark,(g.user.id,qid)) is not None}
     if a.status!='ACTIVE' or (a.mode=='practice' and i.answer is not None):
         result['feedback']={**grade(i.snapshot,i.answer),'answers':i.snapshot['answers'],'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}
     return jsonify(result)
