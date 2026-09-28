@@ -20,6 +20,19 @@ def test_env_configuration_without_connecting(monkeypatch,tmp_path):
     assert app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql+psycopg://')
     assert app.config['SQLALCHEMY_ENGINE_OPTIONS']['connect_args']['connect_timeout']==10
 
+def test_production_upload_directory_is_created_and_writable(monkeypatch,tmp_path):
+    production_uploads=tmp_path/'data'/'uploads'
+    monkeypatch.setenv('RENDER','true')
+    monkeypatch.setenv('UPLOAD_DIR',str(production_uploads))
+    app=create_app({'TESTING':True,'SQLALCHEMY_DATABASE_URI':'sqlite:///'+str(tmp_path/'app.db'),'RATELIMIT_ENABLED':False,
+                    'STORAGE_BACKEND':'r2','R2_ENDPOINT_URL':'https://test.r2.cloudflarestorage.com',
+                    'R2_ACCESS_KEY_ID':'test-key','R2_SECRET_ACCESS_KEY':'test-secret',
+                    'R2_PDF_BUCKET_NAME':'pyq-pdfs','R2_IMAGE_BUCKET_NAME':'pyq-images'})
+    marker=production_uploads/'startup-check.tmp'
+    marker.write_bytes(b'write check')
+    assert app.config['UPLOAD_DIR']==str(production_uploads)
+    assert marker.read_bytes()==b'write check'
+
 def test_render_r2_configuration_fails_fast_without_separate_buckets(monkeypatch,tmp_path):
     monkeypatch.setenv('RENDER','true')
     with pytest.raises(RuntimeError,match='R2 production configuration'):

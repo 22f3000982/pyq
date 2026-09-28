@@ -27,10 +27,11 @@ def create_app(config=None):
     production_env=os.getenv('RENDER','').lower()=='true' or os.getenv('FLASK_ENV','').lower()=='production' or os.getenv('APP_ENV','').lower()=='production'
     if not (os.getenv('DATABASE_URL','').strip() or configured_uri) and production_env:
         raise RuntimeError('DATABASE_URL is required on Render; refusing an implicit SQLite production fallback.')
+    default_upload_dir='/data/uploads' if production_env else str(root/'uploads')
     app.config.update(SECRET_KEY=secret or secrets.token_hex(32),
         SQLALCHEMY_DATABASE_URI=database_url(os.getenv('DATABASE_URL'),'sqlite:///' + str(root/'instance/app.db')),
         SQLALCHEMY_TRACK_MODIFICATIONS=False, MAX_CONTENT_LENGTH=110*1024*1024,
-        UPLOAD_DIR=os.getenv('UPLOAD_DIR', str(root/'uploads')),
+        UPLOAD_DIR=os.getenv('UPLOAD_DIR', default_upload_dir),
         MAX_UPLOAD_SIZE=int(os.getenv('MAX_UPLOAD_SIZE', 20*1024*1024)),
         SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax',
         SESSION_COOKIE_SECURE=os.getenv('COOKIE_SECURE','false').lower()=='true',
