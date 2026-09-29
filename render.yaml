@@ -36,7 +36,7 @@ services:
       - key: CONTENT_CACHE_TTL
         value: "60"
       - key: IMAGE_DELIVERY
-        value: proxy
+        value: signed
       - key: IMAGE_CDN_BASE_URL
         sync: false
       - key: IMAGE_CDN_MANIFEST
@@ -84,7 +84,7 @@ services:
       - key: CONTENT_CACHE_TTL
         value: "60"
       - key: IMAGE_DELIVERY
-        value: proxy
+        value: signed
       - key: IMAGE_CDN_BASE_URL
         sync: false
       - key: IMAGE_CDN_MANIFEST
