@@ -1,4 +1,4 @@
-from .storage import send_asset,ensure_local,publish
+from .storage import send_asset,ensure_local,publish,StorageError
 import uuid,time,hashlib
 from pathlib import Path
 import fitz
@@ -161,7 +161,7 @@ def retry(id):
     if not f.path and not f.source_url:abort(409,description='Invalid uploaded bytes; upload a corrected PDF')
     if f.path:
         try:ensure_local(f.path)
-        except FileNotFoundError:abort(409,description='The stored PDF is missing. Please choose the PDF and upload it again.')
+        except (FileNotFoundError,StorageError):abort(409,description='The stored PDF is missing. Please choose the PDF and upload it again.')
     f.status='QUEUED' if f.path else 'FETCH_QUEUED';f.error=None;f.retries+=1;f.started_at=None;f.finished_at=None;db.session.commit();update_batch(f.batch_id);return jsonify(file_json(f))
 
 @admin.get('/ingestion/<int:id>/source')

@@ -213,7 +213,7 @@ def question_image(id):
         if not prior:abort(404)
     url=image_url(image.path,image.id)
     if not url.startswith('/api/images/'):
-        response=redirect(url,code=302);response.headers['Cache-Control']='private, no-store';return response
+        response=redirect(url,code=302);response.headers['Cache-Control']='private, max-age=300';return response
     response=send_asset(image.path,mimetype='image/png',conditional=True)
     response.headers['Cache-Control']='private, max-age=3600'
     response.vary.add('Cookie')

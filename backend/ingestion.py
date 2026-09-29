@@ -9,7 +9,7 @@ from .acquisition import event
 from .visual_pdf import layout_document
 from .automatic_parser import parse_document,clean_assets
 from .providers import provider,segment_plain
-from .storage import write_asset,ensure_local,publish
+from .storage import write_asset,ensure_local,publish,StorageError
 
 SUCCESS=('AVAILABLE','PARTIAL','DUPLICATE')
 FAILURES=('PROCESSING_FAILED','EXTRACTION_FAILED')
@@ -30,15 +30,18 @@ def store_upload(upload,paper,batch,replace=False):
         if upload.mimetype not in ('application/pdf','application/octet-stream'):raise ValueError('Only PDF uploads are accepted')
         data=upload.read(current_app.config['MAX_UPLOAD_SIZE']+1);f.pages=validate_pdf(data);sha=hashlib.sha256(data).hexdigest()
         old=IngestionFile.query.filter_by(file_hash=sha).first()
-        old_asset_available=True
-        if old and old.path:
-            try:ensure_local(old.path)
-            except FileNotFoundError:old_asset_available=False
-        if old and old_asset_available:
-            f.duplicate_of_id=old.id;f.path=old.path;f.status='DUPLICATE';f.finished_at=time.time()
-            if old.paper_id!=paper.id:paper.canonical_paper_id=old.paper_id
-            event(f,'DEDUPLICATED',f'Identical file already stored as import {old.id}; question records are reused')
-            if old.status in FAILURES:old.status='QUEUED';old.error=None;old.retries+=1
+        if old:
+            write_asset(old.path or (sha+'.pdf'),data)
+            old.path=old.path or (sha+'.pdf')
+            f.duplicate_of_id=old.id;f.path=old.path
+            if old.paper_id!=paper.id:
+                f.status='DUPLICATE';f.finished_at=time.time()
+                paper.canonical_paper_id=old.paper_id
+                event(f,'DEDUPLICATED',f'Identical file already stored as import {old.id}; question records are reused')
+            else:
+                f.status='QUEUED';paper.status='PROCESSING';paper.canonical_paper_id=None
+                event(f,'UPLOADED',f'{len(data)} bytes; SHA-256 {sha}')
+            if old.status in FAILURES:old.status='QUEUED';old.error=None;old.retries+=1;paper.status='PROCESSING'
         else:
             f.file_hash=sha;f.path=sha+'.pdf';write_asset(f.path,data);f.status='QUEUED';paper.status='PROCESSING';paper.canonical_paper_id=None
             event(f,'UPLOADED',f'{len(data)} bytes; SHA-256 {sha}')

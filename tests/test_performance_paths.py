@@ -71,7 +71,7 @@ def test_signed_delivery_no_download_and_csp(app,client,monkeypatch):
     assert 'https://test.r2.cloudflarestorage.com' in r.headers['Content-Security-Policy']
     image=QuestionImage.query.first()
     r=client.get(f'/api/images/{image.id}')
-    assert r.status_code==302 and r.headers['Cache-Control']=='private, no-store'
+    assert r.status_code==302 and r.headers['Cache-Control']=='private, max-age=300'
     assert app.test_client().get(f'/api/images/{image.id}').status_code==401
 
 
