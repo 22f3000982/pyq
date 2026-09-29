@@ -39,7 +39,7 @@ def paginate(query,mapper):
     page,size=page_args();total=query.count()
     return {'items':[mapper(x) for x in query.limit(size).offset((page-1)*size).all()],'total':total,'page':page,'limit':size}
 
-def paper_rows(papers):
+def _paper_content_rows(papers):
     """Batch catalog counts and user progress; never materialize question bodies."""
     if not papers:return []
     ids=[p.id for p in papers];effective_ids={p.canonical_paper_id or p.id for p in papers}
@@ -48,13 +48,26 @@ def paper_rows(papers):
     if missing:effective.update({p.id:p for p in Paper.query.filter(Paper.id.in_(missing))})
     totals={r[0]:r[1:] for r in db.session.query(Question.paper_id,func.count(Question.id),func.count(Question.marks),func.sum(Question.marks),func.sum(case((Question.answer_status=='ANSWER_AVAILABLE',0),else_=1))).filter(Question.paper_id.in_(effective_ids),Question.status=='AVAILABLE').group_by(Question.paper_id)}
     downloads={r[0] for r in db.session.query(IngestionFile.paper_id).filter(IngestionFile.paper_id.in_(effective_ids),IngestionFile.path.isnot(None)).distinct()}
-    user=db.session.get(User,session.get('uid')) if session.get('uid') else None
-    progress={r.paper_id:r for r in PaperProgress.query.filter(PaperProgress.user_id==user.id,PaperProgress.paper_id.in_(ids))} if user and user.active else {}
     out=[]
     for p in papers:
-        e=effective[p.canonical_paper_id or p.id];count,marked,total,unknown=totals.get(e.id,(0,0,None,0));pr=progress.get(p.id)
-        out.append({'progress':({'attempted':pr.attempted,'last_score':pr.last_score,'last_attempted_at':pr.last_attempted_at} if pr else None),'id':p.id,'name':p.name,'course_id':p.course_id,'course':p.course.name,'code':p.course.code,'exam':p.exam_type.name,'exam_type_id':p.exam_type_id,'term':p.term.name,'term_id':p.term_id,'year':p.term.year,'session':p.session,'source_url':p.source_url,'status':p.status,'warnings':p.warnings,'question_count':count,'practice_available':count>0,'duration_seconds':e.duration_seconds,'source_metadata':e.source_metadata,'canonical_paper_id':p.canonical_paper_id,'total_marks':total if count and marked==count else None,'unknown_keys':unknown,'download_url':'/api/papers/'+str(p.id)+'/source' if e.id in downloads else None})
+        e=effective[p.canonical_paper_id or p.id];count,marked,total,unknown=totals.get(e.id,(0,0,None,0))
+        out.append({'progress':None,'id':p.id,'name':p.name,'course_id':p.course_id,'course':p.course.name,'code':p.course.code,'exam':p.exam_type.name,'exam_type_id':p.exam_type_id,'term':p.term.name,'term_id':p.term_id,'year':p.term.year,'session':p.session,'source_url':p.source_url,'status':p.status,'warnings':p.warnings,'question_count':count,'practice_available':count>0,'duration_seconds':e.duration_seconds,'source_metadata':e.source_metadata,'canonical_paper_id':p.canonical_paper_id,'total_marks':total if count and marked==count else None,'unknown_keys':unknown,'download_url':'/api/papers/'+str(p.id)+'/source' if e.id in downloads else None})
     return out
+
+def paper_rows(papers):
+    if not papers:return []
+    import hashlib
+    from .content_cache import cached
+    ids=[p.id for p in papers]
+    key='paper-metadata:'+hashlib.sha256(','.join(map(str,ids)).encode()).hexdigest()
+    rows=cached(key,lambda:_paper_content_rows(papers))
+    user=db.session.get(User,session.get('uid')) if session.get('uid') else None
+    progress={r.paper_id:r for r in PaperProgress.query.filter(PaperProgress.user_id==user.id,PaperProgress.paper_id.in_(ids))} if user and user.active else {}
+    result=[]
+    for row in rows:
+        pr=progress.get(row['id'])
+        result.append({**row,'progress':{'attempted':pr.attempted,'last_score':pr.last_score,'last_attempted_at':pr.last_attempted_at} if pr else None})
+    return result
 
 PAPER_LOAD=(joinedload(Paper.course),joinedload(Paper.term),joinedload(Paper.exam_type))
 def paper_json(p):return paper_rows([p])[0]
@@ -154,9 +167,21 @@ def demo_papers():
     path=Path(__file__).resolve().parents[1]/'demo-papers.json'
     ids=json.loads(path.read_text()).get('paper_ids',[]) if path.exists() else []
     records={p.id:p for p in Paper.query.options(*PAPER_LOAD).filter(Paper.id.in_(ids))}
-    return jsonify(items=paper_rows([records[id] for id in ids if id in records]))
+    featured=[records[id] for id in ids if id in records]
+    ready=db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE')
+    recent=Paper.query.join(Course).join(Term).join(ExamType).filter(or_(Paper.id.in_(ready),Paper.canonical_paper_id.in_(ready))).options(*PAPER_LOAD).order_by(Paper.id.desc()).limit(6).all()
+    seen={paper.id for paper in featured}
+    featured.extend(paper for paper in recent if paper.id not in seen)
+    return jsonify(items=paper_rows(featured))
+
+@api.get('/recent-papers')
+def recent_papers():
+    ready=db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE')
+    q=Paper.query.join(Course).join(Term).join(ExamType).filter(or_(Paper.id.in_(ready),Paper.canonical_paper_id.in_(ready)))
+    return jsonify(items=paper_rows(q.options(*PAPER_LOAD).order_by(Paper.id.desc()).limit(6).all()))
 
 @api.get('/catalog')
 def catalog_options():
     # Complete lightweight dropdown catalog, with no pagination truncation.
-    return jsonify(courses=course_rows(Course.query.order_by(Course.name).all()),meta=metadata().get_json())
+    from .content_cache import cached
+    return jsonify(cached('catalog',lambda:dict(courses=course_rows(Course.query.order_by(Course.name).all()),meta=metadata().get_json())))

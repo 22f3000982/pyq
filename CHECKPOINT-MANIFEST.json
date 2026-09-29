@@ -1,0 +1,120 @@
+{
+  "type": "work-in-progress-changes-only",
+  "base_commit": "86482a2daad777ca7577ea6ecd705a155f627afb",
+  "files": [
+    {
+      "path": "CHECKPOINT-STATUS.md",
+      "sha256": "409dfc6a04ef567ba2d40812de137da034e872140e3391e531d0807b36f097ea"
+    },
+    {
+      "path": "Dockerfile",
+      "sha256": "ea71afa8026e240fb33ffbf1d353aa469dcc6052940afdc5f0dba1c60456f4da"
+    },
+    {
+      "path": "backend/__init__.py",
+      "sha256": "4e4e91f6cb77ca1e8b3947ef18cf3789a3bb065e20d03a6552ffb283122c0aef"
+    },
+    {
+      "path": "backend/acquisition.py",
+      "sha256": "42e383c4767bcd12481321fb3ec4e8daf279cdb6f16b48c8be42345f087846fc"
+    },
+    {
+      "path": "backend/api.py",
+      "sha256": "af18a5285c287dea843b7fd3f477e34df2bae41c658276d1bbb676f1918c5729"
+    },
+    {
+      "path": "backend/celery_app.py",
+      "sha256": "71d9097ae805f2a1ca08f889ec8e66f5fbd7f004e8e5ffc9a858046d91f0e80d"
+    },
+    {
+      "path": "backend/content_cache.py",
+      "sha256": "f80f6a9fedb7f12a5875e2ad1bdb0694b80dfbf1f70784539a8d6fb6a53f9443"
+    },
+    {
+      "path": "backend/database_config.py",
+      "sha256": "fb55ce394f8073adc880a59af4dfb99bafeaf1ee5461f13503db89a86a6f3ec4"
+    },
+    {
+      "path": "backend/engine.py",
+      "sha256": "914b1a1bd2aed77ca69c5c79cc30287ed3fb92ed7e278536041533dc3dbfb841"
+    },
+    {
+      "path": "backend/exam_api.py",
+      "sha256": "0b20e09d050714bdbc36758386d736e0f14653185148a35b3698e98e7ad840a0"
+    },
+    {
+      "path": "backend/models.py",
+      "sha256": "b7556109bca6521631eee50f3745d849fad54f8989fb13466db3ac923738e449"
+    },
+    {
+      "path": "backend/paper_content.py",
+      "sha256": "b3163f51ee5a591ea1d2c4763b076c7983bbb2300f0e0836863d34a17233db71"
+    },
+    {
+      "path": "backend/performance.py",
+      "sha256": "8ba137b4f1c93f2a95ce76499a409e7033319f593756400d188f91890241d92a"
+    },
+    {
+      "path": "backend/storage.py",
+      "sha256": "10d02196046424b0b5d713791ccfcc9d1f814ab4b02305d53559714290721155"
+    },
+    {
+      "path": "bulk_ingest.py",
+      "sha256": "607f7204db70e315424e02dbabb5b48d7b75bb58cd6d963aea7a48a757d0d6be"
+    },
+    {
+      "path": "frontend/src/Exam.vue",
+      "sha256": "885635f76581030c4c1c1db19f59d2b85c7b4b8ad4dc0b2092d6769684dd1c64"
+    },
+    {
+      "path": "frontend/src/QuestionContent.vue",
+      "sha256": "a6c7f2fb8fe9100e9e2af893c9db78bc0cf2d3d45db9332a9129689276d65ddf"
+    },
+    {
+      "path": "frontend/src/api.js",
+      "sha256": "f06c81e67ee911ad1158ca1fca30fae17b2714b7aec49936339275ab9ef2e118"
+    },
+    {
+      "path": "frontend/tests/bootstrap.spec.js",
+      "sha256": "71f8c9412654812e0a19161edd05b660f10da80f6b694d19b2de341accd6ef90"
+    },
+    {
+      "path": "frontend/tests/components.spec.js",
+      "sha256": "9ab4fd358d6a3df9ba9b0b245014fabf917c771bb8da6cc2233991b22393c7d6"
+    },
+    {
+      "path": "frontend/tests/nat.spec.js",
+      "sha256": "05018d39d7ad8dd209804e258e291ccf8549450cae068fd092c5204cda3d779b"
+    },
+    {
+      "path": "frontend/tests/stability.spec.js",
+      "sha256": "e169e402f90d03c7194df6d20ceb9565b3e4f6c941e6b76005aa8f89ada8c85d"
+    },
+    {
+      "path": "gunicorn.conf.py",
+      "sha256": "4b98d0f8fa0678451a487c0a5e9e3e7a8aa368edfeab6b56ecf4fbe39e3245b6"
+    },
+    {
+      "path": "migrations/versions/e51a9c320002_hot_path_indexes.py",
+      "sha256": "01320b64405e0bd9b3e4fb6ecd1f43d9243249f8e3cfd32e4d6dd9e1f9c63dae"
+    },
+    {
+      "path": "requirements-test.txt",
+      "sha256": "21eedf5e1ce10e0cd12193a6185ea64c3a3362128a7c468e35a1e912d069b56a"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "894bf67ede1332cb927509c2f0e2a799e55e1ffa4032ee7e40d18b8e0d9a70fc"
+    },
+    {
+      "path": "tests/test_background_adapter.py",
+      "sha256": "851c8a9d370b1941793326c6d220dddb5c0e883e6a8f3471c130a8048cd99d9c"
+    },
+    {
+      "path": "tests/test_performance_paths.py",
+      "sha256": "41d24df078f8447fbba9896b90314db55d2c3bcc219cabde590d8d0f8ecb63da"
+    }
+  ],
+  "production_ready": false,
+  "known_failing_frontend_tests": 1
+}

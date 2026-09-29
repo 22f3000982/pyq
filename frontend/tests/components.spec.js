@@ -2,7 +2,7 @@ import {describe,it,expect,vi,beforeEach} from 'vitest';
 import {mount,flushPromises} from '@vue/test-utils';
 import Catalog from '../src/Catalog.vue';import Exam from '../src/Exam.vue';import Admin from '../src/Admin.vue';
 const mocks=vi.hoisted(()=>({api:vi.fn(),go:vi.fn(),session:{user:{id:1,name:'Test',role:'ADMIN'}}}));
-vi.mock('../src/api',()=>({...mocks,loadCatalog:async()=>{const [c,m]=await Promise.all([mocks.api('/courses?limit=100'),mocks.api('/metadata')]);return {courses:c.items,meta:m}},invalidateCatalog:vi.fn()}));
+vi.mock('../src/api',()=>({...mocks,api:async(path,o)=>{if(path.endsWith('?bootstrap=1')){const base=path.split('?')[0];return {...await mocks.api(base,o),...await mocks.api(base+'/questions')}}return mocks.api(path,o)},loadCatalog:async()=>{const [c,m]=await Promise.all([mocks.api('/courses?limit=100'),mocks.api('/metadata')]);return {courses:c.items,meta:m}},invalidateCatalog:vi.fn()}));
 vi.mock('../src/MathText.vue',()=>({default:{props:['text'],template:'<div>{{text}}</div>'}}));
 beforeEach(()=>{mocks.api.mockReset();mocks.go.mockReset();sessionStorage.clear()});
 describe('student surfaces',()=>{

@@ -67,6 +67,7 @@ class SourceEntry(db.Model):
     url = db.Column(db.Text)
 
 class Question(db.Model):
+    __table_args__ = (db.Index('ix_question_paper_status_id','paper_id','status','id'),)
     id = db.Column(db.Integer, primary_key=True)
     paper_id = db.Column(db.ForeignKey('paper.id'), nullable=False, index=True)
     number = db.Column(db.String(40), nullable=False)
@@ -119,7 +120,7 @@ class PaperProgress(db.Model):
 
 class Attempt(db.Model):
     # Expired session URLs must never resolve to a later session on SQLite.
-    __table_args__ = {'sqlite_autoincrement': True}
+    __table_args__ = (db.Index('ix_attempt_user_status','user_id','status'), {'sqlite_autoincrement': True})
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False, index=True)
     paper_id = db.Column(db.ForeignKey('paper.id'), index=True)
@@ -163,6 +164,7 @@ class IngestionBatch(db.Model):
     status = db.Column(db.String(30), default='QUEUED')
 
 class IngestionFile(db.Model):
+    __table_args__ = (db.Index('ix_ingestion_file_status_id','status','id'),)
     id = db.Column(db.Integer, primary_key=True)
     batch_id = db.Column(db.ForeignKey('ingestion_batch.id'), nullable=False, index=True)
     paper_id = db.Column(db.ForeignKey('paper.id'), nullable=False, index=True)

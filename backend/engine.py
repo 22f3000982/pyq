@@ -6,12 +6,15 @@ CHOICE_TYPES={'MCQ','MSQ','TRUE_FALSE'}
 AUTO_TYPES=CHOICE_TYPES|{'NAT','SHORT_TEXT'}
 
 def question_snapshot(q):
-    return {'id':q.id,'paper_id':q.paper_id,'number':q.number,'kind':q.kind,'text':q.text,'options':[{'key':o.key,'text':o.text} for o in q.options], 'answers':q.answers,'answer_status':q.answer_status,'explanation':q.explanation,'marks':q.marks,'negative_marks':q.negative_marks,'tolerance':q.tolerance or 0,'topic':q.topic,'difficulty':q.difficulty,'source_page':q.source_page,'images':[{'id':i.id,'alt':i.alt,'option_key':i.option_key,'token':Path(i.path).stem,**(q.evidence or {}).get('layout_assets',{}).get(Path(i.path).stem,{})} for i in q.images], 'source_pages':q.source_pages}
+    return {'id':q.id,'paper_id':q.paper_id,'number':q.number,'kind':q.kind,'text':q.text,'options':[{'key':o.key,'text':o.text} for o in q.options], 'answers':q.answers,'answer_status':q.answer_status,'explanation':q.explanation,'marks':q.marks,'negative_marks':q.negative_marks,'tolerance':q.tolerance or 0,'topic':q.topic,'difficulty':q.difficulty,'source_page':q.source_page,'images':[{'id':i.id,'_asset_path':i.path,'alt':i.alt,'option_key':i.option_key,'token':Path(i.path).stem,**(q.evidence or {}).get('layout_assets',{}).get(Path(i.path).stem,{})} for i in q.images], 'source_pages':q.source_pages}
 
 def question_order(number):
     return tuple((0,int(part)) if part.isdigit() else (1,part.lower()) for part in re.split(r'(\d+)',str(number)))
 
-def public_question(s):return {k:v for k,v in s.items() if k not in ('answers','answer_status','explanation','tolerance')}
+def public_question(s):
+    result={k:v for k,v in s.items() if k not in ('answers','answer_status','explanation','tolerance')}
+    result['images']=[{k:v for k,v in i.items() if not k.startswith('_')} for i in s.get('images',[])]
+    return result
 
 def validate_question(s,grading=False):
     if s['kind'] not in AUTO_TYPES|{'SUBJECTIVE','CODE','IMAGE'}:raise ValueError('Unsupported question type')
@@ -84,12 +87,14 @@ def save_progress(a):
     db.session.execute(stmt)
     db.session.expire_all()
 
-def cleanup_sessions(now=None):
+def cleanup_sessions(now=None,user_id=None):
     """Called by the worker and authenticated session endpoints; never retain history."""
     now=time.time() if now is None else now
-    ids=[id for id, in db.session.query(Attempt.id).filter(Attempt.status!='ACTIVE',Attempt.expires_at<=now)]
+    query=db.session.query(Attempt.id)
+    if user_id is not None:query=query.filter(Attempt.user_id==user_id)
+    ids=[id for id, in query.filter(Attempt.status!='ACTIVE',Attempt.expires_at<=now)]
     # Untimed abandoned practice sessions have a bounded lifetime as well.
-    ids += [id for id, in db.session.query(Attempt.id).filter(Attempt.status=='ACTIVE',Attempt.deadline.is_(None),Attempt.expires_at<=now)]
+    ids += [id for id, in query.filter(Attempt.status=='ACTIVE',Attempt.deadline.is_(None),Attempt.expires_at<=now)]
     if ids:
         db.session.query(AttemptAnswer).filter(AttemptAnswer.attempt_id.in_(ids)).delete(synchronize_session=False)
         db.session.query(Attempt).filter(Attempt.id.in_(ids)).delete(synchronize_session=False)
@@ -111,9 +116,11 @@ def submit_attempt(a,now=None,record_progress=True):
 def expire_attempt(a):
     if a.status=='ACTIVE' and a.deadline and time.time()>=a.deadline:submit_attempt(a)
 
-def expire_all():
-    for a in Attempt.query.filter(Attempt.status=='ACTIVE',Attempt.deadline<=time.time()).all():submit_attempt(a)
-    cleanup_sessions()
+def expire_all(user_id=None):
+    query=Attempt.query.filter(Attempt.status=='ACTIVE',Attempt.deadline<=time.time())
+    if user_id is not None:query=query.filter(Attempt.user_id==user_id)
+    for a in query.all():submit_attempt(a)
+    cleanup_sessions(user_id=user_id)
 
 def palette_state(i):
     answered=i.answer not in (None,'',[])

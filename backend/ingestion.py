@@ -30,7 +30,11 @@ def store_upload(upload,paper,batch,replace=False):
         if upload.mimetype not in ('application/pdf','application/octet-stream'):raise ValueError('Only PDF uploads are accepted')
         data=upload.read(current_app.config['MAX_UPLOAD_SIZE']+1);f.pages=validate_pdf(data);sha=hashlib.sha256(data).hexdigest()
         old=IngestionFile.query.filter_by(file_hash=sha).first()
-        if old:
+        old_asset_available=True
+        if old and old.path:
+            try:ensure_local(old.path)
+            except FileNotFoundError:old_asset_available=False
+        if old and old_asset_available:
             f.duplicate_of_id=old.id;f.path=old.path;f.status='DUPLICATE';f.finished_at=time.time()
             if old.paper_id!=paper.id:paper.canonical_paper_id=old.paper_id
             event(f,'DEDUPLICATED',f'Identical file already stored as import {old.id}; question records are reused')
@@ -151,14 +155,17 @@ def process_file(id):
         meta.update(extracted_records=len(records),available_questions=available,extracted_marks_sum=mark_sum,discrepancies=issues)
         paper.source_metadata=meta
         if meta.get('duration_seconds'):paper.duration_seconds=meta['duration_seconds']
-        f.extracted=len(new_ids);f.warnings=layout['warnings']+issues;f.finished_at=time.time();f.error=None if available else 'No reliable student questions extracted; see events and validation issues'
+        f.extracted=len(new_ids);f.warnings=layout['warnings']+issues;f.finished_at=time.time();f.error=None if available else 'No question records detected. This may be an image-only notes PDF; OCR is unavailable, so upload a text-based question paper or enable OCR.'
         f.status='PARTIAL' if available and failed else 'AVAILABLE' if available else 'EXTRACTION_FAILED'
         paper.status='PARTIALLY_AVAILABLE' if available and failed else 'AVAILABLE' if available else 'EXTRACTION_FAILED'
         event(f,'AUTOMATIC_VALIDATION',{'available':available,'failed_questions':failed,'issues':issues});event(f,f.status,'Student question bank updated automatically')
         db.session.commit()
     except Exception as e:
-        db.session.rollback();f=db.session.get(IngestionFile,id);paper=db.session.get(Paper,f.paper_id)
-        f.status='EXTRACTION_FAILED';f.error=f'{type(e).__name__}: {str(e)[:1200]}';f.finished_at=time.time();paper.status='EXTRACTION_FAILED';event(f,'EXTRACTION_FAILED',f.error);db.session.commit()
+        try:
+            db.session.rollback();f=db.session.get(IngestionFile,id);paper=db.session.get(Paper,f.paper_id)
+            f.status='EXTRACTION_FAILED';f.error=f'{type(e).__name__}: {str(e)[:1200]}';f.finished_at=time.time();paper.status='EXTRACTION_FAILED';event(f,'EXTRACTION_FAILED',f.error);db.session.commit()
+        except Exception:
+            db.session.remove();current_app.logger.error('ingestion_persistence_failed type=%s',type(e).__name__)
     # Aliases share question records instead of inventing independent papers for one PDF.
     for alias in Paper.query.filter_by(canonical_paper_id=paper.id):alias.status=paper.status;alias.source_metadata=paper.source_metadata;alias.duration_seconds=paper.duration_seconds
     db.session.commit();update_batch(f.batch_id)
@@ -179,11 +186,16 @@ def work_once(paper_ids=None):
 
 def worker_loop(once=False):
     while True:
-        # New Excel imports are acquired automatically by the worker.
-        if IngestionFile.query.filter_by(status='FETCH_QUEUED').first():
-            from .acquisition import download_pending
-            download_pending(current_app._get_current_object(),workers=4)
-        worked=work_once()
+        try:
+            worked=work_once()
+            # Process uploaded bytes before acquiring catalog URLs. Catalog work is
+            # deliberately bounded so a large backlog cannot starve user uploads.
+            if not worked and IngestionFile.query.filter_by(status='FETCH_QUEUED').first():
+                from .acquisition import download_pending
+                download_pending(current_app._get_current_object(),workers=1,limit=1)
+                worked=work_once()
+        except Exception as exc:
+            db.session.remove();current_app.logger.error('worker_tick_failed type=%s',type(exc).__name__);worked=False
         if once:return
         db.session.remove()
         if not worked:time.sleep(2)

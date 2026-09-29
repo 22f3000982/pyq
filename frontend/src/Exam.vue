@@ -8,10 +8,10 @@ const key='pyq-pending-'+props.id,draftKey='pyq-draft-'+props.id;
 const current=computed(()=>attempt.value?.palette[index.value]);
 function journal(){const entries=[...(inflight?[inflight]:[]),...queued.values()];if(entries.length)sessionStorage.setItem(key,JSON.stringify(entries));else sessionStorage.removeItem(key)}
 function localState(qid){const d=cache.get(qid),p=attempt.value?.palette.find(p=>p.question_id===qid);if(!p||!d)return;const answered=d.answer!==null&&d.answer!==''&&d.answer!==undefined&&(!Array.isArray(d.answer)||d.answer.length>0);p.state=d.marked?(answered?'ANSWERED_AND_MARKED_FOR_REVIEW':'MARKED_FOR_REVIEW'):answered?'ANSWERED':d.touched?'NOT_ANSWERED':d.visited?'VISITED':p.state}
-async function sync(){try{const a=await api('/attempts/'+props.id);if(stopped)return;attempt.value=a;serverNow=a.server_time;received=performance.now();for(const qid of cache.keys())localState(qid);if(a.status!=='ACTIVE'){sessionStorage.removeItem(key);sessionStorage.removeItem(draftKey);go('/result/'+a.id)}}catch(e){error.value=e.message}}
+async function sync(initial=false){try{const a=await api('/attempts/'+props.id+(initial?'?bootstrap=1':''));if(stopped)return;attempt.value=a;serverNow=a.server_time;received=performance.now();for(const qid of cache.keys())localState(qid);if(a.status!=='ACTIVE'){sessionStorage.removeItem(key);sessionStorage.removeItem(draftKey);go('/result/'+a.id)}return a}catch(e){error.value=e.message}}
 function show(n){index.value=n;item.value=cache.get(current.value.question_id);value.value=item.value.answer;feedback.value=item.value.feedback||null;sessionStorage.setItem('pyq-position-'+props.id,String(n))}
 function prefetchNext(n){const qid=attempt.value?.palette[n+1]?.question_id;for(const img of cache.get(qid)?.question.images||[]){const url=img.url||'/api/images/'+img.id;if(!prefetched.has(url)){prefetched.add(url);const asset=new Image();asset.src=url}}}
-function open(n){if(n<0||n>=attempt.value.palette.length||submitting.value)return;clearTimeout(draftTimer);show(n);prefetchNext(n);persist({question_id:current.value.question_id});}
+function open(n){if(n<0||n>=attempt.value.palette.length||submitting.value)return;clearTimeout(draftTimer);show(n);prefetchNext(n);if(!item.value.visited)persist({question_id:current.value.question_id});else if(queued.size)drain();}
 function persist(data){
  const d=cache.get(data.question_id);if(!d)return Promise.resolve(false);
  if('answer' in data){d.answer=data.answer;d.touched=true;d.feedback=null;if(current.value?.question_id===data.question_id){value.value=data.answer;feedback.value=null}}
@@ -29,17 +29,43 @@ function drain(){
     try{
      const result=await api(`/attempts/${props.id}/answers`,{method:'POST',body:data});
      const d=cache.get(qid);if(result.feedback&&!queued.has(qid)&&d){d.feedback=result.feedback;if(current.value?.question_id===qid)feedback.value=result.feedback}
-     inflight=null;pending.value=null;journal();
+     inflight=null;pending.value=null;
     }catch(e){
      queued.set(qid,{...data,...queued.get(qid)});inflight=null;pending.value=queued.get(qid);journal();saved.value='Response pending — retry to save';error.value=e.message;
-     if(e.status===409)await sync();return false;
+     if(e.status===409){await sync();return false;}
+     return false;
     }
    }
-   saved.value=queued.size?'Responses pending':'All responses saved';return queued.size===0;
+   if(!queued.size){inflight=null;pending.value=null;clearTimeout(draftTimer);journal();saved.value='All responses saved';return true;}
+   saved.value='Responses pending';return false;
   }finally{saving.value=false}
  })().finally(()=>{saveTask=null});return saveTask;
 }
-async function retry(){error.value='';return drain()}
+async function retry(){
+ error.value='';
+ clearTimeout(draftTimer);
+ const snapshot=[...queued.entries()];
+ if(saveTask){const task=saveTask;saveTask=null;await task;}
+ if(snapshot.length){
+  for(const [qid,data] of snapshot)queued.set(qid,{...queued.get(qid),...data});
+  inflight=null;pending.value=null;journal();
+ }
+ const ok=await drain();
+ if(ok){
+  queued.clear();
+  inflight=null;
+  pending.value=null;
+  sessionStorage.removeItem(key);
+  saved.value='All responses saved';
+  return true;
+ }
+ if(snapshot.length){
+  for(const [qid,data] of snapshot)queued.set(qid,{...queued.get(qid),...data});
+  journal();
+  saved.value='Response pending — retry to save';
+ }
+ return ok;
+}
 function editText(v){
  value.value=v;feedback.value=null;const qid=current.value.question_id,d=cache.get(qid);d.answer=v;d.touched=true;d.feedback=null;localState(qid);
  queued.set(qid,{...queued.get(qid),question_id:qid,answer:v});journal();saved.value='Unsaved response';clearTimeout(draftTimer);draftTimer=setTimeout(drain,350);
@@ -61,15 +87,16 @@ async function switchMode(){if(submitting.value)return;if(!await flushText())ret
 function online(){retry();sync()}
 function leaving(e){if(queued.size||inflight){journal();e.preventDefault();e.returnValue=''}}
 onMounted(async()=>{try{
- await sync();if(stopped||!attempt.value||attempt.value.status!=='ACTIVE')return;
- const bundle=await api(`/attempts/${props.id}/questions`);if(stopped)return;if(bundle.status!=='ACTIVE')return go('/result/'+props.id);
+ const bundle=await sync(true);if(stopped||!attempt.value||attempt.value.status!=='ACTIVE')return;
+ if(stopped)return;if(bundle.status!=='ACTIVE')return go('/result/'+props.id);
  for(const d of bundle.items){cache.set(d.question.id,d)}
  let restored=JSON.parse(sessionStorage.getItem(key)||'[]');if(!Array.isArray(restored))restored=[restored];
  const draft=JSON.parse(sessionStorage.getItem(draftKey)||'null');if(draft)restored.push(draft);
  for(const data of restored){const d=cache.get(data.question_id);if(d){if('answer' in data){d.answer=data.answer;d.touched=true}if('marked' in data)d.marked=data.marked;queued.set(data.question_id,{...queued.get(data.question_id),...data})}}
+ if(queued.size){const latest=[...queued.values()].at(-1);pending.value=latest;error.value='Response pending — retry to save';}
  sessionStorage.removeItem(draftKey);
  open(Math.max(0,Math.min(Number(sessionStorage.getItem('pyq-position-'+props.id))||0,attempt.value.palette.length-1)));
- const tick=()=>{seconds.value=attempt.value?.deadline?Math.max(0,Math.ceil(attempt.value.deadline-serverNow-(performance.now()-received)/1000)):null;if(seconds.value===0&&!timeoutRequested){timeoutRequested=true;submit()}};tick();ticker=setInterval(tick,1000);poller=setInterval(sync,60000);
+ const tick=()=>{seconds.value=attempt.value?.deadline?Math.max(0,Math.ceil(attempt.value.deadline-serverNow-(performance.now()-received)/1000)):null;if(seconds.value===0&&!timeoutRequested){timeoutRequested=true;submit()}};tick();ticker=setInterval(tick,1000);poller=setInterval(()=>sync(),60000);
  window.addEventListener('keydown',keyboard);window.addEventListener('online',online);window.addEventListener('beforeunload',leaving);
 }catch(e){error.value=e.message}});
 onUnmounted(()=>{stopped=true;clearInterval(ticker);clearInterval(poller);clearTimeout(draftTimer);window.removeEventListener('online',online);window.removeEventListener('keydown',keyboard);window.removeEventListener('beforeunload',leaving)});

@@ -3,7 +3,7 @@
 This command only claims eligible paper records. It never resets completed
 imports and isolates acquisition/extraction failures per paper.
 """
-import argparse,json,sys,time
+import argparse,json,sys,time,os
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
@@ -38,6 +38,7 @@ def main():
     parser.add_argument('--limit',type=int,default=20)
     parser.add_argument('--retry-failed',action='store_true',help='Select only failed papers; do not include new catalog entries')
     parser.add_argument('--dry-run',action='store_true')
+    parser.add_argument('--enqueue',action='store_true',help='Queue only; background worker handles acquisition/extraction')
     args=parser.parse_args()
     if args.limit<1:parser.error('--limit must be positive')
     app=create_app()
@@ -50,6 +51,8 @@ def main():
         if not ids:
             print(json.dumps({'processed':0,'message':'No eligible papers.'}));return 0
         batch,count=queue_catalog(retry=args.retry_failed,limit=args.limit,paper_ids=ids)
+        if args.enqueue or os.getenv('CELERY_BROKER_URL'):
+            print(json.dumps({'batch_id':batch,'queued_papers':count,'paper_ids':ids,'status':'QUEUED'}));return 0
         download_pending(app,workers=4,paper_ids=ids)
         processed=0
         while work_once(paper_ids=ids):

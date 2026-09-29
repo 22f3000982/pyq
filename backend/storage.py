@@ -1,10 +1,45 @@
 """Private local/R2 assets. Database paths stay stable; no bucket secrets in APIs."""
 import hashlib,io,mimetypes,os,re,uuid
 from pathlib import Path,PurePosixPath
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,quote
 from flask import current_app,send_file,abort
+from .performance import span,count
 
 class StorageError(RuntimeError):pass
+
+def configure_delivery(app):
+    mode=app.config.get('IMAGE_DELIVERY','proxy')
+    if mode not in ('proxy','signed','cdn'):raise ValueError('IMAGE_DELIVERY must be proxy, signed or cdn')
+    app.extensions['image_cdn_manifest']={}
+    origin=None
+    if mode=='cdn':
+        import json
+        u=urlsplit(app.config.get('IMAGE_CDN_BASE_URL',''))
+        if u.scheme!='https' or not u.hostname or u.username or u.password or u.query or u.fragment or u.path not in ('','/'):
+            raise ValueError('IMAGE_CDN_BASE_URL must be an HTTPS origin')
+        origin=u.scheme+'://'+u.netloc
+        manifest=json.loads(Path(app.config['IMAGE_CDN_MANIFEST']).read_text())
+        # Explicit allowlist: never make all source PDF/page assets public.
+        if not isinstance(manifest,dict) or any(not isinstance(v,str) or not re.fullmatch(r'public-questions/[a-f0-9]{64}\.(png|webp|jpg)',v) for v in manifest.values()):
+            raise ValueError('CDN manifest requires content-hashed question image keys')
+        app.extensions['image_cdn_manifest']=manifest
+    elif mode=='signed':
+        u=urlsplit(app.config.get('R2_ENDPOINT_URL',''))
+        if u.scheme!='https' or not u.hostname or not u.hostname.endswith('.r2.cloudflarestorage.com') or u.username or u.password:
+            raise ValueError('Signed image delivery requires a valid R2 endpoint')
+        # Path-style signing keeps the CSP allowlist scoped to one account endpoint.
+        origin=u.scheme+'://'+u.netloc
+    app.extensions['image_origin']=origin
+
+def image_url(name,image_id):
+    if enabled():
+        mode=current_app.config.get('IMAGE_DELIVERY','proxy')
+        if mode=='cdn':
+            key=current_app.extensions['image_cdn_manifest'].get(name)
+            if key:return current_app.extensions['image_origin']+'/'+quote(key,safe='/')
+        if mode=='signed':
+            return private_asset_url(name,image_id)
+    return '/api/images/'+str(image_id)
 
 def configured(config):
     credentials=all(config.get(k) for k in ('R2_ENDPOINT_URL','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY'))
@@ -37,7 +72,7 @@ def client():
     # The checksum kwargs only exist in newer botocore releases. They are not
     # needed for these immutable R2 operations and made the existing pinned
     # client fail before it could make a request on older Windows installs.
-    c=boto3.client('s3',endpoint_url=config['R2_ENDPOINT_URL'],region_name='auto',aws_access_key_id=config['R2_ACCESS_KEY_ID'],aws_secret_access_key=config['R2_SECRET_ACCESS_KEY'],config=Config(signature_version='s3v4',connect_timeout=10,read_timeout=30,retries={'mode':'standard','max_attempts':3}))
+    c=boto3.client('s3',endpoint_url=config['R2_ENDPOINT_URL'],region_name='auto',aws_access_key_id=config['R2_ACCESS_KEY_ID'],aws_secret_access_key=config['R2_SECRET_ACCESS_KEY'],config=Config(signature_version='s3v4',s3={'addressing_style':'path'},connect_timeout=10,read_timeout=30,retries={'mode':'standard','max_attempts':3}))
     current_app.extensions['_r2_client']=c;return c
 
 def object_args(name):
@@ -129,26 +164,35 @@ def publish(name,verify=False,_retry=0):
 
 def ensure_local(name):
     path=local_path(name)
-    if path.is_file():return path
+    if path.is_file():
+        count('asset_hit');return path
+    count('asset_miss')
     if not enabled():raise FileNotFoundError('Asset not found')
-    data=remote_bytes(name);path.parent.mkdir(parents=True,exist_ok=True)
+    with span('r2_download'):data=remote_bytes(name)
+    path.parent.mkdir(parents=True,exist_ok=True)
     temporary=path.with_name(path.name+'.'+uuid.uuid4().hex+'.tmp')
-    try:temporary.write_bytes(data);os.replace(temporary,path)
+    try:
+        with span('disk_write'):
+            temporary.write_bytes(data);os.replace(temporary,path)
     finally:temporary.unlink(missing_ok=True)
     return path
 
 def write_asset(name,data):
     path=local_path(name);path.parent.mkdir(parents=True,exist_ok=True)
     temporary=path.with_name(path.name+'.'+uuid.uuid4().hex+'.tmp')
-    try:temporary.write_bytes(data);os.replace(temporary,path)
+    try:
+        with span('disk_write'):
+            temporary.write_bytes(data);os.replace(temporary,path)
     finally:temporary.unlink(missing_ok=True)
     publish(name)
     return path
 
 def send_asset(name,**kwargs):
-    try:path=ensure_local(name)
-    except FileNotFoundError:abort(404)
-    return send_file(path,**kwargs)
+    with span('send_asset'):
+        try:
+            with span('ensure_local'):path=ensure_local(name)
+        except FileNotFoundError:abort(404)
+        return send_file(path,**kwargs)
 
 def private_asset_url(name,image_id=None,expires=600):
     if enabled():
