@@ -7,8 +7,9 @@ from urllib.parse import urlparse,urljoin,parse_qs
 from pathlib import Path
 import requests
 from flask import current_app
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from .models import db,Paper,IngestionBatch,IngestionFile,User
+from .models import db,Paper,Question,IngestionBatch,IngestionFile,User
 
 ALLOWED={'drive.google.com','drive.usercontent.google.com','drive.googleusercontent.com','docs.google.com','google.com','www.google.com'}
 
@@ -72,7 +73,7 @@ def fetch_pdf(url,destination,max_bytes=20*1024*1024):
 def event(f,stage,message):
     f.events=(f.events or [])+[{'time':time.time(),'stage':stage,'message':str(message)[:1600]}]
 
-def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None):
+def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None,force_paper_ids=None):
     admin=db.session.get(User,user_id) if user_id else User.query.filter_by(role='ADMIN').first()
     # Queue creation is also allowed for the CLI before creating a login account.
     if not admin:
@@ -82,12 +83,28 @@ def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None):
             admin=User(email='ingestion-service@internal.invalid',name='Ingestion service',role='SYSTEM',active=False,password_hash=generate_password_hash(uuid.uuid4().hex));db.session.add(admin);db.session.flush()
     batch=IngestionBatch(user_id=admin.id)
     db.session.add(batch);db.session.flush();count=0
+    force_paper_ids=set(force_paper_ids or [])
     query=Paper.query.filter(Paper.source_url.isnot(None),Paper.status!='ARCHIVED').order_by(Paper.id)
     if paper_ids is not None:query=query.filter(Paper.id.in_(paper_ids))
+    papers=query.all()
+    # One grouped lookup replaces one remote PostgreSQL query per paper. This is
+    # important when the first manual sync selects hundreds of catalog entries.
+    ids=[p.id for p in papers]
+    latest={}
+    if ids:
+        latest_ids=db.session.query(func.max(IngestionFile.id)).filter(IngestionFile.paper_id.in_(ids)).group_by(IngestionFile.paper_id)
+        latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}
     selected=0
-    for p in query:
+    for p in papers:
         if limit is not None and selected>=limit:break
-        previous=IngestionFile.query.filter_by(paper_id=p.id).order_by(IngestionFile.id.desc()).first()
+        previous=latest.get(p.id)
+        forced=p.id in force_paper_ids
+        if forced:
+            if previous and previous.status in ('QUEUED','FETCHING','PROCESSING','FETCH_QUEUED'):continue
+            # A changed source must become a new ingestion record. Never mutate an
+            # AVAILABLE historical record because attempts may reference its questions.
+            f=IngestionFile(batch_id=batch.id,paper_id=p.id,filename=p.name,source_url=p.source_url,status='FETCH_QUEUED')
+            db.session.add(f);count+=1;p.status='PROCESSING';selected+=1;continue
         if previous and previous.status in ('AVAILABLE','PARTIAL','DUPLICATE','QUEUED','FETCHING','PROCESSING','FETCH_QUEUED'):continue
         if previous and previous.status in ('PROCESSING_FAILED','EXTRACTION_FAILED') and not retry:continue
         if previous and previous.status=='PAUSED':continue
@@ -122,7 +139,13 @@ def download_pending(app,workers=4,paper_ids=None,limit=None):
                 else:
                     old=IngestionFile.query.filter_by(file_hash=result['hash']).first()
                     if old:
-                        temp.unlink(missing_ok=True);f.duplicate_of_id=old.id;f.status='DUPLICATE';f.path=old.path;p.canonical_paper_id=old.paper_id if old.paper_id!=p.id else None
+                        temp.unlink(missing_ok=True);f.duplicate_of_id=old.id;f.status='DUPLICATE';f.path=old.path
+                        canonical=db.session.get(Paper,old.paper_id)
+                        p.canonical_paper_id=old.paper_id if old.paper_id!=p.id else None
+                        if canonical and canonical.status in ('AVAILABLE','PARTIALLY_AVAILABLE'):
+                            p.status=canonical.status
+                        elif old.paper_id==p.id and Question.query.filter_by(paper_id=p.id,status='AVAILABLE').first():
+                            p.status='AVAILABLE'
                         event(f,'DEDUPLICATED',f'Identical PDF content to import {old.id}, paper {old.paper_id}');f.finished_at=time.time()
                     else:
                         path=result['hash']+'.pdf';temp.replace(directory/path);f.path=path;f.file_hash=result['hash']
