@@ -161,7 +161,8 @@ def process_file(id):
         if meta.get('declared_total_questions') is not None and meta['declared_total_questions']!=len(records):issues.append({'check':'question_count','source':meta['declared_total_questions'],'extracted_records':len(records),'available':available})
         mark_sum=sum(q.get('marks') or 0 for q in records)
         if meta.get('declared_total_marks') is not None and abs(meta['declared_total_marks']-mark_sum)>1e-6:issues.append({'check':'total_marks','source':meta['declared_total_marks'],'extracted_sum':mark_sum})
-        meta.update(extracted_records=len(records),available_questions=available,extracted_marks_sum=mark_sum,discrepancies=issues)
+        meta.update(extracted_records=len(records),available_questions=available,extracted_marks_sum=mark_sum,discrepancies=issues,
+                    question_assets_verified_r2=current_app.config.get('STORAGE_BACKEND')=='r2')
         archived_from=(paper.source_metadata or {}).get('_admin_archived_from')
         if archived_from:meta['_admin_archived_from']=archived_from
         paper.source_metadata=meta
