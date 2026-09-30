@@ -26,6 +26,13 @@ describe('automatic processing',()=>{it('shows processing counters and queues ca
  const w=mount(Admin);await flushPromises();expect(w.text()).toContain('734');expect(w.text()).not.toContain('Verify');expect(w.text()).not.toContain('Publish');await w.findAll('button').find(b=>b.text()==='Queue next 20 pending').trigger('click');await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/admin/process-catalog',expect.objectContaining({method:'POST'}));w.unmount();
 })});
 
+describe('admin notices',()=>{it('clears a stale success notice when the next admin action fails',async()=>{
+ mocks.api.mockImplementation(async(path)=>path.startsWith('/courses')?{items:[]}:path==='/metadata'?{terms:[],exams:[]}:path==='/admin/stats'?{papers:1}:path.startsWith('/admin/ingestion')?{items:[],total:0}:path==='/admin/process-catalog'?(()=>{throw new Error('Server failed')})():{});
+ const w=mount(Admin);await flushPromises();
+ w.vm.notice='Old success';await w.findAll('button').find(b=>b.text()==='Queue next 20 pending').trigger('click');await flushPromises();
+ expect(w.text()).toContain('Server failed');expect(w.text()).not.toContain('Old success');w.unmount();
+})});
+
 describe('PDF upload form',()=>{it('posts the PDF and metadata and displays real processing completion',async()=>{
  const {default:Upload}=await import('../src/Upload.vue');
  mocks.api.mockImplementation(async(path)=>path.startsWith('/courses')?{items:[{id:1,name:'Deep Learning'}]}:path==='/metadata'?{terms:[{id:1,name:'May 2026'}],exams:[{id:1,name:'Quiz 1'}]}:path==='/admin/upload-pyq'?{file:{id:17,status:'QUEUED'},paper:{id:13}}:{file:{id:17,status:'AVAILABLE',effective_status:'AVAILABLE',events:[{stage:'AVAILABLE',message:'Ready'}]},paper:{id:13,question_count:20}});

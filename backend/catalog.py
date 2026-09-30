@@ -207,10 +207,19 @@ def _ensure_metadata(scan):
     by_code={c.code:c for c in Course.query.all() if c.code};by_name={norm_key(c.name):c for c in Course.query.all()}
     new_courses=0
     for item in scan['courses']:
-        c=by_code.get(item['code']) or by_name.get(norm_key(item['name']))
+        incoming_code=item['code'];incoming_name=norm_key(item['name'])
+        c=by_code.get(incoming_code) or by_name.get(incoming_name)
         if not c:
-            c=Course(name=item['name'],code=item['code']);db.session.add(c);db.session.flush();new_courses+=1
-            by_code[c.code]=c;by_name[norm_key(c.name)]=c
+            c=Course(name=item['name'],code=incoming_code);db.session.add(c);db.session.flush();new_courses+=1
+        elif not c.code:
+            # Adopt the workbook code only when the existing course has no stable code.
+            c.code=incoming_code
+        # A production catalog can contain legacy course codes while the maintained
+        # workbook uses the current IITM code. The workbook code is an alias for the
+        # same name-matched Course during this sync; never assume c.code == incoming_code.
+        by_code[incoming_code]=c
+        if c.code:by_code[c.code]=c
+        by_name[incoming_name]=c;by_name[norm_key(c.name)]=c
         c.level=item['level'];c.course_type=item['course_type'];c.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(c.name)]
     terms={t.name:t for t in Term.query.all()}
     for name in scan['terms']:
