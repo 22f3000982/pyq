@@ -225,7 +225,19 @@ def apply_sync(path,expected_hash=None,process_new=True,process_unprocessed=True
     return report
 
 def preview_workbook(path):
-    return compare_scan(scan_workbook(path))
+    result=compare_scan(scan_workbook(path))
+    # Keep the admin preview payload bounded even when the catalog grows into
+    # thousands of papers. Counts remain exact; only actionable samples travel.
+    result['items']={
+        'new':result['items']['new'][:100],
+        'unprocessed':result['items']['unprocessed'][:100],
+        'changed':result['items']['changed'],
+        'available':[],
+        'ignored':result['items']['ignored'][:100],
+    }
+    result['issues']=result['issues'][:100]
+    result['absent']=result['absent'][:100]
+    return result
 
 def import_workbook(path):
     """Legacy catalog-only import kept efficient for setup/CLI and older clients."""
