@@ -1,8 +1,8 @@
 <script setup>
 import {ref,onMounted,onUnmounted} from 'vue';import {api,loadCatalog,invalidateCatalog,session} from './api';import MathText from './MathText.vue';import Upload from './Upload.vue';
 const uploadForm=ref(null);
-const tab=ref('Processing'),tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog','Settings'];
-const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
+const tab=ref('Processing'),tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];
+const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
 async function run(fn){busy.value=true;error.value='';try{await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){stats.value=await api('/admin/stats');if(tab.value==='Processing'){const d=await api('/admin/ingestion?page='+page.value);jobs.value=d.items;total.value=d.total}else if(tab.value==='Papers'){const d=await api('/admin/papers?'+new URLSearchParams({page:page.value,limit:24,q:paperSearch.value,status:paperStatus.value,course_id:manageCourse.value}));adminPapers.value=d.items;total.value=d.total}else if(tab.value==='Question bank'){const d=await api('/admin/questions?'+new URLSearchParams({page:page.value,paper_id:paper.value}));questions.value=d.items;total.value=d.total}else if(tab.value==='Settings')settings.value=await api('/admin/settings')}
 async function chooseTab(t){tab.value=t;page.value=1;detail.value=null;await run(refresh)}
@@ -10,7 +10,22 @@ async function loadPapers(){papers.value=(await api('/papers?limit=100&course_id
 async function queue(retry=false){await run(async()=>{const d=await api('/admin/process-catalog',{method:'POST',body:{retry}});notice.value=d.queued+' sources queued. The worker automatically downloads, extracts and makes reliable questions available.';await refresh()})}
 function chooseFiles(e){files.value=Array.from(e.target.files).map(file=>({file,paper_id:paper.value}))}
 async function upload(){await run(async()=>{if(files.value.some(f=>!f.paper_id))throw Error('Choose a paper for each PDF.');const form=new FormData();files.value.forEach(f=>form.append('files',f.file));form.append('paper_ids',JSON.stringify(files.value.map(f=>Number(f.paper_id))));const d=await api('/admin/papers/bulk-upload',{method:'POST',form});notice.value='Batch '+d.batch_id+' accepted. Extraction and availability are automatic; no approval is needed.';files.value=[];await refresh()})}
-async function importWorkbook(e){if(!e.target.files[0])return;await run(async()=>{const form=new FormData();form.append('file',e.target.files[0]);const d=await api('/admin/catalog',{method:'POST',form});notice.value=`Catalog imported: ${d.new_papers} new entries; ${d.queued} sources automatically queued.`;await refreshCatalog();await refresh()})}
+async function previewWorkbook(e){
+ const file=e.target.files?.[0];if(!file)return;syncFile.value=file;syncPreview.value=null;selectedChanged.value=[];
+ await run(async()=>{const form=new FormData();form.append('file',file);syncPreview.value=await api('/admin/catalog/preview',{method:'POST',form});notice.value=syncPreview.value.already_applied?'This exact workbook was applied before. Review the comparison below.':'Workbook checked. Nothing has been changed yet.'})
+}
+function chooseChanged(key,checked){selectedChanged.value=checked?[...new Set([...selectedChanged.value,key])]:selectedChanged.value.filter(x=>x!==key)}
+async function applyWorkbook(){
+ if(!syncFile.value||!syncPreview.value)return;
+ await run(async()=>{
+  const form=new FormData();form.append('file',syncFile.value);form.append('workbook_hash',syncPreview.value.workbook_hash);
+  form.append('process_new',String(processNew.value));form.append('process_unprocessed',String(processUnprocessed.value));
+  form.append('changed_keys',JSON.stringify(selectedChanged.value));
+  const d=await api('/admin/catalog/apply',{method:'POST',form});
+  notice.value=`Sync applied: ${d.new_papers} new, ${d.updated_sources} changed sources, ${d.queued} queued for automatic processing.`;
+  syncPreview.value=null;syncFile.value=null;selectedChanged.value=[];invalidateCatalog();await refreshCatalog();await refresh();
+ })
+}
 async function createPaper(){await run(async()=>{if(!manageCourse.value)throw Error('Choose a course.');const d=await api('/admin/papers',{method:'POST',body:{...newPaper.value,course_id:Number(manageCourse.value),term_id:Number(newPaper.value.term_id),exam_type_id:Number(newPaper.value.exam_type_id)}});notice.value='Paper created. You can upload its PDF from Upload PDFs.';newPaper.value={name:'',term_id:'',exam_type_id:'',session:''};invalidateCatalog();await refreshCatalog();await refresh()})}
 async function savePaper(){if(!editPaper.value)return;await run(async()=>{const p=editPaper.value;await api('/admin/papers/'+p.id,{method:'PATCH',body:{name:p.name,course_id:Number(p.course_id),term_id:Number(p.term_id),exam_type_id:Number(p.exam_type_id),session:p.session||'',duration_seconds:p.duration_seconds||null,source_url:p.source_url||null}});notice.value='Paper updated.';editPaper.value=null;invalidateCatalog();await refreshCatalog();await refresh()})}
 async function archivePaper(p){if(!confirm('Hide this paper from students? Existing attempt snapshots remain safe.'))return;await run(async()=>{await api('/admin/papers/'+p.id+'/archive',{method:'POST',body:{}});notice.value='Paper archived and hidden from student pages.';invalidateCatalog();await refreshCatalog();await refresh()})}
@@ -32,6 +47,30 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
 <p v-if="!adminPapers.length" class="empty panel">No papers match these filters.</p>
 </template>
 <template v-if="tab==='Question bank'"><article class="panel mb-3" v-for="q in questions"><div class="section-row"><h3>Question {{q.number}} · {{q.kind}}</h3><span class="status">{{q.status}}</span></div><MathText :text="q.text"/><p class="small muted">Source pages: {{q.source_pages?.join(', ')||q.source_page}} · confidence {{Math.round(q.confidence*100)}}%</p><details><summary>Extraction metadata</summary><pre>{{JSON.stringify({answers:q.answers,marks:q.marks,negative_marks:q.negative_marks,evidence:q.evidence,warnings:q.warnings},null,2)}}</pre></details></article><p v-if="!questions.length" class="empty panel">Questions appear here after automatic processing.</p></template>
-<template v-if="tab==='Catalog'"><section class="panel"><h2>Import Excel catalog</h2><p class="muted">Bulk processing is paused. The workbook updates the complete catalog without starting downloads. Reimporting does not duplicate question records.</p><input type="file" accept=".xlsx" class="form-control" @change="importWorkbook" :disabled="busy" aria-label="Excel workbook"></section></template>
+<template v-if="tab==='Catalog Sync'">
+<section class="panel mb-4">
+ <div class="section-row"><div><div class="eyebrow">MANUAL MONTHLY SYNC</div><h2>Check latest Excel workbook</h2><p class="muted mb-0">Download the student-maintained workbook and upload it here. The first step is preview-only: no catalog or paper is changed until you confirm.</p></div></div>
+ <input type="file" accept=".xlsx" class="form-control mt-3" @change="previewWorkbook" :disabled="busy" aria-label="Latest Excel workbook">
+</section>
+<template v-if="syncPreview">
+ <section class="panel mb-4">
+  <div class="section-row"><div><h2>Sync preview</h2><p class="muted mb-0">Workbook {{syncPreview.workbook_hash.slice(0,10)}}… · {{syncPreview.linked_cells}} linked cells</p></div><span class="status" :class="{ready:!syncPreview.already_applied}">{{syncPreview.already_applied?'Previously applied':'Preview only'}}</span></div>
+  <div class="admin-stat-grid mt-3">
+   <div class="panel" v-for="k in ['new','unprocessed','changed','available','ignored','invalid','absent']"><span class="eyebrow">{{k.replaceAll('_',' ')}}</span><strong>{{syncPreview.summary[k]??0}}</strong></div>
+  </div>
+  <div class="sync-choice-grid mt-3">
+   <label class="sync-choice"><input type="checkbox" v-model="processNew"><span><strong>Import + process new papers</strong><small>{{syncPreview.summary.new}} papers not currently in the catalog</small></span></label>
+   <label class="sync-choice"><input type="checkbox" v-model="processUnprocessed"><span><strong>Process existing unprocessed papers</strong><small>{{syncPreview.summary.unprocessed}} catalog entries already known but not available yet</small></span></label>
+  </div>
+  <p v-if="syncPreview.summary.absent" class="alert alert-warning mt-3">{{syncPreview.summary.absent}} existing papers are absent from this workbook. No paper will be deleted or archived automatically.</p>
+ </section>
+ <details v-if="syncPreview.summary.new" class="panel mb-3"><summary><strong>New papers ({{syncPreview.summary.new}})</strong></summary><div class="sync-list"><div v-for="i in syncPreview.items.new.slice(0,100)" class="sync-row"><span>{{i.course_name}} · {{i.exam_name}} · {{i.term_name}} {{i.session}}</span><strong>{{i.name}}</strong></div><p v-if="syncPreview.summary.new>100" class="muted">Showing first 100. All {{syncPreview.summary.new}} will be included when enabled above.</p></div></details>
+ <details v-if="syncPreview.summary.unprocessed" class="panel mb-3"><summary><strong>Existing but unprocessed ({{syncPreview.summary.unprocessed}})</strong></summary><div class="sync-list"><div v-for="i in syncPreview.items.unprocessed.slice(0,100)" class="sync-row"><span>#{{i.paper_id}} · {{i.course_name}} · {{i.exam_name}} · {{i.term_name}}</span><strong>{{i.name}}</strong></div><p v-if="syncPreview.summary.unprocessed>100" class="muted">Showing first 100. All {{syncPreview.summary.unprocessed}} will be included when enabled above.</p></div></details>
+ <section v-if="syncPreview.summary.changed" class="panel mb-3"><h3>Changed source links</h3><p class="muted">Nothing is replaced automatically. Select only papers whose new Excel link should replace the current source and be reprocessed.</p><label v-for="i in syncPreview.items.changed" class="sync-change-row"><input type="checkbox" :checked="selectedChanged.includes(i.key)" @change="chooseChanged(i.key,$event.target.checked)"><span><strong>{{i.course_name}} · {{i.exam_name}} · {{i.term_name}} {{i.session}}</strong><small>{{i.name}}</small><small class="muted">Current: {{i.old_url}}</small><small class="muted">Workbook: {{i.url}}</small></span></label></section>
+ <details v-if="syncPreview.summary.ignored" class="panel mb-3"><summary>Ignored / archived ({{syncPreview.summary.ignored}})</summary><div class="sync-list"><div v-for="i in syncPreview.items.ignored.slice(0,100)" class="sync-row"><span>{{i.course_name}} · {{i.exam_name}} · {{i.term_name}}</span><strong>{{i.name}}</strong></div></div></details>
+ <details v-if="syncPreview.summary.invalid" class="panel mb-3"><summary>Workbook issues ({{syncPreview.summary.invalid}})</summary><pre>{{JSON.stringify(syncPreview.issues.slice(0,100),null,2)}}</pre></details>
+ <section class="panel sync-apply-bar"><div><strong>Ready to apply selected changes</strong><p class="muted mb-0">Available papers stay untouched. Archived papers stay ignored. Missing workbook rows never delete existing papers.</p></div><button class="btn btn-primary" :disabled="busy||(!processNew&&!processUnprocessed&&!selectedChanged.length)" @click="applyWorkbook">Import &amp; process selected</button></section>
+</template>
+</template>
 <section class="panel" v-if="tab==='Settings'"><h2>Extraction services</h2><dl class="settings-list"><template v-for="(v,k) in settings"><dt>{{k.replaceAll('_',' ')}}</dt><dd>{{String(v)}}</dd></template></dl><p class="muted">Native PDF colour/layout extraction runs automatically. Configured models assist extraction; source indicators always take precedence. Secrets remain on the server.</p></section>
 <div v-if="['Processing','Papers','Question bank'].includes(tab)&&total>24" class="pagination-row"><button class="btn btn-light" :disabled="page===1" @click="page--;run(refresh)">Previous</button><span>Page {{page}}</span><button class="btn btn-light" :disabled="page*24>=total" @click="page++;run(refresh)">Next</button></div></template></template>
