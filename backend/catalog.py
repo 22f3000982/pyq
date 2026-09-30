@@ -2,6 +2,7 @@
 import hashlib,re
 from urllib.parse import urlparse,parse_qs
 import openpyxl
+from sqlalchemy import func
 from .models import db,Course,Term,ExamType,Paper,Question,SourceEntry,ImportRun,IngestionFile
 
 ALIASES={'operating systems':'Operating System','data visualization':'Data Visualization Design'}
@@ -123,8 +124,8 @@ def _existing_index():
 def compare_scan(scan):
     existing=_existing_index()
     ready={pid for pid, in db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct()}
-    latest={}
-    for f in IngestionFile.query.order_by(IngestionFile.id):latest[f.paper_id]=f
+    latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
+    latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}
     categories={'new':[],'unprocessed':[],'changed':[],'available':[],'ignored':[]}
     seen=set()
     for entry in scan['entries']:
