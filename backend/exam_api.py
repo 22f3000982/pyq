@@ -31,16 +31,28 @@ def attempt_image_ttl(a):
     remaining=max(0,(a.expires_at or time.time()+3600)-time.time())
     return max(600,min(604799,int(remaining)+300))
 
+def use_paper_image_delivery(paper_id):
+    """Use direct signed R2 URLs only for papers whose image set was verified."""
+    if current_app.config.get('IMAGE_DELIVERY')!='signed':
+        g.force_proxy_images=False;return
+    if not paper_id:
+        # Mixed collections can span old imports, so choose the reliable path.
+        g.force_proxy_images=True;return
+    paper=db.session.get(Paper,paper_id)
+    meta=(paper.source_metadata or {}) if paper else {}
+    g.force_proxy_images=not bool(meta.get('question_assets_verified_r2'))
+
 def question_with_image_urls(snapshot):
     result=public_question(snapshot)
     paths=getattr(g,'image_paths',{})
     ttl=getattr(g,'image_signed_ttl',None)
-    result['images']=[{**image,'url':image_url(paths.get(image['id']),image['id'],expires=ttl) if paths.get(image['id']) else '/api/images/'+str(image['id'])} for image in result.get('images',[]) if image.get('id') is not None]
+    force_proxy=getattr(g,'force_proxy_images',False)
+    result['images']=[{**image,'url':('/api/images/'+str(image['id'])+'?proxy=1') if force_proxy else (image_url(paths.get(image['id']),image['id'],expires=ttl) if paths.get(image['id']) else '/api/images/'+str(image['id'])+'?proxy=1')} for image in result.get('images',[]) if image.get('id') is not None]
     return result
 
 def prepare_image_paths(snapshots,signed_ttl=None):
     if signed_ttl is not None:g.image_signed_ttl=signed_ttl
-    if current_app.config.get('IMAGE_DELIVERY','proxy')=='proxy':return
+    if getattr(g,'force_proxy_images',False) or current_app.config.get('IMAGE_DELIVERY','proxy')=='proxy':return
     paths={}
     missing=set()
     for snapshot in snapshots:
@@ -52,6 +64,7 @@ def prepare_image_paths(snapshots,signed_ttl=None):
 
 def bootstrap_json(a):
     items=sorted(a.items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))
+    use_paper_image_delivery(a.paper_id)
     prepare_image_paths([i.snapshot for i in items],attempt_image_ttl(a))
     bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter(Bookmark.user_id==g.user.id,Bookmark.question_id.in_([i.question_id for i in items]))}
     return {**attempt_json(a),'items':[item_json(a,i,bookmarks) for i in items]}
@@ -69,6 +82,7 @@ def start_payload(a,snapshots):
             'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,
             'records_progress':a.records_progress,'palette':palette}
     if request.args.get('bootstrap')=='1':
+        use_paper_image_delivery(a.paper_id)
         prepare_image_paths(ordered,attempt_image_ttl(a))
         qids=[s['id'] for s in ordered]
         bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter(
@@ -171,6 +185,7 @@ def attempt_status(id):
 @require_user()
 def attempt_question(id,qid):
     a=owned(id);i=AttemptAnswer.query.filter_by(attempt_id=a.id,question_id=qid).first_or_404()
+    use_paper_image_delivery(a.paper_id)
     prepare_image_paths([i.snapshot],attempt_image_ttl(a))
     return jsonify(item_json(a,i,{qid} if db.session.get(Bookmark,(g.user.id,qid)) else set()))
 
@@ -178,6 +193,7 @@ def attempt_question(id,qid):
 @require_user()
 def attempt_questions(id):
     a=owned(id)
+    use_paper_image_delivery(a.paper_id)
     bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter_by(user_id=g.user.id)}
     items=sorted(a.items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))
     prepare_image_paths([i.snapshot for i in items],attempt_image_ttl(a))
@@ -319,6 +335,7 @@ def paper_questions(id):
     from .api import page_args
     p=visible_papers(Paper.query).filter_by(id=id).first_or_404();rows=snapshots(p.canonical_paper_id or p.id)
     page,size=page_args();selected=rows[(page-1)*size:page*size]
+    use_paper_image_delivery(p.id)
     prepare_image_paths(selected)
     return jsonify(items=[question_with_image_urls(s) for s in selected],total=len(rows),page=page,limit=size)
 
