@@ -23,7 +23,7 @@ def candidates(limit,retry_failed):
     latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
     latest_by_paper={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids))}
     for paper in Paper.query.filter(Paper.source_url.isnot(None)).order_by(Paper.id):
-        if paper.status in ('AVAILABLE','PARTIALLY_AVAILABLE') or paper.canonical_paper_id:continue
+        if paper.status in ('AVAILABLE','PARTIALLY_AVAILABLE','ARCHIVED') or paper.canonical_paper_id:continue
         latest=latest_by_paper.get(paper.id)
         if retry_failed and (not latest or latest.status not in FAILURES):continue
         if latest and latest.status in SUCCESS|ACTIVE:continue
