@@ -86,7 +86,7 @@ def create_app(config=None):
         response.headers['X-Content-Type-Options']='nosniff'
         response.headers['Referrer-Policy']='same-origin'
         response.headers['X-Frame-Options']='SAMEORIGIN'
-        response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'"
+        response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'self' https://tcsion.com https://www.tcsion.com; object-src 'none'; base-uri 'self'"
         if app.extensions.get('image_origin'):
             response.headers['Content-Security-Policy']=response.headers['Content-Security-Policy'].replace("img-src 'self' data:","img-src 'self' data: "+app.extensions['image_origin'])
         if request.path.startswith('/api/') and not request.path.startswith('/api/images/'): response.headers['Cache-Control']='no-store'

@@ -19,6 +19,12 @@ describe('nonblocking exam navigation',()=>{
   release({items:[{question_id:1,state:'ANSWERED'}]});await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/attempts/4/answers',expect.objectContaining({body:expect.objectContaining({items:expect.arrayContaining([expect.objectContaining({question_id:2,answer:'0'})])})}));
   expect(mocks.go).toHaveBeenCalledWith('/result/4');expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/questions')).toHaveLength(1);w.unmount();
  });
+ it('focuses NAT automatically and Enter moves to the next question with signed decimals intact',async()=>{
+  const w=mount(Exam,{props:{id:4},attachTo:document.body});await flushPromises();
+  const first=w.get('input.numeric-answer');expect(document.activeElement).toBe(first.element);
+  await first.setValue('-2.75');await first.trigger('keydown',{key:'Enter'});await flushPromises();
+  expect(w.text()).toContain('QUESTION 2');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('-2.75');w.unmount();
+ });
  it('navigates through untouched questions without writing visited state to the server',async()=>{
   const w=mount(Exam,{props:{id:4}});await flushPromises();await button(w,'Save & next').trigger('click');await button(w,'Previous').trigger('click');await vi.advanceTimersByTimeAsync(1000);
   expect(mocks.api.mock.calls.filter(c=>c[0].endsWith('/answers'))).toHaveLength(0);expect(sessionStorage.getItem('pyq-visited-4')).toContain('1');w.unmount();
