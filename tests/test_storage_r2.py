@@ -54,7 +54,10 @@ def test_real_upload_ingestion_then_cold_cache_student_assets(app,client,remote)
     assert f.status=='AVAILABLE',f.error
     images=QuestionImage.query.all();assert images
     assert 'pyq/'+f.path in remote.objects
-    for image in images:assert 'pyq/'+image.path in remote.objects
+    for image in images:
+        assert 'pyq/'+image.path in remote.objects
+        data,meta=remote.objects['pyq/'+image.path]
+        assert meta.get('sha256')==hashlib.sha256(data).hexdigest()
     root=Path(app.config['UPLOAD_DIR']);(root/f.path).unlink()
     for image in images:(root/image.path).unlink(missing_ok=True)
     assert client.get('/api/images/'+str(images[0].id)).status_code==401
