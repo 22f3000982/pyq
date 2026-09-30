@@ -46,7 +46,8 @@ def test_catalog_preview_is_non_mutating_and_apply_is_incremental(app,client):
     again=post_file(client,'/api/admin/catalog/preview',h,data)
     assert again.status_code==200 and again.json['already_applied'] is True
     assert again.json['summary']['new']==0
-    assert again.json['summary']['unprocessed']==1
+    assert again.json['summary']['unprocessed']==0
+    assert again.json['summary']['queued']==1
     assert Paper.query.count()==1
 
 
