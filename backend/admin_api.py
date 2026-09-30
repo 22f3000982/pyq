@@ -5,7 +5,7 @@ import fitz
 from sqlalchemy import or_
 from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory
 from .models import *
-from .api import integer_argument,require_user,body,paginate,paper_json,course_json,user_json,PAPER_LOAD
+from .api import integer_argument,require_user,body,paginate,paginate_rows,paper_json,paper_rows,course_json,user_json,PAPER_LOAD
 from .engine import question_snapshot,validate_question,aggregate
 from .ingestion import store_upload,update_batch,root
 admin=Blueprint('admin',__name__,url_prefix='/api/admin')
@@ -37,7 +37,7 @@ def list_papers():
     if term:
         like='%'+term+'%'
         q=q.join(Course).join(Term).join(ExamType).filter(or_(Paper.name.ilike(like),Course.name.ilike(like),Course.code.ilike(like),Term.name.ilike(like),ExamType.name.ilike(like)))
-    return jsonify(paginate(q.order_by(Paper.id.desc()),paper_json))
+    return jsonify(paginate_rows(q.order_by(Paper.id.desc()),paper_rows))
 
 @admin.post('/papers')
 @require_user(True)
