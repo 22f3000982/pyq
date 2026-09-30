@@ -49,3 +49,25 @@ def test_timer_override_preserves_source_duration(client):
     assert p.duration_seconds==60
     b=client.post('/api/attempts',json={'paper_id':p.id,'mode':'exam','duration_seconds':7200},headers=h)
     assert 7195<b.json['deadline']-b.json['server_time']<=7200
+
+
+def test_comprehension_preserves_shared_passage_and_subquestion(tmp_path):
+    doc=fitz.open();p=doc.new_page()
+    p.insert_text((40,40),'Question Numbers : (1 to 2)')
+    p.insert_text((40,60),'Question Label : Comprehension')
+    p.insert_text((40,80),'Read this shared passage carefully.')
+    p.insert_text((40,100),'Sub questions')
+    p.insert_text((40,130),'Question Number : 1 Question Id : 123456789 Question Type : MCQ')
+    p.insert_text((40,150),'Correct Marks : 1')
+    p.insert_text((40,170),'Wrong Marks : 0')
+    p.insert_text((40,190),'Question Label : Multiple Choice Question')
+    p.insert_text((40,210),'Which statement follows?')
+    p.insert_text((40,230),'Options :')
+    p.insert_text((40,250),'123456701. Yes',color=(0,.6,0))
+    p.insert_text((40,270),'123456702. No',color=(1,0,0))
+    layout=layout_document(doc,tmp_path,'comprehension123',False)
+    records,_,_=parse_document(layout);q=records[0]
+    assert q['evidence']['shared_passage'] is True
+    assert q['evidence']['shared_passage_text']=='Read this shared passage carefully.'
+    assert q['evidence']['subquestion_text']=='Which statement follows?'
+    assert q['text'].startswith('Read this shared passage carefully.')
