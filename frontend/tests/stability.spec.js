@@ -6,7 +6,7 @@ let attempt;
 beforeEach(()=>{vi.useFakeTimers();sessionStorage.clear();mocks.go.mockReset();mocks.api.mockReset();attempt={id:4,title:'Source paper',mode:'exam',status:'ACTIVE',deadline:Date.now()/1000+600,server_time:Date.now()/1000,palette:[1,2].map(id=>({question_id:id,number:String(id),state:'NOT_VISITED'}))};
  mocks.api.mockImplementation(async(path,o)=>path==='/attempts/4'?structuredClone(attempt):path==='/attempts/4/status'?{id:attempt.id,status:attempt.status,deadline:attempt.deadline,submitted_at:null,expires_at:Date.now()/1000+3600,server_time:Date.now()/1000}:path==='/attempts/4/questions'?{status:'ACTIVE',items:[1,2].map(id=>({question:{id,number:String(id),kind:'NAT',text:'Source question '+id,images:[],options:[],marks:1},answer:null,marked:false}))}:path.endsWith('/answers')?{items:(o?.body?.items||[]).map(x=>({question_id:x.question_id,state:'ANSWERED'}))}:{state:'ANSWERED'});
 });
-afterEach(()=>{vi.restoreAllMocks();vi.useRealTimers()});
+afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();vi.useRealTimers()});
 const button=(w,label)=>w.findAll('button').find(b=>b.text()===label);
 describe('nonblocking exam navigation',()=>{
  it('navigates immediately while save is unresolved; serializes newer responses and submit',async()=>{
@@ -28,6 +28,15 @@ describe('nonblocking exam navigation',()=>{
  it('navigates through untouched questions without writing visited state to the server',async()=>{
   const w=mount(Exam,{props:{id:4}});await flushPromises();await button(w,'Save & next').trigger('click');await button(w,'Previous').trigger('click');await vi.advanceTimersByTimeAsync(1000);
   expect(mocks.api.mock.calls.filter(c=>c[0].endsWith('/answers'))).toHaveLength(0);expect(sessionStorage.getItem('pyq-visited-4')).toContain('1');w.unmount();
+ });
+ it('prefetches the next three image questions plus two idle lookahead questions',async()=>{
+  const urls=[];vi.stubGlobal('Image',class{set src(v){urls.push(v);queueMicrotask(()=>this.onload?.())}});
+  attempt.palette=[1,2,3,4,5,6].map(id=>({question_id:id,number:String(id),state:'NOT_VISITED'}));
+  mocks.api.mockImplementation(async(path,o)=>path==='/attempts/4'?structuredClone(attempt):path==='/attempts/4/status'?{id:4,status:'ACTIVE',deadline:attempt.deadline,server_time:Date.now()/1000}:path==='/attempts/4/questions'?{status:'ACTIVE',items:[1,2,3,4,5,6].map(id=>({question:{id,number:String(id),kind:'MCQ',text:'Q'+id,images:[{id:100+id,url:'/api/images/'+(100+id)+'?proxy=1'}],options:[{key:'A',text:'A'},{key:'B',text:'B'}],marks:1},answer:null,marked:false}))}:path.endsWith('/answers')?{items:[]}:{state:'VISITED'});
+  const w=mount(Exam,{props:{id:4}});await flushPromises();
+  await vi.advanceTimersByTimeAsync(3500);await flushPromises();
+  expect(urls).toEqual(expect.arrayContaining(['/api/images/102?proxy=1','/api/images/103?proxy=1','/api/images/104?proxy=1','/api/images/105?proxy=1','/api/images/106?proxy=1']));
+  expect(new Set(urls).size).toBe(urls.length);w.unmount();
  });
  it('uses a sparse jittered heartbeat instead of synchronized polling',async()=>{
   vi.spyOn(Math,'random').mockReturnValue(0);
