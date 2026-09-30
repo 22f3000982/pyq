@@ -14,7 +14,7 @@ describe('NAT drafts in timed exams',()=>{
   const w=mount(Exam,{props:{id:1}});await flushPromises();await w.get('input.numeric-answer').setValue('3/4');
   await w.findAll('button').find(b=>b.text().includes('Save & next')).trigger('click');await vi.advanceTimersByTimeAsync(600);await flushPromises();expect(stored[1]).toBe('3/4');
   await w.findAll('button').find(b=>b.text().includes('Previous')).trigger('click');await flushPromises();expect(w.get('input.numeric-answer').element.value).toBe('3/4');
-  await w.get('input.numeric-answer').setValue('0');await vi.advanceTimersByTimeAsync(400);expect(stored[1]).toBe('0');w.unmount();
+  await w.get('input.numeric-answer').setValue('0');await vi.advanceTimersByTimeAsync(600);await flushPromises();expect(stored[1]).toBe('0');w.unmount();
  });
  it('recovers an unsaved draft on refresh and flushes before submit',async()=>{
   let w=mount(Exam,{props:{id:1}});await flushPromises();await w.get('input.numeric-answer').setValue('42');w.unmount();
