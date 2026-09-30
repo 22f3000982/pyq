@@ -82,6 +82,7 @@ def test_image_cache_hit_never_downloads(app,client,monkeypatch):
 
 def test_attempt_bootstrap_signed_urls_cover_attempt_lifetime(app,client,monkeypatch):
     pid=seed(1)[0];h=login(client)
+    paper=db.session.get(__import__('backend.models',fromlist=['Paper']).Paper,pid);paper.source_metadata={'question_assets_verified_r2':True};db.session.commit()
     app.config.update(STORAGE_BACKEND='r2',IMAGE_DELIVERY='signed',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com')
     configure_delivery(app)
     expiries=[]
@@ -92,7 +93,8 @@ def test_attempt_bootstrap_signed_urls_cover_attempt_lifetime(app,client,monkeyp
 
 
 def test_signed_delivery_no_download_and_csp(app,client,monkeypatch):
-    seed(1);login(client)
+    pid=seed(1)[0];login(client)
+    paper=db.session.get(__import__('backend.models',fromlist=['Paper']).Paper,pid);paper.source_metadata={'question_assets_verified_r2':True};db.session.commit()
     app.config.update(STORAGE_BACKEND='r2',IMAGE_DELIVERY='signed',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com')
     configure_delivery(app)
     monkeypatch.setattr('backend.storage.private_asset_url',lambda path,id,expires=600:'https://test.r2.cloudflarestorage.com/bucket/'+path+'?signed=1')
@@ -105,6 +107,16 @@ def test_signed_delivery_no_download_and_csp(app,client,monkeypatch):
     r=client.get(f'/api/images/{image.id}')
     assert r.status_code==302 and r.headers['Cache-Control']=='private, max-age=300'
     assert app.test_client().get(f'/api/images/{image.id}').status_code==401
+
+
+def test_unverified_paper_uses_proxy_first_without_failed_signed_probe(app,client,monkeypatch):
+    pid=seed(1)[0];h=login(client)
+    app.config.update(STORAGE_BACKEND='r2',IMAGE_DELIVERY='signed',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com')
+    configure_delivery(app)
+    monkeypatch.setattr('backend.storage.private_asset_url',lambda *a,**k:pytest.fail('unverified paper must not generate signed image URLs'))
+    monkeypatch.setattr('backend.exam_api.send_asset',lambda *a,**k:__import__('flask').make_response(b'PNG',200))
+    a=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':pid,'mode':'exam','duration_seconds':5400}).json
+    assert all(img['url'].endswith('?proxy=1') for item in a['items'] for img in item['question']['images'])
 
 
 def test_failed_signed_image_proxy_does_not_redirect_again(app,client,monkeypatch):
