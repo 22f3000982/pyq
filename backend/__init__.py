@@ -42,8 +42,17 @@ def create_app(config=None):
         OCR_ENABLED=os.getenv('OCR_ENABLED','true').lower()=='true',
         CATALOG_AUTO_PROCESS=os.getenv('CATALOG_AUTO_PROCESS','false').lower()=='true')
     legacy_bucket=os.getenv('R2_BUCKET_NAME','')
-    app.config.update(STORAGE_BACKEND=os.getenv('STORAGE_BACKEND','local').lower(),R2_ENDPOINT_URL=os.getenv('R2_ENDPOINT_URL',''),R2_ACCESS_KEY_ID=os.getenv('R2_ACCESS_KEY_ID',''),R2_SECRET_ACCESS_KEY=os.getenv('R2_SECRET_ACCESS_KEY',''),R2_BUCKET_NAME=legacy_bucket,R2_PDF_BUCKET_NAME=os.getenv('R2_PDF_BUCKET_NAME',''),R2_IMAGE_BUCKET_NAME=os.getenv('R2_IMAGE_BUCKET_NAME',''),R2_PREFIX=os.getenv('R2_PREFIX','pyq'))
-    app.config.update(CONTENT_CACHE_URL=os.getenv('REDIS_URL',''), CACHE_NAMESPACE=os.getenv('CACHE_NAMESPACE','pyq:content:v1'), CONTENT_CACHE_TTL=int(os.getenv('CONTENT_CACHE_TTL','60')), IMAGE_DELIVERY=os.getenv('IMAGE_DELIVERY','proxy'), IMAGE_CDN_BASE_URL=os.getenv('IMAGE_CDN_BASE_URL',''), IMAGE_CDN_MANIFEST=os.getenv('IMAGE_CDN_MANIFEST',''))
+    storage_backend=os.getenv('STORAGE_BACKEND','local').lower()
+    image_delivery=os.getenv('IMAGE_DELIVERY','').strip().lower()
+    # Existing Render services can keep an old/missing proxy variable even after
+    # render.yaml changes. In production R2, prefer private direct signed delivery
+    # so tiny question images never traverse Flask unless their direct URL fails.
+    if production_env and storage_backend=='r2' and image_delivery in ('','proxy'):
+        image_delivery='signed'
+    elif not image_delivery:
+        image_delivery='proxy'
+    app.config.update(STORAGE_BACKEND=storage_backend,R2_ENDPOINT_URL=os.getenv('R2_ENDPOINT_URL',''),R2_ACCESS_KEY_ID=os.getenv('R2_ACCESS_KEY_ID',''),R2_SECRET_ACCESS_KEY=os.getenv('R2_SECRET_ACCESS_KEY',''),R2_BUCKET_NAME=legacy_bucket,R2_PDF_BUCKET_NAME=os.getenv('R2_PDF_BUCKET_NAME',''),R2_IMAGE_BUCKET_NAME=os.getenv('R2_IMAGE_BUCKET_NAME',''),R2_PREFIX=os.getenv('R2_PREFIX','pyq'))
+    app.config.update(CONTENT_CACHE_URL=os.getenv('REDIS_URL',''), CACHE_NAMESPACE=os.getenv('CACHE_NAMESPACE','pyq:content:v1'), CONTENT_CACHE_TTL=int(os.getenv('CONTENT_CACHE_TTL','60')), IMAGE_DELIVERY=image_delivery, IMAGE_CDN_BASE_URL=os.getenv('IMAGE_CDN_BASE_URL',''), IMAGE_CDN_MANIFEST=os.getenv('IMAGE_CDN_MANIFEST',''))
     if config: app.config.update(config)
     from . import content_cache
     from .storage import configure_delivery
