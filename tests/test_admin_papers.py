@@ -43,7 +43,7 @@ def test_admin_paper_crud_archive_restore_and_safe_delete(app,client):
     assert client.get('/api/stats').json['exam_papers']['Quiz 1']==1
 
     blocked=client.delete(f'/api/admin/papers/{target.id}',headers=h)
-    assert blocked.status_code==409 and 'Archive it instead' in blocked.json['message']
+    assert blocked.status_code==409 and 'Archive it instead' in blocked.json['error']
 
     deleted=client.delete(f'/api/admin/papers/{empty.id}',headers=h)
     assert deleted.status_code==200 and deleted.json['deleted'] is True
