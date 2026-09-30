@@ -74,8 +74,9 @@ def test_image_cache_hit_never_downloads(app,client,monkeypatch):
     seed(1);image=QuestionImage.query.first();path=local_path(image.path)
     path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'PNG')
     monkeypatch.setattr('backend.storage.remote_bytes',lambda name:pytest.fail('R2 on local hit'))
-    login(client);r=client.get(f'/api/images/{image.id}')
+    login(client);r=client.get(f'/api/images/{image.id}?proxy=1')
     assert r.status_code==200
+    assert r.headers['Cache-Control']=='private, max-age=31536000, immutable'
     assert 'asset_hit;desc="1"' in r.headers['Server-Timing']
     assert 'ensure_local;dur=' in r.headers['Server-Timing']
 
