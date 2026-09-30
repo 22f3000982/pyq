@@ -156,6 +156,8 @@ def process_file(id):
         mark_sum=sum(q.get('marks') or 0 for q in records)
         if meta.get('declared_total_marks') is not None and abs(meta['declared_total_marks']-mark_sum)>1e-6:issues.append({'check':'total_marks','source':meta['declared_total_marks'],'extracted_sum':mark_sum})
         meta.update(extracted_records=len(records),available_questions=available,extracted_marks_sum=mark_sum,discrepancies=issues)
+        archived_from=(paper.source_metadata or {}).get('_admin_archived_from')
+        if archived_from:meta['_admin_archived_from']=archived_from
         paper.source_metadata=meta
         if meta.get('duration_seconds'):paper.duration_seconds=meta['duration_seconds']
         f.extracted=len(new_ids);f.warnings=layout['warnings']+issues;f.finished_at=time.time();f.error=None if available else 'No question records detected. This may be an image-only notes PDF; OCR is unavailable, so upload a text-based question paper or enable OCR.'
