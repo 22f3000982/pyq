@@ -2,9 +2,10 @@ from .storage import send_asset,ensure_local,publish,StorageError
 import uuid,time,hashlib
 from pathlib import Path
 import fitz
+from sqlalchemy import or_
 from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory
 from .models import *
-from .api import integer_argument,require_user,body,paginate,paper_json,course_json,user_json
+from .api import integer_argument,require_user,body,paginate,paginate_rows,paper_json,paper_rows,course_json,user_json,PAPER_LOAD
 from .engine import question_snapshot,validate_question,aggregate
 from .ingestion import store_upload,update_batch,root
 admin=Blueprint('admin',__name__,url_prefix='/api/admin')
@@ -25,6 +26,18 @@ def add_course():
     b=body()
     if not b.get('name') or not b.get('code'):abort(400,description='Name and code required')
     c=Course(name=str(b['name'])[:200],code=str(b['code'])[:40],level=str(b.get('level',''))[:40],course_type=str(b.get('course_type',''))[:40]);db.session.add(c);db.session.commit();return jsonify(course_json(c)),201
+
+@admin.get('/papers')
+@require_user(True)
+def list_papers():
+    q=Paper.query.options(*PAPER_LOAD)
+    if request.args.get('course_id'):q=q.filter(Paper.course_id==integer_argument('course_id'))
+    if request.args.get('status'):q=q.filter(Paper.status==request.args['status'][:32])
+    term=request.args.get('q','').strip()[:150]
+    if term:
+        like='%'+term+'%'
+        q=q.join(Course).join(Term).join(ExamType).filter(or_(Paper.name.ilike(like),Course.name.ilike(like),Course.code.ilike(like),Term.name.ilike(like),ExamType.name.ilike(like)))
+    return jsonify(paginate_rows(q.order_by(Paper.id.desc()),paper_rows))
 
 @admin.post('/papers')
 @require_user(True)
@@ -52,11 +65,68 @@ def add_metadata():
 def edit_paper(id):
     p=db.get_or_404(Paper,id);b=body()
     if 'duration_seconds' in b:
-        duration=int(b['duration_seconds'])
-        if not 30<=duration<=28800:abort(400,description='Duration must be between 30 seconds and 8 hours')
-        p.duration_seconds=duration
-    if 'name' in b and str(b['name']).strip():p.name=str(b['name'])[:300]
+        if b['duration_seconds'] in (None,''):p.duration_seconds=None
+        else:
+            try:duration=int(b['duration_seconds'])
+            except (TypeError,ValueError):abort(400,description='Duration must be a number of seconds')
+            if not 30<=duration<=28800:abort(400,description='Duration must be between 30 seconds and 8 hours')
+            p.duration_seconds=duration
+    if 'name' in b:
+        name=str(b['name']).strip()
+        if not name:abort(400,description='Name required')
+        p.name=name[:300]
+    if 'session' in b:p.session=str(b['session'] or '')[:20]
+    if 'source_url' in b:p.source_url=str(b['source_url']).strip()[:4000] if b['source_url'] else None
+    if 'course_id' in b:
+        db.get_or_404(Course,b['course_id']);p.course_id=b['course_id']
+    if 'term_id' in b:
+        db.get_or_404(Term,b['term_id']);p.term_id=b['term_id']
+    if 'exam_type_id' in b:
+        db.get_or_404(ExamType,b['exam_type_id']);p.exam_type_id=b['exam_type_id']
     db.session.commit();return jsonify(paper_json(p))
+
+@admin.post('/papers/<int:id>/archive')
+@require_user(True)
+def archive_paper(id):
+    p=db.get_or_404(Paper,id)
+    if p.status=='ARCHIVED':return jsonify(paper=paper_json(p),archived=True)
+    meta=dict(p.source_metadata or {});meta['_admin_archived_from']=p.status or 'CATALOG_ONLY'
+    p.source_metadata=meta;p.status='ARCHIVED'
+    paused=IngestionFile.query.filter(IngestionFile.paper_id==id,IngestionFile.status.in_(['QUEUED','FETCH_QUEUED'])).all()
+    batch_ids={f.batch_id for f in paused}
+    for f in paused:f.status='PAUSED';f.error='Paused because the paper was archived by an administrator.'
+    db.session.commit()
+    for batch_id in batch_ids:update_batch(batch_id)
+    return jsonify(paper=paper_json(p),archived=True)
+
+@admin.post('/papers/<int:id>/restore')
+@require_user(True)
+def restore_paper(id):
+    p=db.get_or_404(Paper,id)
+    if p.status!='ARCHIVED':return jsonify(paper=paper_json(p),archived=False)
+    meta=dict(p.source_metadata or {});previous=meta.pop('_admin_archived_from','CATALOG_ONLY')
+    p.source_metadata=meta;p.status=previous if previous!='ARCHIVED' else 'CATALOG_ONLY';db.session.commit()
+    return jsonify(paper=paper_json(p),archived=False)
+
+@admin.delete('/papers/<int:id>')
+@require_user(True)
+def delete_paper(id):
+    p=db.get_or_404(Paper,id)
+    dependencies={
+        'questions':Question.query.filter_by(paper_id=id).count(),
+        'imports':IngestionFile.query.filter_by(paper_id=id).count(),
+        'attempts':Attempt.query.filter_by(paper_id=id).count(),
+        'progress':PaperProgress.query.filter_by(paper_id=id).count(),
+        'aliases':Paper.query.filter_by(canonical_paper_id=id).count(),
+    }
+    blockers={k:v for k,v in dependencies.items() if v}
+    if blockers:
+        abort(409,description='This paper has linked data and cannot be permanently deleted safely. Archive it instead. Linked: '+', '.join(f'{k}={v}' for k,v in blockers.items()))
+    # Workbook provenance belongs to an otherwise-empty catalog entry and can be
+    # removed together with it; processed/imported content is intentionally blocked.
+    SourceEntry.query.filter_by(paper_id=id).delete(synchronize_session=False)
+    db.session.delete(p);db.session.commit()
+    return jsonify(deleted=True,id=id)
 
 @admin.post('/catalog')
 @require_user(True)

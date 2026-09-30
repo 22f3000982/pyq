@@ -4,7 +4,7 @@ from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_direct
 from sqlalchemy import or_,insert
 from sqlalchemy.orm import selectinload,joinedload
 from .models import *
-from .api import integer_argument,require_user,body,paginate
+from .api import integer_argument,require_user,body,paginate,visible_papers
 from .engine import *
 exams=Blueprint('exams',__name__,url_prefix='/api')
 
@@ -128,7 +128,7 @@ def start():
             q=q.join(Paper).filter(Paper.course_id==b['course_id'],Question.topic==b['topic'])
         title='Practice '+kind;deadline=None
     else:
-        p=Paper.query.options(joinedload(Paper.course),joinedload(Paper.term),joinedload(Paper.exam_type)).filter_by(id=b.get('paper_id')).first_or_404();effective=p.canonical_paper_id or p.id;q=Question.query.filter_by(paper_id=effective,status='AVAILABLE').order_by(Question.id)
+        p=visible_papers(Paper.query).options(joinedload(Paper.course),joinedload(Paper.term),joinedload(Paper.exam_type)).filter_by(id=b.get('paper_id')).first_or_404();effective=p.canonical_paper_id or p.id;q=Question.query.filter_by(paper_id=effective,status='AVAILABLE').order_by(Question.id)
         title=f'{p.course.name} · {p.exam_type.name} · {p.term.name} · {p.name}'
         deadline=None
         if mode=='exam':
@@ -305,14 +305,14 @@ def question_image(id):
 def paper_questions(id):
     from .paper_content import snapshots
     from .api import page_args
-    p=db.get_or_404(Paper,id);rows=snapshots(p.canonical_paper_id or p.id)
+    p=visible_papers(Paper.query).filter_by(id=id).first_or_404();rows=snapshots(p.canonical_paper_id or p.id)
     page,size=page_args();selected=rows[(page-1)*size:page*size]
     prepare_image_paths(selected)
     return jsonify(items=[question_with_image_urls(s) for s in selected],total=len(rows),page=page,limit=size)
 
 @exams.get('/papers/<int:id>/source')
 def source_pdf(id):
-    p=db.get_or_404(Paper,id);f=IngestionFile.query.filter(IngestionFile.paper_id==(p.canonical_paper_id or p.id),IngestionFile.path.isnot(None)).order_by(IngestionFile.id.desc()).first_or_404()
+    p=visible_papers(Paper.query).filter_by(id=id).first_or_404();f=IngestionFile.query.filter(IngestionFile.paper_id==(p.canonical_paper_id or p.id),IngestionFile.path.isnot(None)).order_by(IngestionFile.id.desc()).first_or_404()
     # Source download is separate from the question API. Students can view original
     # source material; answer-bearing source pages never enter exam payloads/assets.
     return send_asset(f.path,mimetype='application/pdf',as_attachment=True,download_name='paper-'+str(p.id)+'.pdf')
