@@ -107,6 +107,18 @@ def test_signed_delivery_no_download_and_csp(app,client,monkeypatch):
     assert app.test_client().get(f'/api/images/{image.id}').status_code==401
 
 
+def test_failed_signed_image_proxy_does_not_redirect_again(app,client,monkeypatch):
+    seed(1);login(client)
+    image=QuestionImage.query.first()
+    app.config.update(STORAGE_BACKEND='r2',IMAGE_DELIVERY='signed',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com')
+    configure_delivery(app)
+    monkeypatch.setattr('backend.storage.private_asset_url',lambda path,id,expires=600:'https://test.r2.cloudflarestorage.com/bucket/'+path+'?signed=1')
+    monkeypatch.setattr('backend.exam_api.send_asset',lambda *a,**k:__import__('flask').make_response(b'PNG',200))
+    r=client.get(f'/api/images/{image.id}?proxy=1')
+    assert r.status_code==200 and r.data==b'PNG'
+    assert 'Location' not in r.headers
+
+
 def test_cdn_explicit_allowlist_only(app,client,tmp_path):
     seed(1);manifest=tmp_path/'images.json'
     manifest.write_text(json.dumps({'formula.png':'public-questions/'+'a'*64+'.png'}))

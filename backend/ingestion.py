@@ -117,7 +117,10 @@ def process_file(id):
         if not records:
             records,extra=fallback(layout,current_app.config);issues.extend(extra)
         publish(f.path)
-        for name in sorted({image['path'] for item in records for image in item.get('images',[])}):publish(name)
+        # Never mark a paper available until every referenced question image is
+        # present and readable in durable storage. This closes the gap where the
+        # database could outlive an ephemeral worker file.
+        for name in sorted({image['path'] for item in records for image in item.get('images',[])}):publish(name,verify=True)
         event(f,'EXTRACTED',f'{len(records)} question records; {len(layout["assets"])} content images');db.session.commit()
         new_ids=[];seen=set();available=0;failed=0
         for item in records:
@@ -181,6 +184,25 @@ def process_file(id):
         if alias.status!='ARCHIVED':alias.status=paper.status
         alias.source_metadata=paper.source_metadata;alias.duration_seconds=paper.duration_seconds
     db.session.commit();update_batch(f.batch_id)
+
+def repair_question_image_asset(image):
+    """Recreate one missing extracted image deterministically from its source PDF."""
+    question=db.session.get(Question,image.question_id)
+    if question is None or not question.ingestion_file_id:return False
+    source=db.session.get(IngestionFile,question.ingestion_file_id)
+    if source is None or not source.path or not source.file_hash:return False
+    try:
+        data=ensure_local(source.path).read_bytes()
+        with fitz.open(stream=data,filetype='pdf') as doc:
+            layout=layout_document(doc,root(),source.file_hash,False)
+        generated={asset['path'] for asset in layout.get('assets',{}).values()}
+        if image.path not in generated or not (root()/image.path).is_file():return False
+        publish(image.path,verify=True)
+        current_app.logger.warning('question_image_repaired image_id=%s paper_id=%s',image.id,question.paper_id)
+        return True
+    except Exception as exc:
+        current_app.logger.error('question_image_repair_failed image_id=%s type=%s',image.id,type(exc).__name__)
+        return False
 
 def work_once(paper_ids=None):
     from .engine import expire_all

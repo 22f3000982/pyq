@@ -18,6 +18,6 @@ it('does not reuse another user bootstrap',async()=>{
 });
 it('refreshes an expired signed image through the authenticated redirect once',async()=>{
  const w=mount(QuestionContent,{props:{text:'[[IMAGE:x]]',images:[{id:5,token:'x',url:'https://r2.example.test/signed'}]}});
- await w.get('img').trigger('error');expect(w.get('img').attributes('src')).toBe('/api/images/5');
+ await w.get('img').trigger('error');expect(w.get('img').attributes('src')).toBe('/api/images/5?proxy=1');
  await w.get('img').trigger('error');expect(w.text()).toContain('Source diagram or notation unavailable');w.unmount();
 });
