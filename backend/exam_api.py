@@ -1,7 +1,7 @@
 from .storage import send_asset,image_url,StorageError
 import time
 from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory,redirect
-from sqlalchemy import or_
+from sqlalchemy import or_,insert
 from sqlalchemy.orm import selectinload,joinedload
 from .models import *
 from .api import integer_argument,require_user,body,paginate
@@ -57,8 +57,38 @@ def bootstrap_json(a):
     return {**attempt_json(a),'items':[item_json(a,i,bookmarks) for i in items]}
 
 def start_response(a):
-    # The legacy response remains supported; frontend opts into the combined payload.
+    # Legacy helper for continuation flows that already own ORM answer objects.
     return jsonify(bootstrap_json(a) if request.args.get('bootstrap')=='1' else attempt_json(a)),201
+
+def start_payload(a,snapshots):
+    """Build a newly-created attempt response without re-reading its answer rows."""
+    ordered=sorted(snapshots,key=lambda s:(s.get('paper_id',0),question_order(s['number']),s['id']))
+    palette=[{'question_id':s['id'],'number':s['number'],'state':'NOT_VISITED','visited':False,'marked':False} for s in ordered]
+    result={'id':a.id,'paper_id':a.paper_id,'title':a.title,'mode':a.mode,'status':a.status,
+            'started_at':a.started_at,'deadline':a.deadline,'submitted_at':a.submitted_at,
+            'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,
+            'records_progress':a.records_progress,'palette':palette}
+    if request.args.get('bootstrap')=='1':
+        prepare_image_paths(ordered,attempt_image_ttl(a))
+        qids=[s['id'] for s in ordered]
+        bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter(
+            Bookmark.user_id==g.user.id,Bookmark.question_id.in_(qids))}
+        result['items']=[{'question':question_with_image_urls(s),'answer':None,'marked':False,
+                          'visited':False,'status':a.status,'bookmarked':s['id'] in bookmarks}
+                         for s in ordered]
+    return result
+
+def finish_new_attempt(a,snapshots):
+    """Persist all answer rows in one batch and return the already-built bootstrap."""
+    db.session.add(a);db.session.flush()
+    db.session.execute(insert(AttemptAnswer),[
+        {'attempt_id':a.id,'question_id':s['id'],'position':n,'snapshot':s,
+         'visited':False,'response_touched':False,'marked':False}
+        for n,s in enumerate(snapshots)
+    ])
+    payload=start_payload(a,snapshots)
+    db.session.commit()
+    return jsonify(payload),201
 
 def item_json(a,i,bookmarks):
     result={'question':question_with_image_urls(i.snapshot),'answer':i.answer,'marked':i.marked,'visited':i.visited,'status':a.status,'bookmarked':i.question_id in bookmarks}
@@ -77,7 +107,9 @@ def collection_query(kind):
 @exams.post('/attempts')
 @require_user()
 def start():
-    expire_all(user_id=g.user.id)
+    # Starting a paper is a latency-sensitive hot path. Timed expiration already
+    # runs in the worker and on attempt/history access, so do not scan a user's
+    # existing sessions before every new exam.
     b=body();mode=b.get('mode','practice')
     if mode not in ('practice','exam'):abort(400,description='Choose practice or exam')
     if b.get('collection')=='mistakes' and b.get('attempt_id'):
@@ -86,9 +118,7 @@ def start():
         wrong=[i for i in source.items if i.outcome=='INCORRECT']
         if not wrong:abort(409,description='No incorrect answers in this attempt')
         a=Attempt(user_id=g.user.id,paper_id=source.paper_id,mode='practice',title=('Wrong-answer practice · '+source.title)[:300],records_progress=False)
-        db.session.add(a);db.session.flush()
-        for n,i in enumerate(wrong):db.session.add(AttemptAnswer(attempt_id=a.id,question_id=i.question_id,position=n,snapshot=i.snapshot))
-        db.session.commit();return start_response(a)
+        return finish_new_attempt(a,[i.snapshot for i in wrong])
     kind=b.get('collection');p=None
     if kind:
         if kind not in ('bookmarks','topic') or mode!='practice':abort(400,description='Invalid practice collection')
@@ -118,9 +148,7 @@ def start():
     if not snapshots:abort(409,description='Questions not imported yet.')
     # Unknown keys/marks remain ungraded; the result reports them separately.
     a=Attempt(user_id=g.user.id,paper_id=p.id if p else None,mode=mode,title=title[:300],deadline=deadline,records_progress=p is not None,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
-    db.session.add(a);db.session.flush()
-    for n,s in enumerate(snapshots):db.session.add(AttemptAnswer(attempt_id=a.id,question_id=s['id'],position=n,snapshot=s))
-    db.session.commit();return start_response(a)
+    return finish_new_attempt(a,snapshots)
 
 @exams.get('/attempts')
 @require_user()

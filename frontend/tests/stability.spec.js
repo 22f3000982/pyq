@@ -6,7 +6,7 @@ let attempt;
 beforeEach(()=>{vi.useFakeTimers();sessionStorage.clear();mocks.go.mockReset();mocks.api.mockReset();attempt={id:4,title:'Source paper',mode:'exam',status:'ACTIVE',deadline:Date.now()/1000+600,server_time:Date.now()/1000,palette:[1,2].map(id=>({question_id:id,number:String(id),state:'NOT_VISITED'}))};
  mocks.api.mockImplementation(async(path,o)=>path==='/attempts/4'?structuredClone(attempt):path==='/attempts/4/status'?{id:attempt.id,status:attempt.status,deadline:attempt.deadline,submitted_at:null,expires_at:Date.now()/1000+3600,server_time:Date.now()/1000}:path==='/attempts/4/questions'?{status:'ACTIVE',items:[1,2].map(id=>({question:{id,number:String(id),kind:'NAT',text:'Source question '+id,images:[],options:[],marks:1},answer:null,marked:false}))}:path.endsWith('/answers')?{items:(o?.body?.items||[]).map(x=>({question_id:x.question_id,state:'ANSWERED'}))}:{state:'ANSWERED'});
 });
-afterEach(()=>vi.useRealTimers());
+afterEach(()=>{vi.restoreAllMocks();vi.useRealTimers()});
 const button=(w,label)=>w.findAll('button').find(b=>b.text()===label);
 describe('nonblocking exam navigation',()=>{
  it('navigates immediately while save is unresolved; serializes newer responses and submit',async()=>{
@@ -23,9 +23,10 @@ describe('nonblocking exam navigation',()=>{
   const w=mount(Exam,{props:{id:4}});await flushPromises();await button(w,'Save & next').trigger('click');await button(w,'Previous').trigger('click');await vi.advanceTimersByTimeAsync(1000);
   expect(mocks.api.mock.calls.filter(c=>c[0].endsWith('/answers'))).toHaveLength(0);expect(sessionStorage.getItem('pyq-visited-4')).toContain('1');w.unmount();
  });
- it('polls only the lightweight status endpoint every five minutes',async()=>{
+ it('uses a sparse jittered heartbeat instead of synchronized polling',async()=>{
+  vi.spyOn(Math,'random').mockReturnValue(0);
   const w=mount(Exam,{props:{id:4}});await flushPromises();expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(0);
-  await vi.advanceTimersByTimeAsync(299000);expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(0);
+  await vi.advanceTimersByTimeAsync(599000);expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(0);
   await vi.advanceTimersByTimeAsync(1000);await flushPromises();expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(1);
   expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/questions')).toHaveLength(1);w.unmount();
  });

@@ -1,5 +1,6 @@
-"""Shared, server-only content cache. Never cache sessions, responses or progress."""
-import json, time, uuid
+"""Shared content cache. Student/session state is never cached here."""
+import json, time, uuid, threading
+from collections import OrderedDict
 from flask import current_app, has_app_context
 from sqlalchemy import event
 from sqlalchemy.orm import Session
@@ -7,6 +8,69 @@ from .performance import count
 
 CONTENT_TABLES = {'course', 'term', 'exam_type', 'paper', 'question', 'question_option',
                   'question_image', 'ingestion_file', 'source_entry'}
+
+# A small per-process fallback matters on Render even before Redis is provisioned:
+# the same paper should not be rebuilt from PostgreSQL for every student. Redis
+# remains the preferred shared cache across processes/services.
+_local_lock = threading.RLock()
+_local_cache = OrderedDict()
+_local_inflight = {}
+
+
+def _local_limit():
+    return max(8, int(current_app.config.get('LOCAL_CONTENT_CACHE_MAX', 128)))
+
+
+def _local_ttl():
+    return max(1, int(current_app.config.get('CONTENT_CACHE_TTL', 60)))
+
+
+def _local_get(key):
+    now=time.monotonic()
+    with _local_lock:
+        row=_local_cache.get(key)
+        if row is None:return None
+        expires,value=row
+        if expires<=now:
+            _local_cache.pop(key,None);return None
+        _local_cache.move_to_end(key)
+        return value
+
+
+def _local_put(key,value):
+    with _local_lock:
+        _local_cache[key]=(time.monotonic()+_local_ttl(),value)
+        _local_cache.move_to_end(key)
+        while len(_local_cache)>_local_limit():_local_cache.popitem(last=False)
+
+
+def _local_clear():
+    with _local_lock:_local_cache.clear()
+
+
+def _local_cached(key,loader):
+    value=_local_get(key)
+    if value is not None:
+        count('cache_hit');return value
+    count('cache_miss')
+    owner=False
+    with _local_lock:
+        event=_local_inflight.get(key)
+        if event is None:
+            event=threading.Event();_local_inflight[key]=event;owner=True
+    if not owner:
+        # Let one thread warm a paper; a bounded wait avoids a thundering herd
+        # during simultaneous exam starts without ever hanging a request.
+        if event.wait(timeout=5.0):
+            value=_local_get(key)
+            if value is not None:
+                count('cache_hit');return value
+        return loader()
+    try:
+        value=loader();_local_put(key,value);return value
+    finally:
+        with _local_lock:
+            _local_inflight.pop(key,None);event.set()
 
 
 def client():
@@ -26,12 +90,13 @@ def prefix():
 
 
 def invalidate():
+    _local_clear()
     try:
         r = client()
-        if r is not None:
-            r.set(prefix()+':epoch', uuid.uuid4().hex)
+        if r is not None:r.set(prefix()+':epoch', uuid.uuid4().hex)
     except Exception:
-        # Entries have a bounded TTL even if invalidation delivery is unavailable.
+        # Local entries are already cleared in this process. Other processes have
+        # a bounded TTL even if shared invalidation is temporarily unavailable.
         current_app.logger.warning('content_cache_invalidation_failed; entries expire within configured TTL')
 
 
@@ -41,8 +106,8 @@ def cached(key, loader):
     try:
         r = client()
     except Exception:
-        count('cache_error');return loader()
-    if r is None:return loader()
+        count('cache_error');return _local_cached(key,loader)
+    if r is None:return _local_cached(key,loader)
     try:
         epoch_key = prefix()+':epoch'
         r.set(epoch_key, uuid.uuid4().hex, nx=True)
@@ -52,7 +117,7 @@ def cached(key, loader):
         if raw is not None:
             count('cache_hit');return json.loads(raw)
         count('cache_miss')
-        lock = r.lock(full+':lock', timeout=15, blocking_timeout=.5)
+        lock = r.lock(full+':lock', timeout=15, blocking_timeout=5.0)
         acquired = lock.acquire()
         raw = r.get(full)
         if raw is not None:
@@ -62,7 +127,7 @@ def cached(key, loader):
         if acquired:
             try:lock.release()
             except Exception:pass
-        count('cache_error');return loader()
+        count('cache_error');return _local_cached(key,loader)
     try:
         value = loader()  # Application exceptions propagate; no duplicate execution.
         if acquired:
@@ -70,6 +135,7 @@ def cached(key, loader):
                 if r.get(epoch_key) == epoch:
                     r.set(full, json.dumps(value), ex=current_app.config.get('CONTENT_CACHE_TTL', 60))
             except Exception:count('cache_error')
+        _local_put(key,value)
         return value
     finally:
         if acquired:
