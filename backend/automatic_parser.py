@@ -42,8 +42,11 @@ def parse_document(layout):
         stem=parts[0];options=[];answers=None;source_pages={pn for start,stop,pn in layout['pages'] if start<end and stop>m.start()}
         for lo,hi,passage,groupstart in groups:
             if lo<=int(number)<=hi:
+                subquestion=stem.strip()
                 stem=passage+'\n\n'+stem;source_pages|={pn for start,stop,pn in layout['pages'] if start<=groupstart<=stop}
                 evidence['shared_passage']=True
+                evidence['shared_passage_text']=passage.strip()
+                evidence['subquestion_text']=subquestion
         if len(parts)>1:
             opts=list(re.finditer(r'(?m)^\s*(\d{7,})\.\s*',parts[1]))
             for n,o in enumerate(opts):
