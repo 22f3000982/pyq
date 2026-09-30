@@ -75,3 +75,30 @@
  .exam-tool-button{font-size:0!important;padding:7px!important}
  .exam-tool-button svg{width:18px;height:18px}
 }
+
+/* Review outcome emphasis */
+.review-card{border-left:5px solid #b9c4d3}
+.review-card.review-correct{border-left-color:#2e9b59;background:#f7fcf9}
+.review-card.review-incorrect{border-left-color:#d44f4f;background:#fff8f8}
+.review-card.review-skipped{border-left-color:#d6a335;background:#fffaf0}
+.review-card.review-ungraded{border-left-color:#7a6bb2;background:#faf8ff}
+.review-card.review-correct .review-outcome{background:#e3f5e9;color:#237644}
+.review-card.review-incorrect .review-outcome{background:#fde8e8;color:#b53838}
+.review-card.review-skipped .review-outcome{background:#fff0c8;color:#976a00}
+.review-card.review-ungraded .review-outcome{background:#eee9fb;color:#66519d}
+
+/* Scratch board toolbar */
+.scratch-toolbar{height:42px;display:flex;align-items:center;gap:8px;padding:6px 9px;border-bottom:1px solid #d8e0ea;background:#f7f9fc}
+.scratch-toolbar button{border:1px solid #c7d2e2;background:#fff;color:#425976;border-radius:4px;min-height:28px;padding:4px 9px;display:flex;align-items:center;gap:5px}
+.scratch-toolbar button.active{outline:2px solid #4a7ad7;outline-offset:1px}
+.scratch-toolbar .scratch-color{width:24px;height:24px;min-height:24px;padding:0;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #b7c3d4}
+.scratch-canvas-wrap{height:calc(100% - 80px)!important}
+
+/* TCS-style comprehension split view */
+.comprehension-split{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:0;border:1px solid #b9c2cf;margin-bottom:18px;min-height:330px}
+.comprehension-passage,.comprehension-question{padding:16px;min-width:0;overflow:auto;max-height:52vh}
+.comprehension-passage{border-right:1px solid #b9c2cf;background:#fafafa}
+.comprehension-question{background:#fff}
+.comprehension-split .eyebrow{margin-bottom:10px;color:#4f6786}
+.comprehension-question .question-stem{margin-bottom:0}
+@media(max-width:760px){.comprehension-split{grid-template-columns:1fr}.comprehension-passage{border-right:0;border-bottom:1px solid #b9c2cf;max-height:34vh}.comprehension-question{max-height:none}}
