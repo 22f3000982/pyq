@@ -7,6 +7,7 @@ from urllib.parse import urlparse,urljoin,parse_qs
 from pathlib import Path
 import requests
 from flask import current_app
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from .models import db,Paper,IngestionBatch,IngestionFile,User
 
@@ -85,10 +86,18 @@ def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None,force_paper
     force_paper_ids=set(force_paper_ids or [])
     query=Paper.query.filter(Paper.source_url.isnot(None),Paper.status!='ARCHIVED').order_by(Paper.id)
     if paper_ids is not None:query=query.filter(Paper.id.in_(paper_ids))
+    papers=query.all()
+    # One grouped lookup replaces one remote PostgreSQL query per paper. This is
+    # important when the first manual sync selects hundreds of catalog entries.
+    ids=[p.id for p in papers]
+    latest={}
+    if ids:
+        latest_ids=db.session.query(func.max(IngestionFile.id)).filter(IngestionFile.paper_id.in_(ids)).group_by(IngestionFile.paper_id)
+        latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}
     selected=0
-    for p in query:
+    for p in papers:
         if limit is not None and selected>=limit:break
-        previous=IngestionFile.query.filter_by(paper_id=p.id).order_by(IngestionFile.id.desc()).first()
+        previous=latest.get(p.id)
         forced=p.id in force_paper_ids
         if forced:
             if previous and previous.status in ('QUEUED','FETCHING','PROCESSING','FETCH_QUEUED'):continue
