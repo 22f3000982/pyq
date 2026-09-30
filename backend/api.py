@@ -123,12 +123,13 @@ def stats():
     from .content_cache import cached
     def load():
         ready=db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct().subquery()
+        visible_effective=db.session.query(func.coalesce(Paper.canonical_paper_id,Paper.id).label('paper_id')).filter(Paper.status!='ARCHIVED').distinct().subquery()
         available=(db.session.query(ExamType.name,func.count(Paper.id))
             .join(Paper,Paper.exam_type_id==ExamType.id)
             .filter(Paper.status!='ARCHIVED',or_(Paper.id.in_(ready),Paper.canonical_paper_id.in_(ready)))
             .group_by(ExamType.name).all())
         return dict(courses=Course.query.count(),papers=Paper.query.filter(Paper.status!='ARCHIVED').count(),
-                    questions=Question.query.filter_by(status='AVAILABLE').count(),
+                    questions=Question.query.filter(Question.status=='AVAILABLE',Question.paper_id.in_(visible_effective)).count(),
                     exam_papers={name:count for name,count in available})
     return jsonify(cached('public-stats',load))
 
@@ -172,7 +173,8 @@ def search():
     text=request.args.get('q','').strip()[:150]
     if len(text)<2:return jsonify(courses=[],papers=[],questions=[])
     like='%'+text+'%'
-    return jsonify(courses=[{'id':c.id,'name':c.name} for c in Course.query.filter(or_(Course.name.ilike(like),Course.code.ilike(like))).limit(20)],papers=paper_rows(visible_papers(Paper.query).options(*PAPER_LOAD).filter(Paper.name.ilike(like)).limit(20).all()),questions=[{'id':q.id,'text':q.text[:300],'paper_id':q.paper_id,'topic':q.topic} for q in Question.query.filter(Question.status=='AVAILABLE',Question.text.ilike(like)).limit(20)])
+    visible_effective=db.session.query(func.coalesce(Paper.canonical_paper_id,Paper.id).label('paper_id')).filter(Paper.status!='ARCHIVED').distinct().subquery()
+    return jsonify(courses=[{'id':c.id,'name':c.name} for c in Course.query.filter(or_(Course.name.ilike(like),Course.code.ilike(like))).limit(20)],papers=paper_rows(visible_papers(Paper.query).options(*PAPER_LOAD).filter(Paper.name.ilike(like)).limit(20).all()),questions=[{'id':q.id,'text':q.text[:300],'paper_id':q.paper_id,'topic':q.topic} for q in Question.query.filter(Question.status=='AVAILABLE',Question.paper_id.in_(visible_effective),Question.text.ilike(like)).limit(20)])
 
 @api.get('/demo-papers')
 def demo_papers():
