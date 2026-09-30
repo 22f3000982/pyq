@@ -293,10 +293,22 @@ def question_image(id):
     if status!='AVAILABLE' and g.user.role!='ADMIN':
         prior=AttemptAnswer.query.join(Attempt).filter(Attempt.user_id==g.user.id,AttemptAnswer.question_id==image.question_id).first()
         if not prior:abort(404)
+    # Normal requests keep the fast direct signed/CDN path. If the browser
+    # reports that direct image as failed, QuestionContent retries with ?proxy=1;
+    # never redirect that fallback back to the same broken signed URL.
+    force_proxy=request.args.get('proxy')=='1'
     url=image_url(image.path,image.id)
-    if not url.startswith('/api/images/'):
+    if not force_proxy and not url.startswith('/api/images/'):
         response=redirect(url,code=302);response.headers['Cache-Control']='private, max-age=300';return response
-    response=send_asset(image.path,mimetype='image/png',conditional=True)
+    try:
+        response=send_asset(image.path,mimetype='image/png',conditional=True)
+    except StorageError:
+        # Older or partially uploaded papers may contain a DB image reference whose
+        # object never reached R2. Rebuild that exact deterministic asset once from
+        # the private source PDF, publish it, then serve it through this proxy.
+        from .ingestion import repair_question_image_asset
+        if not repair_question_image_asset(image):raise
+        response=send_asset(image.path,mimetype='image/png',conditional=True)
     response.headers['Cache-Control']='private, max-age=3600'
     response.vary.add('Cookie')
     return response
