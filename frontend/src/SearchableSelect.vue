@@ -8,7 +8,8 @@ const props=defineProps({
   placeholder:{type:String,default:'Select'},
   searchPlaceholder:{type:String,default:'Type to search…'},
   labelKey:{type:String,default:'label'},
-  valueKey:{type:String,default:'value'}
+  valueKey:{type:String,default:'value'},
+  ariaLabel:{type:String,default:'Select option'}
 });
 const emit=defineEmits(['update:modelValue','change']);
 const open=ref(false),query=ref(''),root=ref(null),searchInput=ref(null);
@@ -32,7 +33,7 @@ onBeforeUnmount(()=>{document.removeEventListener('pointerdown',outside);documen
 
 <template>
 <div ref="root" class="searchable-select" :class="{open}">
-  <button type="button" class="searchable-select-trigger" @click="toggle" :aria-expanded="open">
+  <button type="button" class="searchable-select-trigger" @click="toggle" :aria-expanded="open" :aria-label="ariaLabel">
     <span :class="{placeholder:!selected}">{{selected?.[labelKey]||placeholder}}</span>
     <span class="searchable-select-icons">
       <X v-if="selected" :size="15" class="searchable-select-clear" @click="clear"/>
