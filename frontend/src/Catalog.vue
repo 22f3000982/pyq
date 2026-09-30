@@ -8,7 +8,7 @@ const isCourse=props.route.startsWith('/course/'),isPaper=props.route.startsWith
 async function load(){loading.value=true;try{if(isCourse){const d=await api('/papers?'+new URLSearchParams({course_id:course.value.id,exam:exam.value,year:year.value,term_id:term.value,page:page.value,limit:16}));papers.value=d.items;total.value=d.total}else if(!isPaper){const d=await api('/courses?'+new URLSearchParams({q:q.value,level:level.value,sort:sort.value,page:page.value,limit:12}));courses.value=d.items;total.value=d.total}}catch(e){error.value=e.message}finally{loading.value=false}}
 async function filter(){page.value=1;await load()}
 onMounted(async()=>{try{
- if(isPaper){paper.value=await api('/papers/'+props.route.split('/')[2]);loading.value=false;return}
+ if(isPaper){const id=props.route.split('/')[2];paper.value=await api('/papers/'+id);loading.value=false;if(paper.value.practice_available)void api('/papers/'+id+'/questions?page=1&limit=1').catch(()=>{});return}
  if(isCourse){[course.value,meta.value]=await Promise.all([api('/courses/'+props.route.split('/')[2]),api('/metadata')]);await Promise.all([load(),api('/courses/'+course.value.id+'/topics').then(d=>topics.value=d)]);return}
  await Promise.all([load(),api('/stats').then(d=>stats.value=d),api('/demo-papers').then(d=>featured.value=d.items||[]),api('/metadata').then(d=>meta.value=d)]);
 }catch(e){error.value=e.message;loading.value=false}});
