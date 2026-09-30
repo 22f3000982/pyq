@@ -6,9 +6,9 @@ vi.mock('../src/api',()=>({...mocks,api:async(path,o)=>{if(path.endsWith('?boots
 vi.mock('../src/MathText.vue',()=>({default:{props:['text'],template:'<div>{{text}}</div>'}}));
 beforeEach(()=>{mocks.api.mockReset();mocks.go.mockReset();sessionStorage.clear()});
 describe('student surfaces',()=>{
-it('catalog renders real response data and supports search',async()=>{
- mocks.api.mockImplementation(async path=>path==='/stats'?{courses:39,papers:734,questions:0}:path==='/metadata'?{levels:['DEGREE']}:({items:[{id:1,code:'CS3002',name:'Software Testing',level:'DEGREE',course_type:'Core',paper_count:4,years:[2026],exams:{'Quiz 1':1}}],total:1}));
- const w=mount(Catalog,{props:{route:'/'}});await flushPromises();expect(w.text()).toContain('734');expect(w.text()).toContain('Software Testing');await w.get('input[aria-label="Find a course"]').setValue('testing');await w.get('form').trigger('submit');await flushPromises();expect(mocks.api.mock.calls.at(-1)[0]).toContain('q=testing');w.unmount();
+it('homepage stays focused on high-level stats and direct exam actions',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/stats'?{courses:39,papers:734,questions:1403,exam_papers:{'Quiz 1':42,'Quiz 2':38,'End Term':31}}:path==='/metadata'?{levels:['DEGREE']}:{items:[],total:0});
+ const w=mount(Catalog,{props:{route:'/'}});await flushPromises();expect(w.text()).toContain('734');expect(w.text()).toContain('Quiz 1');expect(w.text()).toContain('42 papers available');expect(w.text()).not.toContain('Five papers to try');expect(w.text()).not.toContain('Explore your courses');expect(mocks.api.mock.calls.some(c=>String(c[0]).startsWith('/courses?'))).toBe(false);w.unmount();
 });
 it('unimported paper disables exam and practice but preserves source',async()=>{
  mocks.api.mockImplementation(async path=>path==='/stats'?{}:path==='/metadata'?{levels:[]}:({id:1,course_id:1,course:'Test',name:'Source paper',practice_available:false,question_count:0,source_url:'https://example.com/paper',warnings:[]}));
@@ -17,7 +17,7 @@ it('unimported paper disables exam and practice but preserves source',async()=>{
 it('exam saves options and review mark, then submits through confirmation',async()=>{
  const a={id:1,mode:'exam',title:'DEMO DATA',status:'ACTIVE',deadline:Date.now()/1000+3600,server_time:Date.now()/1000,palette:[{question_id:1,state:'NOT_VISITED'}]};
  mocks.api.mockImplementation(async(path,options)=>path==='/attempts/1'?a:path.endsWith('/questions')?{status:'ACTIVE',items:[{question:{id:1,kind:'MCQ',text:'DEMO DATA question',marks:2,negative_marks:0,options:[{key:'A',text:'Alpha'},{key:'B',text:'Beta'}],images:[]},answer:null,marked:false}]}:path.endsWith('/answers')?{state:options.body.marked?'ANSWERED_AND_MARKED_FOR_REVIEW':options.body.answer?'ANSWERED':'VISITED'}:{});
- const w=mount(Exam,{props:{id:1}});await flushPromises();await w.findAll('.option')[0].trigger('click');await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/attempts/1/answers',expect.objectContaining({body:{question_id:1,answer:['A']}}));
+ const w=mount(Exam,{props:{id:1}});await flushPromises();await w.findAll('.option')[0].trigger('click');await new Promise(r=>setTimeout(r,300));await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/attempts/1/answers',expect.objectContaining({body:{items:expect.arrayContaining([expect.objectContaining({question_id:1,answer:['A']})])}}));
  await w.findAll('button').find(b=>b.text()==='Mark for review').trigger('click');await flushPromises();expect(w.text()).not.toContain('Correct answer');await w.findAll('button').find(b=>b.text()==='Submit exam').trigger('click');expect(w.find('[role="dialog"]').exists()).toBe(true);await w.findAll('button').find(b=>b.text()==='Submit attempt').trigger('click');await flushPromises();expect(mocks.go).toHaveBeenCalledWith('/result/1');w.unmount();
 });
 });
@@ -47,7 +47,7 @@ describe('student requested improvements',()=>{
  });
  it('loads available papers after choosing a course within an exam type',async()=>{
   const {default:ExamBrowser}=await import('../src/ExamBrowser.vue');mocks.api.mockImplementation(async(path)=>path.startsWith('/courses')?{items:[{id:27,name:'Game Theory',exams:{'Quiz 1':3}}]}:path==='/metadata'?{terms:[{id:1,name:'May 2026'}]}:{items:[{id:50,name:'Game Theory.pdf',term:'May 2026',exam:'Quiz 1',question_count:16,total_marks:25}],total:1});
-  const w=mount(ExamBrowser,{props:{route:'/exam/Quiz%201'}});await flushPromises();await w.get('[aria-label="Choose course"]').setValue('27');await flushPromises();expect(mocks.api.mock.calls.at(-1)[0]).toContain('available=true');expect(w.text()).toContain('Game Theory.pdf');expect(w.text()).toContain('May 2026');expect(w.findAll('a').at(-1).attributes('href')).toBe('#/paper/50');w.unmount();
+  const w=mount(ExamBrowser,{props:{route:'/exam/Quiz%201'}});await flushPromises();await w.get('button[aria-label="Choose course"]').trigger('click');const search=w.get('.searchable-select-search input');await search.setValue('Game');expect(w.findAll('.searchable-select-option')).toHaveLength(1);await w.findAll('.searchable-select-option')[0].trigger('click');await flushPromises();expect(mocks.api.mock.calls.at(-1)[0]).toContain('available=true');expect(w.text()).toContain('Game Theory.pdf');expect(w.text()).toContain('May 2026');expect(w.findAll('a').at(-1).attributes('href')).toBe('#/paper/50');w.unmount();
  });
 });
 
