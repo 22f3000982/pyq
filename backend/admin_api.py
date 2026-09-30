@@ -160,12 +160,15 @@ def apply_catalog():
     try:
         changed=json.loads(request.form.get('changed_keys','[]'))
         if not isinstance(changed,list):abort(400,description='changed_keys must be a list')
+        try:batch_limit=int(request.form.get('batch_limit','20'))
+        except ValueError:abort(400,description='batch_limit must be a number')
+        if not 1<=batch_limit<=50:abort(400,description='batch_limit must be between 1 and 50')
         result=apply_sync(path,
             expected_hash=request.form.get('workbook_hash') or None,
             process_new=request.form.get('process_new','true').lower()=='true',
             process_unprocessed=request.form.get('process_unprocessed','true').lower()=='true',
             changed_keys=[str(x) for x in changed[:500]],
-            queue=True)
+            queue=True,batch_limit=batch_limit)
         return jsonify(**result),202
     finally:path.unlink(missing_ok=True)
 
@@ -177,6 +180,21 @@ def import_catalog():
     path=_workbook_upload()
     try:return jsonify(**import_workbook(path),batch_id=None,queued=0)
     finally:path.unlink(missing_ok=True)
+
+@admin.get('/catalog/batches/<int:id>')
+@require_user(True)
+def catalog_batch(id):
+    from .ingestion import SUCCESS,FAILURES
+    batch=db.get_or_404(IngestionBatch,id)
+    files=IngestionFile.query.filter_by(batch_id=id).order_by(IngestionFile.id).all()
+    total=len(files);success=sum(f.status in SUCCESS for f in files);failed=sum(f.status in FAILURES for f in files)
+    active=sum(f.status in ('FETCHING','PROCESSING') for f in files)
+    queued=sum(f.status in ('FETCH_QUEUED','QUEUED') for f in files)
+    finished=success+failed
+    percent=round((finished/total)*100,1) if total else 100
+    return jsonify(id=id,status=batch.status,total=total,completed=success,failed=failed,active=active,queued=queued,
+                   finished=finished,percent=percent,done=(total==0 or finished==total),
+                   items=[{'id':f.id,'paper_id':f.paper_id,'filename':f.filename,'status':f.status,'error':f.error,'extracted':f.extracted} for f in files])
 
 @admin.get('/imports')
 @require_user(True)
