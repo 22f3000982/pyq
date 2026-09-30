@@ -13,18 +13,33 @@ def owned(id):
     if a.user_id!=g.user.id:abort(404)
     expire_attempt(a)
     if a.expires_at<=time.time():
-        cleanup_sessions();abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
+        cleanup_sessions(user_id=g.user.id);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
     return a
 
 def attempt_json(a):return {'id':a.id,'paper_id':a.paper_id,'title':a.title,'mode':a.mode,'status':a.status,'started_at':a.started_at,'deadline':a.deadline,'submitted_at':a.submitted_at,'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,'records_progress':a.records_progress,'palette':[{'question_id':i.question_id,'number':i.snapshot['number'],'state':palette_state(i),'visited':i.visited,'marked':i.marked} for i in sorted(a.items,key=lambda i:(i.snapshot.get("paper_id",0),question_order(i.snapshot["number"]),i.position))]}
 
+def attempt_status_json(a):
+    # Deliberately excludes a.items/snapshots. This endpoint is used for the
+    # occasional timer safety sync and stays O(1) in paper question count.
+    return {'id':a.id,'status':a.status,'deadline':a.deadline,'submitted_at':a.submitted_at,
+            'server_time':time.time(),'expires_at':a.expires_at,'version':a.version}
+
+def attempt_image_ttl(a):
+    # Bootstrap contains URLs for the whole paper. Keep them valid for the
+    # remaining temporary attempt lifetime so late questions do not fall back
+    # through Flask after the old 10-minute signature expired.
+    remaining=max(0,(a.expires_at or time.time()+3600)-time.time())
+    return max(600,min(604799,int(remaining)+300))
+
 def question_with_image_urls(snapshot):
     result=public_question(snapshot)
     paths=getattr(g,'image_paths',{})
-    result['images']=[{**image,'url':image_url(paths.get(image['id']),image['id']) if paths.get(image['id']) else '/api/images/'+str(image['id'])} for image in result.get('images',[]) if image.get('id') is not None]
+    ttl=getattr(g,'image_signed_ttl',None)
+    result['images']=[{**image,'url':image_url(paths.get(image['id']),image['id'],expires=ttl) if paths.get(image['id']) else '/api/images/'+str(image['id'])} for image in result.get('images',[]) if image.get('id') is not None]
     return result
 
-def prepare_image_paths(snapshots):
+def prepare_image_paths(snapshots,signed_ttl=None):
+    if signed_ttl is not None:g.image_signed_ttl=signed_ttl
     if current_app.config.get('IMAGE_DELIVERY','proxy')=='proxy':return
     paths={}
     missing=set()
@@ -37,7 +52,7 @@ def prepare_image_paths(snapshots):
 
 def bootstrap_json(a):
     items=sorted(a.items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))
-    prepare_image_paths([i.snapshot for i in items])
+    prepare_image_paths([i.snapshot for i in items],attempt_image_ttl(a))
     bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter(Bookmark.user_id==g.user.id,Bookmark.question_id.in_([i.question_id for i in items]))}
     return {**attempt_json(a),'items':[item_json(a,i,bookmarks) for i in items]}
 
@@ -119,10 +134,16 @@ def attempt(id):
     a=owned(id)
     return jsonify(bootstrap_json(a) if request.args.get('bootstrap')=='1' else attempt_json(a))
 
+@exams.get('/attempts/<int:id>/status')
+@require_user()
+def attempt_status(id):
+    return jsonify(attempt_status_json(owned(id)))
+
 @exams.get('/attempts/<int:id>/questions/<int:qid>')
 @require_user()
 def attempt_question(id,qid):
     a=owned(id);i=AttemptAnswer.query.filter_by(attempt_id=a.id,question_id=qid).first_or_404()
+    prepare_image_paths([i.snapshot],attempt_image_ttl(a))
     return jsonify(item_json(a,i,{qid} if db.session.get(Bookmark,(g.user.id,qid)) else set()))
 
 @exams.get('/attempts/<int:id>/questions')
@@ -131,15 +152,25 @@ def attempt_questions(id):
     a=owned(id)
     bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter_by(user_id=g.user.id)}
     items=sorted(a.items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))
-    prepare_image_paths([i.snapshot for i in items])
+    prepare_image_paths([i.snapshot for i in items],attempt_image_ttl(a))
     return jsonify(items=[item_json(a,i,bookmarks) for i in items],status=a.status)
 
 @exams.post('/attempts/<int:id>/answers')
 @require_user()
 def answer(id):
-    a=owned(id)
+    b=body()
+    # Fetch the owned attempt and target answer in one round-trip. This removes
+    # one database query from every response save while preserving ownership,
+    # deadline enforcement and optimistic parent-version serialization.
+    row=(db.session.query(Attempt,AttemptAnswer)
+         .join(AttemptAnswer,AttemptAnswer.attempt_id==Attempt.id)
+         .filter(Attempt.id==id,Attempt.user_id==g.user.id,
+                 AttemptAnswer.question_id==b.get('question_id')).first())
+    if row is None:abort(404)
+    a,i=row;expire_attempt(a)
+    if a.expires_at<=time.time():
+        cleanup_sessions(user_id=g.user.id);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
     if a.status!='ACTIVE':abort(409,description='Attempt already submitted or time expired')
-    b=body();i=AttemptAnswer.query.filter_by(attempt_id=a.id,question_id=b.get('question_id')).first_or_404()
     if 'answer' in b:
         i.answer=normalize_answer(i.snapshot,b['answer']);i.response_touched=True
     if 'marked' in b:
