@@ -1,5 +1,6 @@
 """Workbook catalog scanning, safe incremental sync, and legacy import compatibility."""
 import hashlib,re
+from collections import Counter
 from urllib.parse import urlparse,parse_qs
 import openpyxl
 from sqlalchemy import func
@@ -34,6 +35,9 @@ def source_token(url):
 
 def paper_key(course_code,term_name,exam_name,session,name):
     return digest('|'.join(map(norm_key,[course_code,term_name,exam_name,session,name])))
+
+def structural_key(course_code,term_name,exam_name,session):
+    return tuple(map(norm_key,[course_code,term_name,exam_name,session]))
 
 def scan_workbook(path):
     raw=open(path,'rb').read();sha=hashlib.sha256(raw).hexdigest()
@@ -111,49 +115,91 @@ def scan_workbook(path):
                     seen_keys[key]=entry;report['entries'].append(entry);report['terms'][sheet.title]+=1
     workbook.close();return report
 
-def _existing_index():
+def _existing_catalog():
     courses={c.id:c for c in Course.query.all()};terms={t.id:t for t in Term.query.all()};exams={e.id:e for e in ExamType.query.all()}
-    index={}
-    for p in Paper.query.all():
-        c=courses.get(p.course_id);t=terms.get(p.term_id);e=exams.get(p.exam_type_id)
-        if not (c and t and e):continue
-        key=paper_key(c.code or c.name,t.name,e.name,p.session,p.name)
-        index.setdefault(key,[]).append(p)
-    return index
+    papers=Paper.query.all();by_id={p.id:p for p in papers}
+    exact={};structural={};sources={}
+    def add(mapping,key,paper):
+        if not key:return
+        bucket=mapping.setdefault(key,[])
+        if all(existing.id!=paper.id for existing in bucket):bucket.append(paper)
+    for p in papers:
+        course=courses.get(p.course_id);term=terms.get(p.term_id);exam=exams.get(p.exam_type_id)
+        if not (course and term and exam):continue
+        code=course.code or course.name
+        add(exact,paper_key(code,term.name,exam.name,p.session,p.name),p)
+        add(structural,structural_key(code,term.name,exam.name,p.session),p)
+        add(sources,source_token(p.source_url),p)
+    # Previous workbook provenance is valuable when display labels were renamed.
+    for source in SourceEntry.query.all():
+        paper=by_id.get(source.paper_id)
+        if paper:add(sources,source_token(source.url),paper)
+    return {'papers':papers,'by_id':by_id,'exact':exact,'structural':structural,'sources':sources}
+
+def _preferred(candidates,ready):
+    if not candidates:return None
+    return sorted(candidates,key=lambda p:(p.status!='ARCHIVED',((p.canonical_paper_id or p.id) in ready),p.id),reverse=True)[0]
+
+def _match_entries(scan,ready):
+    catalog=_existing_catalog();claimed=set();matches={}
+    structure_counts=Counter(structural_key(e['course_code'],e['term_name'],e['exam_name'],e['session']) for e in scan['entries'])
+    for entry in scan['entries']:
+        paper=None;token=entry['source_token'];structure=structural_key(entry['course_code'],entry['term_name'],entry['exam_name'],entry['session'])
+        # Strongest signal: same source file, including links seen in older workbook imports.
+        source_matches=[p for p in catalog['sources'].get(token,[]) if p.id not in claimed]
+        if len(source_matches)==1:paper=source_matches[0]
+        elif source_matches:
+            exact_ids={p.id for p in catalog['exact'].get(entry['key'],[])}
+            narrowed=[p for p in source_matches if p.id in exact_ids]
+            if len(narrowed)==1:paper=narrowed[0]
+            else:
+                structural_ids={p.id for p in catalog['structural'].get(structure,[])}
+                narrowed=[p for p in source_matches if p.id in structural_ids]
+                if len(narrowed)==1:paper=narrowed[0]
+        # Exact logical identity remains safe when source sharing links changed.
+        if paper is None:
+            exact=[p for p in catalog['exact'].get(entry['key'],[]) if p.id not in claimed]
+            if exact:paper=_preferred(exact,ready)
+        # Last safe fallback: one workbook paper and one DB paper for the same
+        # course+term+exam+session. Never guess when either side is ambiguous.
+        if paper is None and structure_counts[structure]==1:
+            structural=[p for p in catalog['structural'].get(structure,[]) if p.id not in claimed]
+            if len(structural)==1:paper=structural[0]
+        if paper:
+            matches[entry['key']]=paper;claimed.add(paper.id)
+    return matches,catalog
 
 def compare_scan(scan):
-    existing=_existing_index()
     ready={pid for pid, in db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct()}
+    matches,catalog=_match_entries(scan,ready)
     latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
     latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}
-    categories={'new':[],'unprocessed':[],'changed':[],'available':[],'ignored':[]}
-    seen=set()
+    categories={'new':[],'unprocessed':[],'changed':[],'available':[],'ignored':[],'queued':[],'failed':[]}
+    matched_ids=set()
+    active_states={'QUEUED','FETCH_QUEUED','FETCHING','PROCESSING'}
+    failed_states={'PROCESSING_FAILED','EXTRACTION_FAILED'}
     for entry in scan['entries']:
-        seen.add(entry['key']);matches=existing.get(entry['key'],[])
-        if not matches:
-            item={**entry,'category':'new','paper_id':None};categories['new'].append(item);continue
-        # Prefer a visible paper with available content, then newest id.
-        matches=sorted(matches,key=lambda p:(p.status!='ARCHIVED',((p.canonical_paper_id or p.id) in ready),p.id),reverse=True)
-        paper=matches[0];effective=paper.canonical_paper_id or paper.id;is_available=effective in ready
+        paper=matches.get(entry['key'])
+        if not paper:
+            categories['new'].append({**entry,'category':'new','paper_id':None});continue
+        matched_ids.add(paper.id)
+        effective=paper.canonical_paper_id or paper.id;is_available=effective in ready
         job=latest.get(paper.id)
         base={**entry,'paper_id':paper.id,'paper_status':paper.status,'old_url':paper.source_url,
               'available':is_available,'latest_ingestion_status':job.status if job else None}
-        if paper.status=='ARCHIVED':base['category']='ignored';categories['ignored'].append(base)
-        elif source_token(paper.source_url)!=entry['source_token']:
-            base['category']='changed';categories['changed'].append(base)
-        elif is_available:
-            base['category']='available';categories['available'].append(base)
-        else:
-            base['category']='unprocessed';categories['unprocessed'].append(base)
-    absent=[]
-    for key,papers in existing.items():
-        if key in seen:continue
-        for p in papers:
-            if p.status!='ARCHIVED' and p.source_url:
-                absent.append({'paper_id':p.id,'name':p.name,'course_id':p.course_id,'term_id':p.term_id,'exam_type_id':p.exam_type_id})
+        if paper.status=='ARCHIVED':category='ignored'
+        elif source_token(paper.source_url)!=entry['source_token']:category='changed'
+        elif job and job.status in active_states:category='queued'
+        elif job and job.status in failed_states and not is_available:category='failed'
+        elif is_available:category='available'
+        else:category='unprocessed'
+        base['category']=category;categories[category].append(base)
+    absent=[{'paper_id':p.id,'name':p.name,'course_id':p.course_id,'term_id':p.term_id,'exam_type_id':p.exam_type_id}
+            for p in catalog['papers'] if p.id not in matched_ids and p.status!='ARCHIVED' and p.source_url]
     already_applied=ImportRun.query.filter_by(workbook_hash=scan['workbook_hash']).first() is not None
     summary={k:len(v) for k,v in categories.items()}
-    summary.update(total=len(scan['entries']),invalid=len(scan['issues']),absent=len(absent))
+    summary.update(total=len(scan['entries']),invalid=len(scan['issues']),absent=len(absent),
+                   pending=len(categories['new'])+len(categories['unprocessed']))
     return {'workbook_hash':scan['workbook_hash'],'already_applied':already_applied,'summary':summary,
             'items':categories,'issues':scan['issues'],'absent':absent,'terms':scan['terms'],'linked_cells':scan['linked_cells']}
 
@@ -178,28 +224,40 @@ def _ensure_metadata(scan):
             exams[entry['exam_name']]=ExamType(name=entry['exam_name']);db.session.add(exams[entry['exam_name']])
     db.session.flush();return by_code,terms,exams,new_courses
 
-def apply_sync(path,expected_hash=None,process_new=True,process_unprocessed=True,changed_keys=None,queue=True):
+def apply_sync(path,expected_hash=None,process_new=True,process_unprocessed=True,changed_keys=None,queue=True,batch_limit=20):
     scan=scan_workbook(path)
     if expected_hash and scan['workbook_hash']!=expected_hash:raise ValueError('Workbook changed after preview; preview the file again')
+    batch_limit=max(1,min(int(batch_limit or 20),50))
     preview=compare_scan(scan);changed_keys=set(changed_keys or [])
-    by_code,terms,exams,new_courses=_ensure_metadata(scan);existing=_existing_index()
+    by_code,terms,exams,new_courses=_ensure_metadata(scan)
+    state={item['key']:item for values in preview['items'].values() for item in values}
+    new_candidates=[e for e in scan['entries'] if process_new and state[e['key']]['category']=='new']
+    changed_candidates=[e for e in scan['entries'] if state[e['key']]['category']=='changed' and e['key'] in changed_keys]
+    unprocessed_candidates=[e for e in scan['entries'] if process_unprocessed and state[e['key']]['category']=='unprocessed']
+    # Fresh monthly papers take priority, then explicitly approved replacements,
+    # then the older backlog. Only this slice is touched/queued in this run.
+    candidates=new_candidates+changed_candidates+unprocessed_candidates
+    selected=candidates[:batch_limit];selected_keys={e['key'] for e in selected}
+    paper_by_id={p.id:p for p in Paper.query.all()}
     selected_ids=[];force_ids=[];new_papers=0;existing_papers=0;updated_sources=0;paper_for_key={}
-    categories={item['key']:item['category'] for values in preview['items'].values() for item in values}
     for entry in scan['entries']:
-        category=categories[entry['key']];matches=existing.get(entry['key'],[])
-        paper=sorted(matches,key=lambda p:(p.status!='ARCHIVED',p.id),reverse=True)[0] if matches else None
-        if category=='new' and process_new:
+        item=state[entry['key']];paper=paper_by_id.get(item.get('paper_id'))
+        if entry['key'] not in selected_keys:
+            if paper:paper_for_key[entry['key']]=paper
+            continue
+        category=item['category']
+        if category=='new':
             identity=digest('sync-v2|'+entry['key'])
             paper=Paper(identity=identity,course=by_code[entry['course_code']],term=terms[entry['term_name']],
                         exam_type=exams[entry['exam_name']],name=entry['name'],session=entry['session'],
                         variant=entry['variant'],source_url=entry['url'],warnings=entry['warnings'],
                         source_metadata={'catalog_sync_key':entry['key']})
-            db.session.add(paper);db.session.flush();existing.setdefault(entry['key'],[]).append(paper)
+            db.session.add(paper);db.session.flush();paper_by_id[paper.id]=paper
             new_papers+=1;selected_ids.append(paper.id)
         elif paper:
             existing_papers+=1
-            if category=='unprocessed' and process_unprocessed:selected_ids.append(paper.id)
-            elif category=='changed' and entry['key'] in changed_keys:
+            if category=='unprocessed':selected_ids.append(paper.id)
+            elif category=='changed':
                 paper.source_url=entry['url'];paper.canonical_paper_id=None
                 meta=dict(paper.source_metadata or {});meta['catalog_sync_key']=entry['key'];paper.source_metadata=meta
                 updated_sources+=1;selected_ids.append(paper.id);force_ids.append(paper.id)
@@ -213,14 +271,16 @@ def apply_sync(path,expected_hash=None,process_new=True,process_unprocessed=True
         if provenance not in seen:
             db.session.add(SourceEntry(identity=provenance,paper_id=paper.id,workbook_hash=scan['workbook_hash'],
                 sheet=entry['sheet'],cell=entry['cell'],raw_text=entry['raw_text'],url=entry['url']));seen.add(provenance)
+    eligible=len(candidates);remaining=max(0,eligible-len(selected))
     report={'mode':'manual_incremental_sync','summary':preview['summary'],'new_courses':new_courses,'new_papers':new_papers,
             'existing_papers':existing_papers,'updated_sources':updated_sources,'selected_for_processing':len(set(selected_ids)),
+            'batch_limit':batch_limit,'eligible_pending':eligible,'remaining_pending':remaining,
             'linked_cells':scan['linked_cells'],'issues':scan['issues'],'terms':scan['terms']}
     db.session.add(ImportRun(workbook_hash=scan['workbook_hash'],report=report));db.session.commit()
     batch_id=queued=0
     if queue and selected_ids:
         from .acquisition import queue_catalog
-        batch_id,queued=queue_catalog(limit=None,paper_ids=sorted(set(selected_ids)),retry=True,force_paper_ids=set(force_ids))
+        batch_id,queued=queue_catalog(limit=batch_limit,paper_ids=selected_ids,retry=False,force_paper_ids=set(force_ids))
     report.update(batch_id=batch_id or None,queued=queued)
     return report
 
@@ -234,6 +294,8 @@ def preview_workbook(path):
         'changed':result['items']['changed'],
         'available':[],
         'ignored':result['items']['ignored'][:100],
+        'queued':result['items']['queued'][:100],
+        'failed':result['items']['failed'][:100],
     }
     result['issues']=result['issues'][:100]
     result['absent']=result['absent'][:100]
