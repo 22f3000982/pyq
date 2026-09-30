@@ -159,30 +159,53 @@ def attempt_questions(id):
 @require_user()
 def answer(id):
     b=body()
-    # Fetch the owned attempt and target answer in one round-trip. This removes
-    # one database query from every response save while preserving ownership,
-    # deadline enforcement and optimistic parent-version serialization.
-    row=(db.session.query(Attempt,AttemptAnswer)
-         .join(AttemptAnswer,AttemptAnswer.attempt_id==Attempt.id)
-         .filter(Attempt.id==id,Attempt.user_id==g.user.id,
-                 AttemptAnswer.question_id==b.get('question_id')).first())
-    if row is None:abort(404)
-    a,i=row;expire_attempt(a)
+    batched='items' in b
+    raw=b.get('items') if batched else [b]
+    if batched and (not isinstance(raw,list) or not 1<=len(raw)<=20):
+        abort(400,description='Answer batch must contain 1–20 responses.')
+    if not isinstance(raw,list):abort(400,description='Expected answer responses.')
+
+    # Merge repeated question updates inside one browser flush (for example an
+    # answer plus a review mark) so the database sees only the latest fields.
+    merged={}
+    for data in raw:
+        if not isinstance(data,dict):abort(400,description='Each answer response must be an object.')
+        qid=data.get('question_id')
+        if not isinstance(qid,int) or isinstance(qid,bool):abort(400,description='question_id must be an integer.')
+        if 'marked' in data and not isinstance(data['marked'],bool):abort(400,description='marked must be true or false.')
+        merged[qid]={**merged.get(qid,{}),**data,'question_id':qid}
+    updates=list(merged.values());qids=list(merged)
+
+    # One owned-attempt/answer read handles the whole browser flush. A single
+    # response remains fully backward compatible with the previous API.
+    rows=(db.session.query(Attempt,AttemptAnswer)
+          .join(AttemptAnswer,AttemptAnswer.attempt_id==Attempt.id)
+          .filter(Attempt.id==id,Attempt.user_id==g.user.id,
+                  AttemptAnswer.question_id.in_(qids)).all())
+    if not rows or len(rows)!=len(qids):abort(404)
+    a=rows[0][0];by_qid={i.question_id:i for _,i in rows}
+    expire_attempt(a)
     if a.expires_at<=time.time():
         cleanup_sessions(user_id=g.user.id);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
     if a.status!='ACTIVE':abort(409,description='Attempt already submitted or time expired')
-    if 'answer' in b:
-        i.answer=normalize_answer(i.snapshot,b['answer']);i.response_touched=True
-    if 'marked' in b:
-        if not isinstance(b['marked'],bool):abort(400)
-        i.marked=b['marked']
-    i.visited=True
-    # All answer writes update parent version, serializing against submission.
+
+    saved_at=time.time();results=[]
+    for data in updates:
+        i=by_qid[data['question_id']]
+        if 'answer' in data:
+            i.answer=normalize_answer(i.snapshot,data['answer']);i.response_touched=True
+        if 'marked' in data:i.marked=data['marked']
+        i.visited=True
+        result={'question_id':i.question_id,'state':palette_state(i),'saved_at':saved_at}
+        if a.mode=='practice' and i.answer is not None:
+            result['feedback']={**grade(i.snapshot,i.answer),'answers':i.snapshot['answers'],'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}
+        results.append(result)
+
+    # Serialize the whole flush against submission with one parent-version bump
+    # and one commit rather than one transaction per response.
     a.version+=1
-    result={'state':palette_state(i),'saved_at':time.time()}
-    if a.mode=='practice' and i.answer is not None:result['feedback']={**grade(i.snapshot,i.answer),'answers':i.snapshot['answers'],'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}
     db.session.commit()
-    return jsonify(result)
+    return jsonify(items=results) if batched else jsonify({k:v for k,v in results[0].items() if k!='question_id'})
 
 @exams.post('/attempts/<int:id>/submit')
 @require_user()
