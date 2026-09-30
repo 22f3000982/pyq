@@ -17,7 +17,9 @@ def file_json(f):return {k:getattr(f,k) for k in ('id','batch_id','paper_id','fi
 @require_user(True)
 def stats():
     from .ingestion import SUCCESS,FAILURES
-    return jsonify(courses=Course.query.count(),papers=Paper.query.count(),questions=Question.query.filter_by(status='AVAILABLE').count(),processed=IngestionFile.query.filter(IngestionFile.status.in_(SUCCESS)).count(),processing=IngestionFile.query.filter(IngestionFile.status.in_(['QUEUED','PROCESSING','FETCH_QUEUED','FETCHING'])).count(),failed=IngestionFile.query.filter(IngestionFile.status.in_(FAILURES)).count(),flagged_questions=Question.query.filter_by(status='EXTRACTION_FAILED').count(),active_sessions=Attempt.query.filter_by(status='ACTIVE').count(),progress_records=PaperProgress.query.count(),users=User.query.filter_by(active=True).count())
+    queued=IngestionFile.query.filter(IngestionFile.status.in_(['QUEUED','FETCH_QUEUED'])).count()
+    active_processing=IngestionFile.query.filter(IngestionFile.status.in_(['PROCESSING','FETCHING'])).count()
+    return jsonify(courses=Course.query.count(),papers=Paper.query.count(),questions=Question.query.filter_by(status='AVAILABLE').count(),processed=IngestionFile.query.filter(IngestionFile.status.in_(SUCCESS)).count(),queued=queued,active_processing=active_processing,processing=queued+active_processing,failed=IngestionFile.query.filter(IngestionFile.status.in_(FAILURES)).count(),flagged_questions=Question.query.filter_by(status='EXTRACTION_FAILED').count(),active_sessions=Attempt.query.filter_by(status='ACTIVE').count(),progress_records=PaperProgress.query.count(),users=User.query.filter_by(active=True).count())
 
 
 @admin.post('/courses')

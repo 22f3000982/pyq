@@ -325,7 +325,10 @@ def question_image(id):
         from .ingestion import repair_question_image_asset
         if not repair_question_image_asset(image):raise
         response=send_asset(image.path,mimetype='image/png',conditional=True)
-    response.headers['Cache-Control']='private, max-age=3600'
+    # Extracted question-image paths are immutable. Keep them in the user's
+    # private browser cache for a year so revisiting/prefetching a formula never
+    # triggers slow conditional 304 round-trips through Render.
+    response.headers['Cache-Control']='private, max-age=31536000, immutable'
     response.vary.add('Cookie')
     return response
 

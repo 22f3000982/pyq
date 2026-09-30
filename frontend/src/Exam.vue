@@ -3,7 +3,7 @@ import {ref,reactive,onMounted,onUnmounted,computed,nextTick} from 'vue';import 
 import {api,go,session} from './api';import {clock,paletteLabel} from './utils';import MathText from './MathText.vue';import QuestionContent from './QuestionContent.vue';import AnswerValue from './AnswerValue.vue';import ScratchBoard from './ScratchBoard.vue';import TcsCalculator from './TcsCalculator.vue';
 const props=defineProps({id:Number});const attempt=ref(null),item=ref(null),index=ref(0),value=ref(null),error=ref(''),saving=ref(false),feedback=ref(null),confirm=ref(false),showPalette=ref(false),seconds=ref(null),saved=ref('All responses saved'),pending=ref(null);
 const navigating=ref(false),switchDialog=ref(false),switchMinutes=ref(90),instructions=ref(false),submitting=ref(false),scratchOpen=ref(false),calculatorOpen=ref(false),natInput=ref(null);
-const cache=reactive(new Map()),queued=new Map();let ticker,poller,draftTimer,saveTask=null,serverNow=0,received=0,stopped=false,inflight=null,timeoutRequested=false;const prefetched=new Set();
+const cache=reactive(new Map()),queued=new Map();let ticker,poller,draftTimer,saveTask=null,serverNow=0,received=0,stopped=false,inflight=null,timeoutRequested=false;const prefetched=new Set(),prefetchAssets=new Map(),prefetchTimers=new Set();
 const key='pyq-pending-'+props.id,draftKey='pyq-draft-'+props.id,visitedKey='pyq-visited-'+props.id;
 const current=computed(()=>attempt.value?.palette[index.value]);
 function inflightEntries(){return Array.isArray(inflight)?inflight:(inflight?[inflight]:[])}
@@ -14,8 +14,41 @@ function localState(qid){const d=cache.get(qid),p=attempt.value?.palette.find(p=
 async function sync(initial=false){try{const a=await api('/attempts/'+props.id+(initial?'?bootstrap=1':'/status'));if(stopped)return;if(initial)attempt.value=a;else if(attempt.value){attempt.value.status=a.status;attempt.value.deadline=a.deadline;attempt.value.submitted_at=a.submitted_at;attempt.value.expires_at=a.expires_at}serverNow=a.server_time;received=performance.now();if(initial)for(const qid of cache.keys())localState(qid);if(a.status!=='ACTIVE'){sessionStorage.removeItem(key);sessionStorage.removeItem(draftKey);sessionStorage.removeItem(visitedKey);go('/result/'+a.id)}return a}catch(e){error.value=e.message}}
 function scheduleHeartbeat(){clearTimeout(poller);if(stopped||!attempt.value?.deadline)return;const delay=600000+Math.floor(Math.random()*300000);poller=setTimeout(async()=>{await sync();scheduleHeartbeat()},delay)}
 function show(n){index.value=n;item.value=cache.get(current.value.question_id);value.value=item.value.answer;feedback.value=item.value.feedback||null;sessionStorage.setItem('pyq-position-'+props.id,String(n));if(item.value?.question.kind==='NAT')nextTick(()=>natInput.value?.focus({preventScroll:true}))}
-function prefetchImages(qid){for(const img of cache.get(qid)?.question.images||[]){const url=img.url||'/api/images/'+img.id;if(!prefetched.has(url)){prefetched.add(url);const asset=new Image();asset.decoding='async';asset.fetchPriority='low';asset.src=url}}}
-function prefetchNext(n){const p=attempt.value?.palette;if(!p)return;const q1=p[n+1]?.question_id;if(q1)prefetchImages(q1);const q2=p[n+2]?.question_id;if(q2){const go=()=>prefetchImages(q2);typeof requestIdleCallback==='function'?requestIdleCallback(go,{timeout:1200}):setTimeout(go,500)}}
+function prefetchImages(qid){
+ const images=cache.get(qid)?.question.images||[];
+ for(const img of images){
+  const url=img.url||'/api/images/'+img.id+'?proxy=1';
+  if(prefetched.has(url))continue;
+  prefetched.add(url);
+  const asset=new Image();asset.decoding='async';asset.fetchPriority='low';
+  // Retain the Image object until completion so browser work is not discarded by GC.
+  prefetchAssets.set(url,asset);
+  const done=()=>prefetchAssets.delete(url);
+  asset.onload=done;asset.onerror=done;asset.src=url;
+ }
+}
+function later(fn,delay){
+ const id=setTimeout(()=>{prefetchTimers.delete(id);if(!stopped)fn()},delay);prefetchTimers.add(id);return id
+}
+function idle(fn,timeout=1800){
+ if(typeof requestIdleCallback==='function')return requestIdleCallback(()=>!stopped&&fn(),{timeout});
+ return later(fn,900)
+}
+function prefetchNext(n){
+ const p=attempt.value?.palette;if(!p)return;
+ const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+ // Respect explicit data-saving and very slow mobile connections.
+ const constrained=connection?.saveData||['slow-2g','2g'].includes(connection?.effectiveType);
+ const strong=constrained?1:3,idleCount=constrained?0:2;
+ for(let offset=1;offset<=strong;offset++){
+  const qid=p[n+offset]?.question_id;if(!qid)break;
+  later(()=>prefetchImages(qid),180+(offset-1)*220);
+ }
+ for(let offset=strong+1;offset<=strong+idleCount;offset++){
+  const qid=p[n+offset]?.question_id;if(!qid)break;
+  idle(()=>prefetchImages(qid),1600+(offset-strong)*500);
+ }
+}
 function open(n){if(n<0||n>=attempt.value.palette.length||submitting.value)return;show(n);markVisited(current.value.question_id);prefetchNext(n)}
 function scheduleSave(delay=250){clearTimeout(draftTimer);draftTimer=setTimeout(()=>drain(),delay)}
 function persist(data){
@@ -103,7 +136,7 @@ onMounted(async()=>{try{
  const tick=()=>{seconds.value=attempt.value?.deadline?Math.max(0,Math.ceil(attempt.value.deadline-serverNow-(performance.now()-received)/1000)):null;if(seconds.value===0&&!timeoutRequested){timeoutRequested=true;submit()}};tick();ticker=setInterval(tick,1000);scheduleHeartbeat();
  window.addEventListener('keydown',keyboard);window.addEventListener('online',online);window.addEventListener('beforeunload',leaving);document.addEventListener('visibilitychange',visible);
 }catch(e){error.value=e.message}});
-onUnmounted(()=>{stopped=true;clearInterval(ticker);clearTimeout(poller);clearTimeout(draftTimer);window.removeEventListener('online',online);window.removeEventListener('keydown',keyboard);window.removeEventListener('beforeunload',leaving);document.removeEventListener('visibilitychange',visible)});
+onUnmounted(()=>{stopped=true;clearInterval(ticker);clearTimeout(poller);clearTimeout(draftTimer);for(const id of prefetchTimers)clearTimeout(id);prefetchTimers.clear();prefetchAssets.clear();window.removeEventListener('online',online);window.removeEventListener('keydown',keyboard);window.removeEventListener('beforeunload',leaving);document.removeEventListener('visibilitychange',visible)});
 </script>
 <template><div v-if="!session.user" class="empty panel"><h2>Sign in to continue</h2><a href="#/login" class="btn btn-primary">Sign in</a></div><template v-else-if="attempt"><header class="exam-header"><a class="exam-logo" href="#/progress"><BookOpen/> PYQstudio</a><div><span class="eyebrow">{{attempt.mode==='exam'?'TIMED EXAM':'PRACTICE SESSION'}}</span><h1>{{attempt.title}}</h1></div><button class="btn btn-light mode-switch" @click="switchDialog=true" :disabled="submitting">Switch to {{attempt.mode==='exam'?'practice':'exam'}}</button><button class="btn btn-light exam-tool-button" @click="scratchOpen=!scratchOpen"><NotebookPen :size="15"/>Scratch</button><button class="btn btn-light exam-tool-button" @click="calculatorOpen=!calculatorOpen"><Calculator :size="15"/>Calculator</button><button class="btn btn-light" @click="instructions=true">Instructions</button><div class="timer" :class="{urgent:seconds!==null&&seconds<120}"><Clock :size="19"/>{{seconds===null?'Untimed':clock(seconds)}}</div></header><div class="cbt-section-bar"><strong>Section 1 · Question paper</strong><span>{{session.user.name}} · {{attempt.mode==='exam'?'Exam mode':'Practice mode'}}</span></div><div v-if="error" class="alert alert-danger" role="alert">{{error}}<button v-if="pending" class="btn btn-light ms-3" @click="retry" :disabled="saving">Retry save</button></div><div class="exam-layout"><section class="question-panel panel" v-if="item"><div class="section-row"><span class="eyebrow">QUESTION {{item.question.number}} · {{index+1}} OF {{attempt.palette.length}}</span><button @click="bookmark" class="btn btn-light btn-sm"><Bookmark :size="17" :fill="item.bookmarked?'currentColor':'none'"/>{{item.bookmarked?'Bookmarked':'Bookmark'}}</button></div><div class="question-content"><div class="question-meta"><span>{{item.question.kind.replace('_',' / ')}}</span><span>{{item.question.marks===null?'Marks not specified':'+'+item.question.marks+' marks'}}</span><span v-if="item.question.negative_marks">−{{item.question.negative_marks}} incorrect</span></div>
 <div :class="{'comprehension-split':item.question.shared_passage&&item.question.passage}">

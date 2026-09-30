@@ -39,6 +39,7 @@ def test_catalog_preview_is_non_mutating_and_apply_is_incremental(app,client):
     assert applied.json['new_papers']==1 and applied.json['queued']==1
     paper=Paper.query.one()
     assert paper.source_url=='https://drive.google.com/file/d/source-one/view'
+    assert paper.status=='CATALOG_ONLY'  # queued backlog is not active processing
     assert IngestionFile.query.filter_by(paper_id=paper.id,status='FETCH_QUEUED').count()==1
     assert ImportRun.query.count()==1
 
@@ -77,6 +78,7 @@ def test_changed_source_requires_explicit_selection(app,client):
     })
     assert replace.status_code==202 and replace.json['updated_sources']==1 and replace.json['queued']==1
     db.session.expire_all();updated=db.session.get(Paper,p.id)
+    assert updated.status=='AVAILABLE'  # keep the working bank live until replacement actually processes
     assert updated.source_url.endswith('/new-source/view')
     assert Question.query.filter_by(paper_id=p.id,status='AVAILABLE').count()==1
     assert IngestionFile.query.filter_by(paper_id=p.id,status='FETCH_QUEUED').count()==1

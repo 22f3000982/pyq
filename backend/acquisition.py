@@ -104,7 +104,7 @@ def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None,force_paper
             # A changed source must become a new ingestion record. Never mutate an
             # AVAILABLE historical record because attempts may reference its questions.
             f=IngestionFile(batch_id=batch.id,paper_id=p.id,filename=p.name,source_url=p.source_url,status='FETCH_QUEUED')
-            db.session.add(f);count+=1;p.status='PROCESSING';selected+=1;continue
+            db.session.add(f);count+=1;selected+=1;continue
         if previous and previous.status in ('AVAILABLE','PARTIAL','DUPLICATE','QUEUED','FETCHING','PROCESSING','FETCH_QUEUED'):continue
         if previous and previous.status in ('PROCESSING_FAILED','EXTRACTION_FAILED') and not retry:continue
         if previous and previous.status=='PAUSED':continue
@@ -112,7 +112,7 @@ def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None,force_paper
             previous.status='QUEUED';previous.error=None;previous.batch_id=batch.id;previous.source_url=p.source_url;count+=1
         else:
             f=IngestionFile(batch_id=batch.id,paper_id=p.id,filename=p.name,source_url=p.source_url,status='FETCH_QUEUED');db.session.add(f);count+=1
-        p.status='PROCESSING';selected+=1
+        selected+=1
     db.session.commit();return batch.id,count
 
 def download_pending(app,workers=4,paper_ids=None,limit=None):
