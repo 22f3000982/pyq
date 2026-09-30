@@ -59,11 +59,22 @@ def test_image_cache_hit_never_downloads(app,client,monkeypatch):
     assert 'ensure_local;dur=' in r.headers['Server-Timing']
 
 
+def test_attempt_bootstrap_signed_urls_cover_attempt_lifetime(app,client,monkeypatch):
+    pid=seed(1)[0];h=login(client)
+    app.config.update(STORAGE_BACKEND='r2',IMAGE_DELIVERY='signed',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com')
+    configure_delivery(app)
+    expiries=[]
+    monkeypatch.setattr('backend.storage.private_asset_url',lambda path,id,expires=600:(expiries.append(expires) or 'https://test.r2.cloudflarestorage.com/bucket/'+path))
+    a=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':pid,'mode':'exam','duration_seconds':5400}).json
+    assert expiries and min(expiries)>5400
+    assert all(img['url'].startswith('https://test.r2.cloudflarestorage.com/') for item in a['items'] for img in item['question']['images'])
+
+
 def test_signed_delivery_no_download_and_csp(app,client,monkeypatch):
     seed(1);login(client)
     app.config.update(STORAGE_BACKEND='r2',IMAGE_DELIVERY='signed',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com')
     configure_delivery(app)
-    monkeypatch.setattr('backend.storage.private_asset_url',lambda path,id:'https://test.r2.cloudflarestorage.com/bucket/'+path+'?signed=1')
+    monkeypatch.setattr('backend.storage.private_asset_url',lambda path,id,expires=600:'https://test.r2.cloudflarestorage.com/bucket/'+path+'?signed=1')
     monkeypatch.setattr('backend.storage.ensure_local',lambda name:pytest.fail('No disk for direct images'))
     r=client.get('/api/papers/1/questions')
     assert r.json['items'][0]['images'][0]['url'].startswith('https://test.r2.cloudflarestorage.com/')
@@ -89,13 +100,16 @@ def test_cdn_explicit_allowlist_only(app,client,tmp_path):
 def test_response_save_queries_and_bootstrap_privacy(app,client):
     pid=seed(1)[0];h=login(client)
     a=client.post('/api/attempts?bootstrap=1',json={'paper_id':pid,'mode':'exam'},headers=h).json
+    status=client.get(f"/api/attempts/{a['id']}/status")
+    assert status.status_code==200 and 'palette' not in status.json and 'items' not in status.json
+    status_count=int(re.search(r'queries;desc="(\\d+)"',status.headers['Server-Timing'])[1])
+    assert status_count<=2  # authenticated user + owned attempt; no AttemptAnswer snapshot load.
     r=client.post(f"/api/attempts/{a['id']}/answers",json={'question_id':a['palette'][0]['question_id'],'answer':['b']},headers=h)
     assert r.status_code==200 and 'feedback' not in r.json
-    count=int(re.search(r'queries;desc="(\d+)"',r.headers['Server-Timing'])[1])
-    assert count<=5  # 3 reads + versioned parent/child writes (identity-map independent).
+    count=int(re.search(r'queries;desc="(\\d+)"',r.headers['Server-Timing'])[1])
+    assert count<=4  # user + joined attempt/answer read + versioned parent/child writes.
     r=client.get(f"/api/attempts/{a['id']}?bootstrap=1")
     assert r.json['items'][0]['answer']==['b'] and 'feedback' not in r.json['items'][0]
-
 
 def test_public_gzip_excludes_session(app,client):
     seed(12)
