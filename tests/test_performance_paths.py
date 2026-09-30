@@ -48,6 +48,27 @@ def test_cache_failure_and_loader_error_do_not_double_run(app,redis_cache,monkey
     monkeypatch.setattr(redis_cache,'get',lambda *a:(_ for _ in ()).throw(ConnectionError()))
     assert cached('offline',lambda:42)==42
 
+def test_local_cache_fallback_reuses_paper_snapshots_without_redis(app,client):
+    pid=seed(1)[0]
+    app.config['CONTENT_CACHE_URL']=''
+    first=client.get(f'/api/papers/{pid}/questions')
+    second=client.get(f'/api/papers/{pid}/questions')
+    assert first.status_code==200 and second.status_code==200
+    assert first.json==second.json
+    assert 'cache_hit;desc="1"' in second.headers['Server-Timing']
+
+
+def test_warm_attempt_start_avoids_answer_row_reread(app,client):
+    pid=seed(1)[0];h=login(client)
+    app.config['CONTENT_CACHE_URL']=''
+    client.get(f'/api/papers/{pid}/questions')  # warm immutable paper content
+    r=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':pid,'mode':'exam','duration_seconds':5400})
+    assert r.status_code==201 and len(r.json['items'])==2
+    # Hot start should not re-select newly inserted AttemptAnswer rows just to
+    # construct the bootstrap response.
+    count=int(re.search(r'queries;desc="(\\d+)"',r.headers['Server-Timing'])[1])
+    assert count<=7
+
 
 def test_image_cache_hit_never_downloads(app,client,monkeypatch):
     seed(1);image=QuestionImage.query.first();path=local_path(image.path)
