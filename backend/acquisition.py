@@ -9,7 +9,7 @@ import requests
 from flask import current_app
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from .models import db,Paper,IngestionBatch,IngestionFile,User
+from .models import db,Paper,Question,IngestionBatch,IngestionFile,User
 
 ALLOWED={'drive.google.com','drive.usercontent.google.com','drive.googleusercontent.com','docs.google.com','google.com','www.google.com'}
 
@@ -139,7 +139,13 @@ def download_pending(app,workers=4,paper_ids=None,limit=None):
                 else:
                     old=IngestionFile.query.filter_by(file_hash=result['hash']).first()
                     if old:
-                        temp.unlink(missing_ok=True);f.duplicate_of_id=old.id;f.status='DUPLICATE';f.path=old.path;p.canonical_paper_id=old.paper_id if old.paper_id!=p.id else None
+                        temp.unlink(missing_ok=True);f.duplicate_of_id=old.id;f.status='DUPLICATE';f.path=old.path
+                        canonical=db.session.get(Paper,old.paper_id)
+                        p.canonical_paper_id=old.paper_id if old.paper_id!=p.id else None
+                        if canonical and canonical.status in ('AVAILABLE','PARTIALLY_AVAILABLE'):
+                            p.status=canonical.status
+                        elif old.paper_id==p.id and Question.query.filter_by(paper_id=p.id,status='AVAILABLE').first():
+                            p.status='AVAILABLE'
                         event(f,'DEDUPLICATED',f'Identical PDF content to import {old.id}, paper {old.paper_id}');f.finished_at=time.time()
                     else:
                         path=result['hash']+'.pdf';temp.replace(directory/path);f.path=path;f.file_hash=result['hash']
