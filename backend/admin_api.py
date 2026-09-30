@@ -91,7 +91,12 @@ def archive_paper(id):
     p=db.get_or_404(Paper,id)
     if p.status=='ARCHIVED':return jsonify(paper=paper_json(p),archived=True)
     meta=dict(p.source_metadata or {});meta['_admin_archived_from']=p.status or 'CATALOG_ONLY'
-    p.source_metadata=meta;p.status='ARCHIVED';db.session.commit()
+    p.source_metadata=meta;p.status='ARCHIVED'
+    paused=IngestionFile.query.filter(IngestionFile.paper_id==id,IngestionFile.status.in_(['QUEUED','FETCH_QUEUED'])).all()
+    batch_ids={f.batch_id for f in paused}
+    for f in paused:f.status='PAUSED';f.error='Paused because the paper was archived by an administrator.'
+    db.session.commit()
+    for batch_id in batch_ids:update_batch(batch_id)
     return jsonify(paper=paper_json(p),archived=True)
 
 @admin.post('/papers/<int:id>/restore')
@@ -112,12 +117,14 @@ def delete_paper(id):
         'imports':IngestionFile.query.filter_by(paper_id=id).count(),
         'attempts':Attempt.query.filter_by(paper_id=id).count(),
         'progress':PaperProgress.query.filter_by(paper_id=id).count(),
-        'source_entries':SourceEntry.query.filter_by(paper_id=id).count(),
         'aliases':Paper.query.filter_by(canonical_paper_id=id).count(),
     }
     blockers={k:v for k,v in dependencies.items() if v}
     if blockers:
         abort(409,description='This paper has linked data and cannot be permanently deleted safely. Archive it instead. Linked: '+', '.join(f'{k}={v}' for k,v in blockers.items()))
+    # Workbook provenance belongs to an otherwise-empty catalog entry and can be
+    # removed together with it; processed/imported content is intentionally blocked.
+    SourceEntry.query.filter_by(paper_id=id).delete(synchronize_session=False)
     db.session.delete(p);db.session.commit()
     return jsonify(deleted=True,id=id)
 
