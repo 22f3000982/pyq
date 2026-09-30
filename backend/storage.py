@@ -31,14 +31,14 @@ def configure_delivery(app):
         origin=u.scheme+'://'+u.netloc
     app.extensions['image_origin']=origin
 
-def image_url(name,image_id):
+def image_url(name,image_id,expires=None):
     if enabled():
         mode=current_app.config.get('IMAGE_DELIVERY','proxy')
         if mode=='cdn':
             key=current_app.extensions['image_cdn_manifest'].get(name)
             if key:return current_app.extensions['image_origin']+'/'+quote(key,safe='/')
         if mode=='signed':
-            return private_asset_url(name,image_id)
+            return private_asset_url(name,image_id,expires=expires or 600)
     return '/api/images/'+str(image_id)
 
 def configured(config):
@@ -196,7 +196,11 @@ def send_asset(name,**kwargs):
 
 def private_asset_url(name,image_id=None,expires=600):
     if enabled():
-        try:return client().generate_presigned_url('get_object',Params=object_args(name),ExpiresIn=expires)
+        try:
+            # SigV4 presigned GET URLs support at most seven days. Clamp caller
+            # values so a long practice session never creates an invalid URL.
+            expires=max(60,min(int(expires),604799))
+            return client().generate_presigned_url('get_object',Params=object_args(name),ExpiresIn=expires)
         except StorageError:raise
         except Exception as exc:raise failure(exc,'signed URL generation') from None
     return '/api/images/'+str(image_id) if image_id is not None else None
