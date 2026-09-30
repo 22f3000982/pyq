@@ -7,6 +7,8 @@ services:
     preDeployCommand: python -m flask --app backend:create_app db upgrade
     healthCheckPath: /healthz
     envVars:
+      - key: APP_ENV
+        value: production
       - key: DATABASE_URL
         sync: false
       - key: SECRET_KEY
@@ -27,6 +29,22 @@ services:
         value: pyq
       - key: COOKIE_SECURE
         value: "true"
+      - key: REDIS_URL
+        sync: false
+      - key: CACHE_NAMESPACE
+        value: pyq:content:v1
+      - key: CONTENT_CACHE_TTL
+        value: "60"
+      - key: IMAGE_DELIVERY
+        value: signed
+      - key: IMAGE_CDN_BASE_URL
+        sync: false
+      - key: IMAGE_CDN_MANIFEST
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_QUEUE_NAMESPACE
+        value: pyq:ingestion
       - key: UPLOAD_DIR
         value: /data/uploads
 
@@ -37,6 +55,8 @@ services:
     dockerContext: .
     dockerCommand: python -m flask --app backend:create_app worker
     envVars:
+      - key: APP_ENV
+        value: production
       - key: DATABASE_URL
         sync: false
       - key: SECRET_KEY
@@ -57,5 +77,21 @@ services:
         value: pyq
       - key: COOKIE_SECURE
         value: "true"
+      - key: REDIS_URL
+        sync: false
+      - key: CACHE_NAMESPACE
+        value: pyq:content:v1
+      - key: CONTENT_CACHE_TTL
+        value: "60"
+      - key: IMAGE_DELIVERY
+        value: signed
+      - key: IMAGE_CDN_BASE_URL
+        sync: false
+      - key: IMAGE_CDN_MANIFEST
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_QUEUE_NAMESPACE
+        value: pyq:ingestion
       - key: UPLOAD_DIR
         value: /data/uploads

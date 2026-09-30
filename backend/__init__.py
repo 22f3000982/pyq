@@ -1,4 +1,4 @@
-import os, secrets
+import os, secrets, gzip, re
 from pathlib import Path
 from flask import Flask, jsonify, request, session, send_from_directory
 from sqlalchemy import text
@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.exceptions import HTTPException
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError,SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 from .models import db
 
@@ -27,11 +27,12 @@ def create_app(config=None):
     production_env=os.getenv('RENDER','').lower()=='true' or os.getenv('FLASK_ENV','').lower()=='production' or os.getenv('APP_ENV','').lower()=='production'
     if not (os.getenv('DATABASE_URL','').strip() or configured_uri) and production_env:
         raise RuntimeError('DATABASE_URL is required on Render; refusing an implicit SQLite production fallback.')
+    default_upload_dir='/data/uploads' if production_env else str(root/'uploads')
     app.config.update(SECRET_KEY=secret or secrets.token_hex(32),
         SQLALCHEMY_DATABASE_URI=database_url(os.getenv('DATABASE_URL'),'sqlite:///' + str(root/'instance/app.db')),
         SQLALCHEMY_TRACK_MODIFICATIONS=False, MAX_CONTENT_LENGTH=110*1024*1024,
-        UPLOAD_DIR=os.getenv('UPLOAD_DIR', str(root/'uploads')),
-        MAX_UPLOAD_SIZE=int(os.getenv('MAX_UPLOAD_SIZE', 20*1024*1024)),
+        UPLOAD_DIR=os.getenv('UPLOAD_DIR', default_upload_dir),
+        MAX_UPLOAD_SIZE=int(os.getenv('MAX_UPLOAD_SIZE', 110*1024*1024)),
         SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax',
         SESSION_COOKIE_SECURE=os.getenv('COOKIE_SECURE','false').lower()=='true',
         PERMANENT_SESSION_LIFETIME=86400,
@@ -41,9 +42,28 @@ def create_app(config=None):
         OCR_ENABLED=os.getenv('OCR_ENABLED','true').lower()=='true',
         CATALOG_AUTO_PROCESS=os.getenv('CATALOG_AUTO_PROCESS','false').lower()=='true')
     legacy_bucket=os.getenv('R2_BUCKET_NAME','')
-    app.config.update(STORAGE_BACKEND=os.getenv('STORAGE_BACKEND','local').lower(),R2_ENDPOINT_URL=os.getenv('R2_ENDPOINT_URL',''),R2_ACCESS_KEY_ID=os.getenv('R2_ACCESS_KEY_ID',''),R2_SECRET_ACCESS_KEY=os.getenv('R2_SECRET_ACCESS_KEY',''),R2_BUCKET_NAME=legacy_bucket,R2_PDF_BUCKET_NAME=os.getenv('R2_PDF_BUCKET_NAME',''),R2_IMAGE_BUCKET_NAME=os.getenv('R2_IMAGE_BUCKET_NAME',''),R2_PREFIX=os.getenv('R2_PREFIX','pyq'))
+    storage_backend=os.getenv('STORAGE_BACKEND','local').lower()
+    image_delivery=os.getenv('IMAGE_DELIVERY','').strip().lower()
+    # Existing Render services can keep an old/missing proxy variable even after
+    # render.yaml changes. In production R2, prefer private direct signed delivery
+    # so tiny question images never traverse Flask unless their direct URL fails.
+    if production_env and storage_backend=='r2' and image_delivery in ('','proxy'):
+        image_delivery='signed'
+    elif not image_delivery:
+        image_delivery='proxy'
+    app.config.update(STORAGE_BACKEND=storage_backend,R2_ENDPOINT_URL=os.getenv('R2_ENDPOINT_URL',''),R2_ACCESS_KEY_ID=os.getenv('R2_ACCESS_KEY_ID',''),R2_SECRET_ACCESS_KEY=os.getenv('R2_SECRET_ACCESS_KEY',''),R2_BUCKET_NAME=legacy_bucket,R2_PDF_BUCKET_NAME=os.getenv('R2_PDF_BUCKET_NAME',''),R2_IMAGE_BUCKET_NAME=os.getenv('R2_IMAGE_BUCKET_NAME',''),R2_PREFIX=os.getenv('R2_PREFIX','pyq'))
+    app.config.update(CONTENT_CACHE_URL=os.getenv('REDIS_URL',''), CACHE_NAMESPACE=os.getenv('CACHE_NAMESPACE','pyq:content:v1'), CONTENT_CACHE_TTL=int(os.getenv('CONTENT_CACHE_TTL','60')), IMAGE_DELIVERY=image_delivery, IMAGE_CDN_BASE_URL=os.getenv('IMAGE_CDN_BASE_URL',''), IMAGE_CDN_MANIFEST=os.getenv('IMAGE_CDN_MANIFEST',''))
     if config: app.config.update(config)
+    from . import content_cache
+    from .storage import configure_delivery
+    configure_delivery(app)
     if app.config['STORAGE_BACKEND'] not in ('local','r2'):raise ValueError('STORAGE_BACKEND must be local or r2')
+    if production_env:
+        from sqlalchemy.engine import make_url
+        if make_url(app.config['SQLALCHEMY_DATABASE_URI']).get_backend_name()!='postgresql':
+            raise RuntimeError('Production requires PostgreSQL; SQLite fallback is disabled.')
+        if app.config['STORAGE_BACKEND']!='r2':
+            raise RuntimeError('Production requires private R2 storage; local fallback is disabled.')
     if production_env and app.config['STORAGE_BACKEND']=='r2':
         required_r2=('R2_ENDPOINT_URL','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','R2_PDF_BUCKET_NAME','R2_IMAGE_BUCKET_NAME')
         if any(not app.config.get(key) for key in required_r2):
@@ -53,6 +73,8 @@ def create_app(config=None):
     app.config['UPLOAD_DIR']=str((root/upload_path).resolve() if not upload_path.is_absolute() else upload_path)
     Path(app.config['UPLOAD_DIR']).mkdir(parents=True, exist_ok=True)
     db.init_app(app); Migrate(app, db); limiter.init_app(app)
+    from .performance import install
+    install(app, db)
     @app.before_request
     def csrf():
         if request.path.startswith('/api/') and request.method in ('POST','PUT','PATCH','DELETE'):
@@ -64,8 +86,19 @@ def create_app(config=None):
         response.headers['X-Content-Type-Options']='nosniff'
         response.headers['Referrer-Policy']='same-origin'
         response.headers['X-Frame-Options']='SAMEORIGIN'
-        response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'"
-        if request.path.startswith('/api/'): response.headers['Cache-Control']='no-store'
+        response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'self' https://tcsion.com https://www.tcsion.com; object-src 'none'; base-uri 'self'"
+        if app.extensions.get('image_origin'):
+            response.headers['Content-Security-Policy']=response.headers['Content-Security-Policy'].replace("img-src 'self' data:","img-src 'self' data: "+app.extensions['image_origin'])
+        if request.path.startswith('/api/') and not request.path.startswith('/api/images/'): response.headers['Cache-Control']='no-store'
+        # Compress shared public content only; session/CSRF and answer APIs are excluded.
+        shared=request.path in ('/api/catalog','/api/metadata','/api/courses','/api/papers','/api/demo-papers') or bool(re.fullmatch(r'/api/papers/\d+/questions',request.path))
+        if shared:
+            response.vary.add('Accept-Encoding')
+            if request.method=='GET' and response.status_code==200 and request.accept_encodings['gzip']>0 and not response.headers.get('Content-Encoding') and not response.direct_passthrough:
+                data=response.get_data()
+                if len(data)>1024:
+                    compressed=gzip.compress(data,compresslevel=5,mtime=0)
+                    if len(compressed)<len(data):response.set_data(compressed);response.headers['Content-Encoding']='gzip'
         return response
     @app.get('/healthz')
     def healthz():
@@ -77,7 +110,14 @@ def create_app(config=None):
             return jsonify(status='unavailable'),503
     from .storage import StorageError
     @app.errorhandler(StorageError)
-    def storage_error(e):return jsonify(error=str(e)),503
+    def storage_error(e):
+        app.logger.warning('Asset delivery failed: %s',str(e))
+        return jsonify(error='Source asset is temporarily unavailable. Please retry.'),503
+    @app.errorhandler(SQLAlchemyError)
+    def database_error(e):
+        db.session.rollback()
+        app.logger.error('Database request failed (%s)',type(e).__name__)
+        return jsonify(error='Database is temporarily unavailable. Please retry.'),503
     @app.errorhandler(HTTPException)
     def http_error(e): return jsonify(error=e.description),e.code
     @app.errorhandler(IntegrityError)
@@ -107,9 +147,11 @@ def create_app(config=None):
         if path.startswith('api/'): return jsonify(error='Not found'),404
         dist=root/'frontend/dist'
         if path and (dist/path).is_file() and (dist/path).resolve().is_relative_to(dist):
-            return send_from_directory(dist,path)
+            response=send_from_directory(dist,path)
+            if re.fullmatch(r'assets/[^/]+-[A-Za-z0-9_-]{8,}\.(js|css|woff2?)',path):response.headers['Cache-Control']='public, max-age=31536000, immutable'
+            return response
         if not (dist/'index.html').exists(): return jsonify(message='Build frontend with npm run build'),503
-        return send_from_directory(dist,'index.html')
+        response=send_from_directory(dist,'index.html');response.headers['Cache-Control']='no-cache';return response
     from .cli import register_cli
     register_cli(app)
     return app

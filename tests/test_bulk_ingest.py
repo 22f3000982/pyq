@@ -19,5 +19,8 @@ def test_bulk_candidates_are_bounded_and_retry_only_failed(app):
             IngestionFile(batch_id=batch.id,paper_id=p4.id,filename='four.pdf',status='PAUSED'),
         ]);db.session.commit()
         assert candidates(20,False)==[p1.id]
-        assert candidates(20,True)==[p1.id,p3.id]
+        assert candidates(20,True)==[p3.id]
+        assert candidates(1,False)==[p1.id]
+        p1.status="AVAILABLE";db.session.commit()
+        assert candidates(20,False)==[]
         db.session.remove()

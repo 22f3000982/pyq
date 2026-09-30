@@ -82,7 +82,7 @@ def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None):
             admin=User(email='ingestion-service@internal.invalid',name='Ingestion service',role='SYSTEM',active=False,password_hash=generate_password_hash(uuid.uuid4().hex));db.session.add(admin);db.session.flush()
     batch=IngestionBatch(user_id=admin.id)
     db.session.add(batch);db.session.flush();count=0
-    query=Paper.query.filter(Paper.source_url.isnot(None)).order_by(Paper.id)
+    query=Paper.query.filter(Paper.source_url.isnot(None),Paper.status!='ARCHIVED').order_by(Paper.id)
     if paper_ids is not None:query=query.filter(Paper.id.in_(paper_ids))
     selected=0
     for p in query:
@@ -98,11 +98,13 @@ def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None):
         p.status='PROCESSING';selected+=1
     db.session.commit();return batch.id,count
 
-def download_pending(app,workers=4,paper_ids=None):
+def download_pending(app,workers=4,paper_ids=None,limit=None):
     with app.app_context():
-        query=IngestionFile.query.filter_by(status='FETCH_QUEUED')
+        query=IngestionFile.query.join(Paper,Paper.id==IngestionFile.paper_id).filter(IngestionFile.status=='FETCH_QUEUED',Paper.status!='ARCHIVED')
         if paper_ids is not None:query=query.filter(IngestionFile.paper_id.in_(paper_ids))
-        jobs=[(f.id,f.source_url) for f in query.order_by(IngestionFile.id)]
+        query=query.order_by(IngestionFile.id)
+        if limit is not None:query=query.limit(limit)
+        jobs=[(f.id,f.source_url) for f in query]
         directory=Path(app.config['UPLOAD_DIR']);max_bytes=app.config['MAX_UPLOAD_SIZE']
     def download(job):
         id,url=job;temp=directory/('fetch-'+uuid.uuid4().hex+'.tmp')

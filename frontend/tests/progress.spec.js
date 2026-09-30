@@ -2,7 +2,7 @@ import {describe,it,expect,vi,beforeEach} from 'vitest';
 import {mount,flushPromises} from '@vue/test-utils';
 import PaperProgress from '../src/PaperProgress.vue';import ExamBrowser from '../src/ExamBrowser.vue';import Records from '../src/Records.vue';
 const mocks=vi.hoisted(()=>({api:vi.fn(),go:vi.fn(),session:{user:{id:1,name:'Student'}}}));
-vi.mock('../src/api',()=>mocks);
+vi.mock('../src/api',()=>({...mocks,loadCatalog:async()=>{const [c,m]=await Promise.all([mocks.api('/courses?limit=100'),mocks.api('/metadata')]);return {courses:c.items,meta:m}}}));
 beforeEach(()=>{mocks.api.mockReset();mocks.go.mockReset()});
 describe('latest paper progress',()=>{
  it('shows the exact latest percentage and preserves zero/unknown',async()=>{
@@ -13,7 +13,7 @@ describe('latest paper progress',()=>{
  });
  it('paper cards show Take Test or latest score and Retake Test',async()=>{
   mocks.api.mockImplementation(async path=>path.startsWith('/courses')?{items:[{id:1,name:'AI',exams:{'Quiz 1':2}}]}:path==='/metadata'?{terms:[]}:{items:[{id:1,name:'New paper',progress:null},{id:2,name:'Attempted paper',progress:{attempted:true,last_score:80}}],total:2});
-  const w=mount(ExamBrowser,{props:{route:'/exam/Quiz%201'}});await flushPromises();await w.get('select[aria-label="Choose course"]').setValue('1');await flushPromises();
+  const w=mount(ExamBrowser,{props:{route:'/exam/Quiz%201'}});await flushPromises();await w.get('button[aria-label="Choose course"]').trigger('click');await w.get('.searchable-select-search input').setValue('AI');await w.findAll('.searchable-select-option')[0].trigger('click');await flushPromises();
   const cards=w.findAll('article');expect(cards[0].text()).toContain('Take Test');expect(cards[0].text()).not.toContain('already attempted');expect(cards[1].text()).toContain('You already attempted this QP and scored 80.0%.');expect(cards[1].get('a').attributes('href')).toBe('#/paper/2');expect(cards[1].text()).toContain('Retake Test');w.unmount();
  });
  it('progress page displays latest scores and active resumes, without past-attempt analytics',async()=>{

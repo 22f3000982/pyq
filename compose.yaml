@@ -24,6 +24,10 @@ services:
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
       DATABASE_URL: postgresql+psycopg://pyq:${POSTGRES_PASSWORD}@db:5432/pyq
       UPLOAD_DIR: /data/uploads
+      REDIS_URL: redis://redis:6379/0
+      CACHE_NAMESPACE: pyq:content:v1
+      CONTENT_CACHE_TTL: "60"
+      IMAGE_DELIVERY: proxy
       RATELIMIT_STORAGE_URI: redis://redis:6379/0
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       LLM_PROVIDER: ${LLM_PROVIDER:-none}
@@ -32,6 +36,8 @@ services:
       LLM_MODEL: ${LLM_MODEL:-}
       OCR_ENABLED: "true"
       MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-20971520}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_QUEUE_NAMESPACE: pyq:ingestion
     volumes: ["uploads:/data/uploads"]
     depends_on:
       db: { condition: service_healthy }

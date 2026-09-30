@@ -29,3 +29,49 @@
 [data-theme="dark"]{--navy:#b9d2f2;--blue:#91baff;--muted:#bacce0;--line:#435064}
 [data-theme="dark"] .question-stem,[data-theme="dark"] .answer-choice>strong,[data-theme="dark"] .question-panel>.section-row .eyebrow{color:#e4eaf2}
 [data-theme="dark"] .brand-mark{background:#315783}
+
+
+/* Searchable exam filters: always open below the trigger and filter as the user types. */
+.searchable-select{position:relative;width:100%;min-width:0}
+.searchable-select-trigger{width:100%;min-height:48px;padding:11px 13px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#334862;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left}
+.searchable-select-trigger .placeholder{color:#7e8da2}
+.searchable-select-icons{display:flex;align-items:center;gap:5px;flex:none}
+.searchable-select-clear{color:#8898ad}
+.searchable-select-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:1200;background:#fff;border:1px solid #cfd9e8;border-radius:8px;box-shadow:0 14px 36px #18396924;overflow:hidden}
+.searchable-select-search{display:flex;align-items:center;gap:9px;padding:9px 11px;border-bottom:1px solid #e4e9f1;color:#8191a7;background:#fafcff}
+.searchable-select-search input{width:100%;border:0;outline:0;background:transparent;color:#263b5b;min-width:0}
+.searchable-select-options{max-height:310px;overflow:auto;padding:5px}
+.searchable-select-option{display:block;width:100%;padding:10px 12px;background:#fff;border:0;border-radius:5px;text-align:left;color:#344966}
+.searchable-select-option:hover,.searchable-select-option.selected{background:#edf4ff;color:#245cc1}
+.searchable-select-empty{padding:16px 12px;margin:0;color:#8795a9;font-size:.84rem}
+.exam-browser-filters{align-items:flex-end;overflow:visible}
+.exam-browser-filters>label{width:min(420px,100%);margin-top:0}
+.exam-browser-filters .searchable-select{margin-top:7px}
+
+/* Floating CBT tools stay independent from answer saving/timer state. */
+.floating-tool{position:fixed;z-index:1300;background:#fff;border:1px solid #76869b;box-shadow:0 18px 55px #07172f45;min-width:300px;min-height:240px;resize:both;overflow:hidden}
+.floating-tool-header{height:38px;background:#3d536e;color:#fff;display:flex;align-items:center;gap:9px;padding:0 9px;cursor:move;user-select:none;touch-action:none}
+.floating-tool-header strong{font-size:.8rem}
+.floating-tool-header>span{font-size:.65rem;opacity:.75}
+.floating-tool-actions{margin-left:auto;display:flex;gap:3px}
+.floating-tool-actions button,.floating-tool-actions a{display:grid;place-items:center;width:28px;height:28px;border:0;background:#ffffff18;color:#fff;border-radius:3px;padding:0}
+.floating-tool-actions button:hover,.floating-tool-actions a:hover{background:#ffffff30}
+.scratch-tool{left:9vw;top:17vh;width:560px;height:430px}
+.scratch-canvas-wrap{height:calc(100% - 38px);background:#fff}
+.scratch-canvas-wrap canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;background:#fff}
+.calculator-tool{right:5vw;top:15vh;width:470px;height:590px;display:flex;flex-direction:column}
+.calculator-tool iframe{width:100%;flex:1;border:0;background:#fff}
+.calculator-fallback{font-size:.68rem;line-height:1.35;color:#687a92;margin:0;padding:5px 8px;border-top:1px solid #e1e6ed;background:#f7f9fc}
+.exam-tool-button svg{flex:none}
+.nat-hint{display:block;color:#78889e;margin-top:7px;font-weight:400}
+
+[data-theme="dark"] .searchable-select-trigger,[data-theme="dark"] .searchable-select-menu,[data-theme="dark"] .searchable-select-option,[data-theme="dark"] .searchable-select-search{background:#172130;color:#e4eaf2;border-color:#526479}
+[data-theme="dark"] .searchable-select-option:hover,[data-theme="dark"] .searchable-select-option.selected{background:#294460;color:#fff}
+
+@media(max-width:760px){
+ .exam-browser-filters>label{width:100%}
+ .floating-tool{left:3vw!important;right:auto!important;top:10vh!important;width:94vw!important;max-width:94vw;height:70vh;min-width:0;resize:none}
+ .calculator-tool{height:78vh}
+ .exam-tool-button{font-size:0!important;padding:7px!important}
+ .exam-tool-button svg{width:18px;height:18px}
+}
