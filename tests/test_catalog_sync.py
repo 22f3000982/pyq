@@ -175,3 +175,32 @@ def test_catalog_batch_progress_reports_percent_and_done(app,client):
     assert progress.json['completed']==1
     assert progress.json['failed']==1
     assert progress.json['done'] is True
+
+
+def workbook_with_course(code='CS4010',name='Deep Learning'):
+    wb=openpyxl.Workbook()
+    master=wb.active;master.title='Courses'
+    master.append(['Course Name','Course Code','Course Level','Course Type'])
+    master.append([name,code,'Diploma','Theory'])
+    term=wb.create_sheet('Sep 2026')
+    term.append(['Course Name','Quiz 1'])
+    term.append([name,'Renamed paper'])
+    term['B2'].hyperlink='https://drive.google.com/file/d/alias-source/view'
+    out=io.BytesIO();wb.save(out);wb.close();return out.getvalue()
+
+
+def test_apply_accepts_workbook_code_alias_for_existing_course_name(app,client):
+    h=login(client,True)
+    existing=Course(name='Deep Learning',code='DL')
+    db.session.add(existing);db.session.commit()
+    data=workbook_with_course(code='CS4010',name='Deep Learning')
+    preview=post_file(client,'/api/admin/catalog/preview',h,data)
+    assert preview.status_code==200
+    applied=post_file(client,'/api/admin/catalog/apply',h,data,{
+        'workbook_hash':preview.json['workbook_hash'],'process_new':'true','process_unprocessed':'true',
+        'changed_keys':'[]','batch_limit':'1'
+    })
+    assert applied.status_code==202
+    paper=Paper.query.one()
+    assert paper.course_id==existing.id
+    assert Course.query.count()==1
