@@ -23,7 +23,7 @@ it('exam saves options and review mark, then submits through confirmation',async
 });
 describe('automatic processing',()=>{it('shows processing counters and queues catalog without approval controls',async()=>{
  mocks.api.mockImplementation(async(path,options)=>path.startsWith('/courses')?{items:[]}:path==='/metadata'?{terms:[],exams:[]}:path==='/admin/stats'?{papers:734,processed:1,questions:20}:path.startsWith('/admin/ingestion')?{items:[],total:0}:({queued:3,batch_id:1}));
- const w=mount(Admin);await flushPromises();expect(w.text()).toContain('734');expect(w.text()).not.toContain('Verify');expect(w.text()).not.toContain('Publish');await w.findAll('button').find(b=>b.text()==='Resume full catalog processing').trigger('click');await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/admin/process-catalog',expect.objectContaining({method:'POST'}));w.unmount();
+ const w=mount(Admin);await flushPromises();expect(w.text()).toContain('734');expect(w.text()).not.toContain('Verify');expect(w.text()).not.toContain('Publish');await w.findAll('button').find(b=>b.text()==='Queue next 20 pending').trigger('click');await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/admin/process-catalog',expect.objectContaining({method:'POST'}));w.unmount();
 })});
 
 describe('PDF upload form',()=>{it('posts the PDF and metadata and displays real processing completion',async()=>{
