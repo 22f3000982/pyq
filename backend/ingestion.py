@@ -38,9 +38,12 @@ def store_upload(upload,paper,batch,replace=False):
                 f.status='DUPLICATE';f.finished_at=time.time()
                 paper.canonical_paper_id=old.paper_id
                 event(f,'DEDUPLICATED',f'Identical file already stored as import {old.id}; question records are reused')
-            else:
+            elif replace:
                 f.status='QUEUED';paper.status='PROCESSING';paper.canonical_paper_id=None
-                event(f,'UPLOADED',f'{len(data)} bytes; SHA-256 {sha}')
+                event(f,'REPLACED',f'Identical source explicitly queued for reprocessing; SHA-256 {sha}')
+            else:
+                f.status='DUPLICATE';f.finished_at=time.time()
+                event(f,'DEDUPLICATED',f'Identical file already imported for this paper as import {old.id}; no reprocessing needed')
             if old.status in FAILURES:old.status='QUEUED';old.error=None;old.retries+=1;paper.status='PROCESSING'
         else:
             f.file_hash=sha;f.path=sha+'.pdf';write_asset(f.path,data);f.status='QUEUED';paper.status='PROCESSING';paper.canonical_paper_id=None
