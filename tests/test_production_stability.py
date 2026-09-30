@@ -64,7 +64,7 @@ def test_image_proxy_auth_cache_and_missing_content(app,client,tmp_path):
     assert client.get(f'/api/images/{image.id}').status_code==401
     login(client);r=client.get(f'/api/images/{image.id}')
     assert r.status_code==200 and r.data==b'PNG'
-    assert r.headers['Cache-Control']=='private, max-age=3600'
+    assert r.headers['Cache-Control']=='private, max-age=31536000, immutable'
     assert 'Cookie' in r.headers['Vary']
     assert client.get(f'/api/images/{image.id}',headers={'If-None-Match':r.headers['ETag']}).status_code==304
     path.unlink();assert client.get(f'/api/images/{image.id}').status_code==404
