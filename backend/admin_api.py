@@ -128,26 +128,52 @@ def delete_paper(id):
     db.session.delete(p);db.session.commit()
     return jsonify(deleted=True,id=id)
 
-@admin.post('/catalog')
-@require_user(True)
-def import_catalog():
-    from .catalog import import_workbook
+def _workbook_upload():
     upload=request.files.get('file')
     if not upload or not upload.filename.lower().endswith('.xlsx'):abort(400,description='Select an XLSX workbook')
     data=upload.read(10*1024*1024+1)
     if len(data)>10*1024*1024:abort(413)
-    # Reject oversized compressed contents before parsing.
     import io,zipfile
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as z:
             if sum(i.file_size for i in z.infolist())>100*1024*1024:abort(413)
     except zipfile.BadZipFile:abort(400,description='Invalid workbook')
     path=root()/(uuid.uuid4().hex+'.xlsx');path.write_bytes(data)
+    return path
+
+@admin.post('/catalog/preview')
+@require_user(True)
+def preview_catalog():
+    from .catalog import preview_workbook
+    path=_workbook_upload()
+    try:return jsonify(preview_workbook(path))
+    finally:path.unlink(missing_ok=True)
+
+@admin.post('/catalog/apply')
+@require_user(True)
+def apply_catalog():
+    from .catalog import apply_sync
+    import json
+    path=_workbook_upload()
     try:
-        result=import_workbook(path)
-        from .acquisition import queue_catalog
-        batch,count=queue_catalog(g.user.id) if current_app.config['CATALOG_AUTO_PROCESS'] else (None,0)
-        return jsonify(**result,batch_id=batch,queued=count)
+        changed=json.loads(request.form.get('changed_keys','[]'))
+        if not isinstance(changed,list):abort(400,description='changed_keys must be a list')
+        result=apply_sync(path,
+            expected_hash=request.form.get('workbook_hash') or None,
+            process_new=request.form.get('process_new','true').lower()=='true',
+            process_unprocessed=request.form.get('process_unprocessed','true').lower()=='true',
+            changed_keys=[str(x) for x in changed[:500]],
+            queue=True)
+        return jsonify(**result),202
+    finally:path.unlink(missing_ok=True)
+
+@admin.post('/catalog')
+@require_user(True)
+def import_catalog():
+    # Backward-compatible immediate catalog-only import for older clients.
+    from .catalog import import_workbook
+    path=_workbook_upload()
+    try:return jsonify(**import_workbook(path),batch_id=None,queued=0)
     finally:path.unlink(missing_ok=True)
 
 @admin.get('/imports')
