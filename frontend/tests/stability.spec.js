@@ -50,7 +50,7 @@ describe('nonblocking exam navigation',()=>{
 });
 describe('visible source fidelity',()=>{
  it('shows an explicit recoverable error instead of silently removing source notation',async()=>{
-  const w=mount(QuestionContent,{props:{text:'Function [[IMAGE:x]] at [[IMAGE:missing]]',images:[{id:1,token:'x',inline:true,width:3}]}});await w.get('img').trigger('error');expect(w.find('img').exists()).toBe(false);expect(w.text()).toContain('Source diagram or notation unavailable');expect(w.text()).toContain('[Source notation unavailable]');await w.get('button').trigger('click');expect(w.get('img').attributes('src')).toBe('/api/images/1');w.unmount();
+  const w=mount(QuestionContent,{props:{text:'Function [[IMAGE:x]] at [[IMAGE:missing]]',images:[{id:1,token:'x',inline:true,width:3}]}});await w.get('img').trigger('error');expect(w.find('img').exists()).toBe(false);expect(w.text()).toContain('Source diagram or notation unavailable');expect(w.text()).toContain('[Source notation unavailable]');await w.get('button').trigger('click');expect(w.get('img').attributes('src')).toBe('/api/images/1?proxy=1');w.unmount();
  });
  it('renders source fractions, Greek letters and matrices without trusting HTML',async()=>{
   const w=mount(MathText,{props:{text:String.raw`Inline \(\frac{\alpha_1^2}{2}\) display \[\begin{pmatrix}1&2\\3&4\end{pmatrix}\] <img src=x onerror=alert(1)>`}});await flushPromises();expect(w.findAll('.katex')).toHaveLength(2);expect(w.find('img').exists()).toBe(false);expect(w.text()).toContain('<img src=x');w.unmount();
