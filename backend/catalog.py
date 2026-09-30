@@ -227,9 +227,44 @@ def preview_workbook(path):
     return compare_scan(scan_workbook(path))
 
 def import_workbook(path):
-    """Legacy immediate import used by CLI/tests: create catalog only, never queue downloads."""
-    scan=scan_workbook(path);before=Paper.query.count()
-    result=apply_sync(path,expected_hash=scan['workbook_hash'],process_new=True,process_unprocessed=False,changed_keys=[],queue=False)
-    result['new_papers']=Paper.query.count()-before
-    result['existing_papers']=len(scan['entries'])-result['new_papers']
-    return result
+    """Legacy catalog-only import kept efficient for setup/CLI and older clients."""
+    scan=scan_workbook(path)
+    courses_list=Course.query.all();terms_list=Term.query.all();exams_list=ExamType.query.all();papers_list=Paper.query.all()
+    by_code={c.code:c for c in courses_list if c.code};by_name={norm_key(c.name):c for c in courses_list}
+    terms={t.name:t for t in terms_list};exams={e.name:e for e in exams_list}
+    report={'new_courses':0,'new_papers':0,'existing_papers':0,'linked_cells':scan['linked_cells'],
+            'issues':scan['issues'],'terms':scan['terms']}
+    for item in scan['courses']:
+        course=by_code.get(item['code']) or by_name.get(norm_key(item['name']))
+        if not course:
+            course=Course(name=item['name'],code=item['code']);db.session.add(course);by_code[item['code']]=course;by_name[norm_key(item['name'])]=course;report['new_courses']+=1
+        course.level=item['level'];course.course_type=item['course_type'];course.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(course.name)]
+    for name in scan['terms']:
+        if name not in terms:
+            m=re.fullmatch(r'(Jan|May|Sep)\s+(\d{4})',name);terms[name]=Term(name=name,year=int(m[2]),month=TERM_MONTH[m[1]]);db.session.add(terms[name])
+    for entry in scan['entries']:
+        if entry['exam_name'] not in exams:
+            exams[entry['exam_name']]=ExamType(name=entry['exam_name']);db.session.add(exams[entry['exam_name']])
+    db.session.flush()
+    # Rebuild a logical index after metadata IDs exist, without extra SELECTs.
+    index={}
+    for p in papers_list:
+        course=next((x for x in courses_list if x.id==p.course_id),None) or by_code.get(next((k for k,v in by_code.items() if v.id==p.course_id),None))
+        term=next((x for x in terms_list if x.id==p.term_id),None) or next((x for x in terms.values() if x.id==p.term_id),None)
+        exam=next((x for x in exams_list if x.id==p.exam_type_id),None) or next((x for x in exams.values() if x.id==p.exam_type_id),None)
+        if course and term and exam:index.setdefault(paper_key(course.code or course.name,term.name,exam.name,p.session,p.name),p)
+    provenance_seen={identity for identity, in db.session.query(SourceEntry.identity).all()};pending=[]
+    for entry in scan['entries']:
+        paper=index.get(entry['key'])
+        if not paper:
+            paper=Paper(identity=digest('sync-v2|'+entry['key']),course=by_code[entry['course_code']],term=terms[entry['term_name']],
+                        exam_type=exams[entry['exam_name']],name=entry['name'],session=entry['session'],variant=entry['variant'],
+                        source_url=entry['url'],warnings=entry['warnings'],source_metadata={'catalog_sync_key':entry['key']})
+            db.session.add(paper);db.session.flush();index[entry['key']]=paper;report['new_papers']+=1
+        else:report['existing_papers']+=1
+        provenance=digest('|'.join([scan['workbook_hash'],entry['sheet'],entry['cell'],entry['key']]))
+        if provenance not in provenance_seen:
+            provenance_seen.add(provenance);pending.append(SourceEntry(identity=provenance,paper_id=paper.id,workbook_hash=scan['workbook_hash'],
+                sheet=entry['sheet'],cell=entry['cell'],raw_text=entry['raw_text'],url=entry['url']))
+    db.session.add_all(pending);db.session.add(ImportRun(workbook_hash=scan['workbook_hash'],report=report));db.session.commit()
+    return report
