@@ -34,7 +34,7 @@ def test_admin_paper_crud_archive_restore_and_safe_delete(app,client):
     assert target.id not in [p['id'] for p in public['items']]
 
     stats=client.get('/api/stats').json
-    assert stats['exam_papers']['Quiz 1']==0
+    assert stats['exam_papers'].get('Quiz 1',0)==0
     assert stats['exam_papers']['Quiz 2']==1 and stats['exam_papers']['End Term']==1
 
     restored=client.post(f'/api/admin/papers/{target.id}/restore',headers=h,json={})
