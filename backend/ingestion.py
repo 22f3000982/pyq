@@ -160,7 +160,9 @@ def process_file(id):
         if meta.get('duration_seconds'):paper.duration_seconds=meta['duration_seconds']
         f.extracted=len(new_ids);f.warnings=layout['warnings']+issues;f.finished_at=time.time();f.error=None if available else 'No question records detected. This may be an image-only notes PDF; OCR is unavailable, so upload a text-based question paper or enable OCR.'
         f.status='PARTIAL' if available and failed else 'AVAILABLE' if available else 'EXTRACTION_FAILED'
-        paper.status='PARTIALLY_AVAILABLE' if available and failed else 'AVAILABLE' if available else 'EXTRACTION_FAILED'
+        db.session.expire(paper,['status'])
+        if paper.status!='ARCHIVED':
+            paper.status='PARTIALLY_AVAILABLE' if available and failed else 'AVAILABLE' if available else 'EXTRACTION_FAILED'
         event(f,'AUTOMATIC_VALIDATION',{'available':available,'failed_questions':failed,'issues':issues});event(f,f.status,'Student question bank updated automatically')
         db.session.commit()
     except Exception as e:
@@ -170,7 +172,9 @@ def process_file(id):
         except Exception:
             db.session.remove();current_app.logger.error('ingestion_persistence_failed type=%s',type(e).__name__)
     # Aliases share question records instead of inventing independent papers for one PDF.
-    for alias in Paper.query.filter_by(canonical_paper_id=paper.id):alias.status=paper.status;alias.source_metadata=paper.source_metadata;alias.duration_seconds=paper.duration_seconds
+    for alias in Paper.query.filter_by(canonical_paper_id=paper.id):
+        if alias.status!='ARCHIVED':alias.status=paper.status
+        alias.source_metadata=paper.source_metadata;alias.duration_seconds=paper.duration_seconds
     db.session.commit();update_batch(f.batch_id)
 
 def work_once(paper_ids=None):
@@ -179,7 +183,7 @@ def work_once(paper_ids=None):
     for stale in IngestionFile.query.filter(IngestionFile.status=='PROCESSING',IngestionFile.started_at<time.time()-1800):
         stale.status='EXTRACTION_FAILED';stale.error='Worker lease expired; automatic retry is safe';event(stale,'LEASE_EXPIRED',stale.error)
     db.session.commit()
-    candidate_query=IngestionFile.query.filter_by(status='QUEUED')
+    candidate_query=IngestionFile.query.join(Paper,Paper.id==IngestionFile.paper_id).filter(IngestionFile.status=='QUEUED',Paper.status!='ARCHIVED')
     if paper_ids is not None:candidate_query=candidate_query.filter(IngestionFile.paper_id.in_(paper_ids))
     candidate=candidate_query.order_by(IngestionFile.id).first()
     if not candidate:return False
