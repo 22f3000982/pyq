@@ -212,8 +212,12 @@ def questions():
 @require_user(True)
 def process_catalog():
     from .acquisition import queue_catalog
-    batch,count=queue_catalog(g.user.id,retry=body().get('retry',False))
-    return jsonify(batch_id=batch,queued=count),202
+    payload=body()
+    try:limit=int(payload.get('limit',20))
+    except (TypeError,ValueError):abort(400,description='limit must be a number')
+    if not 1<=limit<=50:abort(400,description='limit must be between 1 and 50')
+    batch,count=queue_catalog(g.user.id,retry=payload.get('retry',False),limit=limit)
+    return jsonify(batch_id=batch,queued=count,limit=limit),202
 
 @admin.post('/papers/upload')
 @admin.post('/papers/bulk-upload')
