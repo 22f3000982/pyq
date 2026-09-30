@@ -61,7 +61,7 @@ def _local_cached(key,loader):
     if not owner:
         # Let one thread warm a paper; a bounded wait avoids a thundering herd
         # during simultaneous exam starts without ever hanging a request.
-        if event.wait(timeout=.75):
+        if event.wait(timeout=5.0):
             value=_local_get(key)
             if value is not None:
                 count('cache_hit');return value
@@ -117,7 +117,7 @@ def cached(key, loader):
         if raw is not None:
             count('cache_hit');return json.loads(raw)
         count('cache_miss')
-        lock = r.lock(full+':lock', timeout=15, blocking_timeout=.5)
+        lock = r.lock(full+':lock', timeout=15, blocking_timeout=5.0)
         acquired = lock.acquire()
         raw = r.get(full)
         if raw is not None:
