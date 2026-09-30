@@ -1,7 +1,7 @@
 from .storage import send_asset,image_url,StorageError
 import time
 from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory,redirect
-from sqlalchemy import or_
+from sqlalchemy import or_,insert
 from sqlalchemy.orm import selectinload,joinedload
 from .models import *
 from .api import integer_argument,require_user,body,paginate
@@ -81,7 +81,7 @@ def start_payload(a,snapshots):
 def finish_new_attempt(a,snapshots):
     """Persist all answer rows in one batch and return the already-built bootstrap."""
     db.session.add(a);db.session.flush()
-    db.session.execute(db.insert(AttemptAnswer),[
+    db.session.execute(insert(AttemptAnswer),[
         {'attempt_id':a.id,'question_id':s['id'],'position':n,'snapshot':s,
          'visited':False,'response_touched':False,'marked':False}
         for n,s in enumerate(snapshots)
