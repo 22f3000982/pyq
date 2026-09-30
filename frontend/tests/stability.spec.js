@@ -4,7 +4,7 @@ import Exam from '../src/Exam.vue';import QuestionContent from '../src/QuestionC
 const mocks=vi.hoisted(()=>({api:vi.fn(),go:vi.fn(),session:{user:{name:'Student'}}}));vi.mock('../src/api',()=>({...mocks,api:async(path,o)=>{if(path.endsWith('?bootstrap=1')){const base=path.split('?')[0];return {...await mocks.api(base,o),...await mocks.api(base+'/questions')}}return mocks.api(path,o)}}));
 let attempt;
 beforeEach(()=>{vi.useFakeTimers();sessionStorage.clear();mocks.go.mockReset();mocks.api.mockReset();attempt={id:4,title:'Source paper',mode:'exam',status:'ACTIVE',deadline:Date.now()/1000+600,server_time:Date.now()/1000,palette:[1,2].map(id=>({question_id:id,number:String(id),state:'NOT_VISITED'}))};
- mocks.api.mockImplementation(async(path)=>path==='/attempts/4'?structuredClone(attempt):path==='/attempts/4/questions'?{status:'ACTIVE',items:[1,2].map(id=>({question:{id,number:String(id),kind:'NAT',text:'Source question '+id,images:[],options:[],marks:1},answer:null,marked:false}))}:{state:'ANSWERED'});
+ mocks.api.mockImplementation(async(path)=>path==='/attempts/4'?structuredClone(attempt):path==='/attempts/4/status'?{id:attempt.id,status:attempt.status,deadline:attempt.deadline,submitted_at:null,expires_at:Date.now()/1000+3600,server_time:Date.now()/1000}:path==='/attempts/4/questions'?{status:'ACTIVE',items:[1,2].map(id=>({question:{id,number:String(id),kind:'NAT',text:'Source question '+id,images:[],options:[],marks:1},answer:null,marked:false}))}:{state:'ANSWERED'});
 });
 afterEach(()=>vi.useRealTimers());
 const button=(w,label)=>w.findAll('button').find(b=>b.text()===label);
@@ -18,6 +18,12 @@ describe('nonblocking exam navigation',()=>{
   await button(w,'Submit exam').trigger('click');await button(w,'Submit attempt').trigger('click');expect(mocks.api.mock.calls.some(c=>c[0].endsWith('/submit'))).toBe(false);
   release({state:'ANSWERED'});await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/attempts/4/answers',expect.objectContaining({body:expect.objectContaining({question_id:2,answer:'0'})}));
   expect(mocks.go).toHaveBeenCalledWith('/result/4');expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/questions')).toHaveLength(1);w.unmount();
+ });
+ it('polls only the lightweight status endpoint every five minutes',async()=>{
+  const w=mount(Exam,{props:{id:4}});await flushPromises();expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(0);
+  await vi.advanceTimersByTimeAsync(299000);expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(0);
+  await vi.advanceTimersByTimeAsync(1000);await flushPromises();expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(1);
+  expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/questions')).toHaveLength(1);w.unmount();
  });
  it('keeps offline responses across navigation and restores them after remount',async()=>{
   let w=mount(Exam,{props:{id:4}});await flushPromises();const base=mocks.api.getMockImplementation();mocks.api.mockImplementation((path,o)=>path.endsWith('/answers')?Promise.reject(new Error('Offline')):base(path,o));
