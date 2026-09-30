@@ -10,14 +10,8 @@ def question_snapshot(q):
     text=q.text
     passage=evidence.get('shared_passage_text')
     subquestion=evidence.get('subquestion_text')
-    if passage and subquestion:
-        text=subquestion
-    elif evidence.get('shared_passage'):
-        # Legacy imports stored passage + subquestion in one string. Preserve old
-        # data while giving them the split-view UI without a schema migration.
-        parts=re.split(r'\n\s*\n',text,maxsplit=1)
-        if len(parts)==2:passage,text=parts[0].strip(),parts[1].strip()
-    return {'id':q.id,'paper_id':q.paper_id,'number':q.number,'kind':q.kind,'text':text,'passage':passage,'shared_passage':bool(passage),'options':[{'key':o.key,'text':o.text} for o in q.options], 'answers':q.answers,'answer_status':q.answer_status,'explanation':q.explanation,'marks':q.marks,'negative_marks':q.negative_marks,'tolerance':q.tolerance or 0,'topic':q.topic,'difficulty':q.difficulty,'source_page':q.source_page,'images':[{'id':i.id,'_asset_path':i.path,'alt':i.alt,'option_key':i.option_key,'token':Path(i.path).stem,**evidence.get('layout_assets',{}).get(Path(i.path).stem,{})} for i in q.images], 'source_pages':q.source_pages}
+    if passage and subquestion:text=subquestion
+    return {'id':q.id,'paper_id':q.paper_id,'number':q.number,'kind':q.kind,'text':text,'passage':passage,'shared_passage':bool(passage or evidence.get('shared_passage')),'options':[{'key':o.key,'text':o.text} for o in q.options], 'answers':q.answers,'answer_status':q.answer_status,'explanation':q.explanation,'marks':q.marks,'negative_marks':q.negative_marks,'tolerance':q.tolerance or 0,'topic':q.topic,'difficulty':q.difficulty,'source_page':q.source_page,'images':[{'id':i.id,'_asset_path':i.path,'alt':i.alt,'option_key':i.option_key,'token':Path(i.path).stem,**evidence.get('layout_assets',{}).get(Path(i.path).stem,{})} for i in q.images], 'source_pages':q.source_pages}
 
 def question_order(number):
     return tuple((0,int(part)) if part.isdigit() else (1,part.lower()) for part in re.split(r'(\d+)',str(number)))
