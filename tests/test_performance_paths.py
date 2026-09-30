@@ -104,12 +104,16 @@ def test_response_save_queries_and_bootstrap_privacy(app,client):
     assert status.status_code==200 and 'palette' not in status.json and 'items' not in status.json
     status_count=int(re.search(r'queries;desc="(\\d+)"',status.headers['Server-Timing'])[1])
     assert status_count<=2  # authenticated user + owned attempt; no AttemptAnswer snapshot load.
-    r=client.post(f"/api/attempts/{a['id']}/answers",json={'question_id':a['palette'][0]['question_id'],'answer':['b']},headers=h)
-    assert r.status_code==200 and 'feedback' not in r.json
+    qids=[p['question_id'] for p in a['palette'][:2]]
+    r=client.post(f"/api/attempts/{a['id']}/answers",json={'items':[{'question_id':qids[0],'answer':['b']},{'question_id':qids[1],'marked':True}]},headers=h)
+    assert r.status_code==200 and len(r.json['items'])==2 and all('feedback' not in item for item in r.json['items'])
     count=int(re.search(r'queries;desc="(\\d+)"',r.headers['Server-Timing'])[1])
-    assert count<=4  # user + joined attempt/answer read + versioned parent/child writes.
+    assert count<=5  # one auth read + one batched owned-answer read + one transaction.
     r=client.get(f"/api/attempts/{a['id']}?bootstrap=1")
-    assert r.json['items'][0]['answer']==['b'] and 'feedback' not in r.json['items'][0]
+    assert r.json['items'][0]['answer']==['b'] and r.json['items'][1]['marked'] is True and 'feedback' not in r.json['items'][0]
+    # Legacy single-response clients remain supported.
+    single=client.post(f"/api/attempts/{a['id']}/answers",json={'question_id':qids[0],'answer':None},headers=h)
+    assert single.status_code==200 and single.json['state']=='NOT_ANSWERED'
 
 def test_public_gzip_excludes_session(app,client):
     seed(12)
