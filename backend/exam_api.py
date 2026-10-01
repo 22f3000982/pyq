@@ -4,6 +4,7 @@ from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_direct
 from sqlalchemy import or_,insert
 from sqlalchemy.orm import selectinload,joinedload
 from .models import *
+from . import limiter
 from .api import integer_argument,require_visitor,body,paginate,visible_papers
 from .engine import *
 exams=Blueprint('exams',__name__,url_prefix='/api')
@@ -370,3 +371,26 @@ def switch_mode(id):
     for i in source.items:
         db.session.add(AttemptAnswer(attempt_id=a.id,question_id=i.question_id,position=i.position,snapshot=i.snapshot,answer=i.answer,visited=i.visited,marked=i.marked,response_touched=i.response_touched))
     db.session.commit();return start_response(a)
+
+
+@exams.post('/questions/<int:id>/report-format')
+@limiter.limit('60 per hour')
+@require_visitor
+def report_format(id):
+    from sqlalchemy.exc import IntegrityError
+    q=Question.query.join(Paper,Paper.id==Question.paper_id).filter(Question.id==id,Question.status=='AVAILABLE',Paper.status!='ARCHIVED').first_or_404()
+    payload=body();issue=payload.get('issue');description=payload.get('description','')
+    if issue not in ('TEXT','FORMULA','IMAGE','OPTIONS','OTHER'):abort(400,description='Choose a valid formatting issue.')
+    if not isinstance(description,str) or len(description)>1000:abort(400,description='Description must be at most 1000 characters.')
+    existing=ContentReport.query.filter_by(question_id=q.id,guest_hash=g.guest_hash).first()
+    if existing:return jsonify(id=existing.id,duplicate=True,status=existing.status)
+    if ContentReport.query.filter(ContentReport.guest_hash==g.guest_hash,ContentReport.created_at>time.time()-3600).count()>=20:abort(429,description='Too many reports. Please try again later.')
+    report=ContentReport(question_id=q.id,guest_hash=g.guest_hash,issue=issue,description=description.strip())
+    db.session.add(report)
+    try:db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        existing=ContentReport.query.filter_by(question_id=q.id,guest_hash=g.guest_hash).first()
+        if not existing:raise
+        return jsonify(id=existing.id,duplicate=True,status=existing.status)
+    return jsonify(id=report.id,duplicate=False,status=report.status),201

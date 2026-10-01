@@ -464,3 +464,31 @@ def grading_queue():
 @require_user(True)
 def manual_grade(id):
     abort(410,description='Historical manual grading is disabled. Only the latest source-scored paper percentage is retained.')
+
+
+def report_json(r):
+    q=db.session.get(Question,r.question_id);p=db.session.get(Paper,q.paper_id)
+    return {'id':r.id,'question_id':q.id,'number':q.number,'paper_id':p.id,'paper':p.name,'issue':r.issue,'description':r.description,'status':r.status,'created_at':r.created_at,'resolved_at':r.resolved_at}
+
+@admin.get('/content-reports')
+@require_user(True)
+def content_reports():
+    status=request.args.get('status','OPEN')
+    if status not in ('OPEN','RESOLVED','ALL'):abort(400,description='Invalid report status.')
+    query=ContentReport.query
+    if status!='ALL':query=query.filter_by(status=status)
+    return jsonify(paginate(query.order_by(ContentReport.created_at.desc()),report_json))
+
+@admin.get('/content-reports/<int:id>')
+@require_user(True)
+def content_report_detail(id):
+    r=db.get_or_404(ContentReport,id)
+    return jsonify(**report_json(r),question=admin_question(db.session.get(Question,r.question_id)))
+
+@admin.patch('/content-reports/<int:id>')
+@require_user(True)
+def update_content_report(id):
+    r=db.get_or_404(ContentReport,id);status=body().get('status')
+    if status not in ('OPEN','RESOLVED'):abort(400,description='Invalid report status.')
+    r.status=status;r.resolved_at=time.time() if status=='RESOLVED' else None
+    db.session.commit();return jsonify(report_json(r))

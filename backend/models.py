@@ -207,3 +207,14 @@ class QuestionReview(db.Model):
     before = db.Column(db.JSON)
     after = db.Column(db.JSON)
     created_at = db.Column(db.Float, default=time.time)
+
+class ContentReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question_id = db.Column(db.ForeignKey('question.id'), nullable=False, index=True)
+    guest_hash = db.Column(db.String(64), nullable=False)
+    issue = db.Column(db.String(20), nullable=False)
+    description = db.Column(db.String(1000), nullable=False, default='')
+    status = db.Column(db.String(12), nullable=False, default='OPEN', index=True)
+    created_at = db.Column(db.Float, nullable=False, default=time.time)
+    resolved_at = db.Column(db.Float)
+    __table_args__ = (db.UniqueConstraint('question_id', 'guest_hash', name='uq_content_report_question_guest'),)

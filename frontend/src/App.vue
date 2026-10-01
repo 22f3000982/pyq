@@ -3,9 +3,10 @@ import {ref,onMounted,computed} from 'vue';
 import {BookOpen,LayoutDashboard,History,Bookmark,Target,ShieldCheck,Search,ArrowUpRight,GraduationCap,LogOut} from 'lucide-vue-next';
 import {api,session,loadSession,go} from './api';
 import Catalog from './Catalog.vue';import ExamBrowser from './ExamBrowser.vue';import Exam from './Exam.vue';import Records from './Records.vue';import Admin from './Admin.vue';
-const theme=ref(localStorage.getItem('pyq-theme')||'light');
+let storedTheme;try{storedTheme=localStorage.getItem('pyq-theme')}catch{}
+const theme=ref(storedTheme==='dark'?'dark':'light');
 document.documentElement.dataset.theme=theme.value;
-function toggleTheme(){theme.value=theme.value==='dark'?'light':'dark';document.documentElement.dataset.theme=theme.value;localStorage.setItem('pyq-theme',theme.value)}
+function toggleTheme(){theme.value=theme.value==='dark'?'light':'dark';document.documentElement.dataset.theme=theme.value;try{localStorage.setItem('pyq-theme',theme.value)}catch{}}
 const route=ref(location.hash.slice(1)||'/');window.addEventListener('hashchange',()=>{route.value=location.hash.slice(1)||'/';window.scrollTo(0,0)});
 const busy=ref(true),error=ref(''),auth=ref({name:'',email:'',password:''}),authBusy=ref(false),query=ref(''),results=ref(null);
 const examPage=computed(()=>route.value.startsWith('/attempt/'));
@@ -16,7 +17,7 @@ async function search(){if(query.value.trim().length<2)return;results.value=awai
 const nav=[['/','Home',BookOpen],['/progress','My progress',LayoutDashboard],['/bookmarks','Bookmarks',Bookmark]];
 </script>
 <template>
-<button class="theme-toggle btn btn-light btn-sm" @click="toggleTheme" :aria-label="'Switch to '+(theme==='dark'?'light':'dark')+' theme'">{{theme==='dark'?'☀ Light':'☾ Dark'}}</button>
+<div class="theme-toolbar"><button class="theme-toggle btn btn-light btn-sm" @click="toggleTheme" :aria-label="'Switch to '+(theme==='dark'?'light':'dark')+' theme'">{{theme==='dark'?'☀ Light':'☾ Dark'}}</button></div>
 <div class="app-shell" :class="{'exam-shell':examPage}">
 <aside v-if="!examPage" class="sidebar"><a href="#/" class="brand"><span class="brand-mark"><BookOpen :size="23"/></span><span>PYQ<span class="brand-light">studio</span><small>THE PRACTICE LIBRARY</small></span></a><div class="nav-caption">YOUR WORKSPACE</div><nav><a v-for="[path,label,Icon] in nav" :href="'#'+path" :class="{active:route===path}"><component :is="Icon" :size="19"/>{{label}}</a><a v-if="session.user?.role==='ADMIN'" href="#/admin" :class="{active:route.startsWith('/admin')}"><ShieldCheck :size="19"/>Administration / Upload PYQ</a></nav><div class="sidebar-bottom"><GraduationCap :size="24"/><strong>One paper at a time.</strong><p>Build understanding through deliberate practice.</p><small>Independent learning platform.<br>Not affiliated with IIT Madras.</small></div></aside>
 <div class="workspace"><header v-if="!examPage" class="topbar"><span class="top-context">IITM BS <span>/</span> Previous-year papers</span><form class="global-search" @submit.prevent="search"><Search :size="17"/><input v-model="query" aria-label="Global search" placeholder="Search courses, papers, questions…"><button type="submit" class="text-btn">Search</button></form><div class="account" v-if="session.user?.role==='ADMIN'"><span class="avatar">{{session.user.name.slice(0,1)}}</span><span>{{session.user.name}}</span><button @click="logout" aria-label="Log out" class="icon-btn"><LogOut :size="17"/></button></div></header>

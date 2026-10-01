@@ -130,3 +130,26 @@ remain server enforced. At most five active sessions per browser are allowed.
 The normal startup migration adds nullable guest ownership to temporary attempts;
 it preserves existing accounts and content. Old account scores are not copied into
 browser storage. Returning visitors start with browser-local progress.
+
+### Responsive interface and content reports
+
+The mobile-first layout and theme tokens live in `frontend/src/responsive.css`,
+loaded after the legacy component styles. Theme selection stays in this browser;
+the switch sits above the navigation so it cannot cover quiz controls. Source
+images and the drawing canvas retain their original white backgrounds.
+
+Next to Bookmark, **Report Broken Format** opens an optional-detail form for text,
+formula, image, options or other issues. Reports require no student login. The
+server accepts only available, non-archived questions and stores one report per
+browser/question, with CSRF protection, a 20-new-reports/hour browser cap and a
+60-requests/hour IP cap. No email, name or raw session cookie is collected.
+Admins use **Content Reports** to filter Open/Resolved reports, inspect the
+question and mark a reviewed issue resolved or reopen it. Resolution changes
+only the report status; corrections still go through the existing content workflow.
+Reports are included in dependency-ordered library reset. The startup migration
+creates the report table without rewriting existing papers or questions.
+
+Starting practice/exam shows an immediate indeterminate progress indicator and
+skeleton while the request runs; start buttons are disabled until success/failure.
+Loading feedback also covers restored attempts and mode switching. It indicates
+activity rather than claiming a percentage or reducing the network duration.

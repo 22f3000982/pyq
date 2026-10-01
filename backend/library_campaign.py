@@ -19,7 +19,7 @@ def library_inventory(include_storage=True):
         'images':QuestionImage.query.count(),'options':QuestionOption.query.count(),'source_entries':SourceEntry.query.count(),
         'ingestion_files':IngestionFile.query.count(),'ingestion_batches':IngestionBatch.query.count(),'imports':ImportRun.query.count(),
         'attempts':Attempt.query.count(),'progress':PaperProgress.query.count(),'bookmarks':Bookmark.query.count(),
-        'reviews':QuestionReview.query.count(),
+        'reviews':QuestionReview.query.count(),'content_reports':ContentReport.query.count(),
     }
     counts['ready_papers']=db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct().count()
     now=time.time();stale_before=now-1800
@@ -49,6 +49,7 @@ def reset_library(user_id,cleanup_storage=True,cancel_active=False):
         db.session.commit()
     # Delete dependent content explicitly so PostgreSQL and SQLite behave the same.
     Bookmark.query.delete(synchronize_session=False)
+    ContentReport.query.delete(synchronize_session=False)
     QuestionReview.query.delete(synchronize_session=False)
     AttemptAnswer.query.delete(synchronize_session=False)
     Attempt.query.delete(synchronize_session=False)
