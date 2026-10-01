@@ -14,4 +14,4 @@ COPY --from=frontend /app/frontend/dist ./frontend/dist
 RUN useradd --uid 10001 --create-home app && mkdir -p /data/uploads /app/instance && chown -R app:app /data /app/instance
 USER app
 EXPOSE 5000
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "backend:create_app()"]
+CMD ["sh", "-c", "python -m flask --app backend:create_app db upgrade && exec gunicorn --config gunicorn.conf.py 'backend:create_app()'"]
