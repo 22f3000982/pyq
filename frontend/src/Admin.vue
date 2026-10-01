@@ -2,7 +2,7 @@
 import {ref,onMounted,onUnmounted} from 'vue';import {api,loadCatalog,invalidateCatalog,session} from './api';import MathText from './MathText.vue';import Upload from './Upload.vue';
 const uploadForm=ref(null);
 const tab=ref('Processing'),tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];
-const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),masterFile=ref(null),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
+const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),masterFile=ref(null),webRunnerActive=ref(false),webRunnerStop=ref(false),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
 async function run(fn){busy.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){stats.value=await api('/admin/stats');if(tab.value==='Processing'){const d=await api('/admin/ingestion?page='+page.value);jobs.value=d.items;total.value=d.total}else if(tab.value==='Papers'){const d=await api('/admin/papers?'+new URLSearchParams({page:page.value,limit:24,q:paperSearch.value,status:paperStatus.value,course_id:manageCourse.value}));adminPapers.value=d.items;total.value=d.total}else if(tab.value==='Question bank'){const d=await api('/admin/questions?'+new URLSearchParams({page:page.value,paper_id:paper.value}));questions.value=d.items;total.value=d.total}else if(tab.value==='Settings')settings.value=await api('/admin/settings')}
 async function chooseTab(t){tab.value=t;page.value=1;detail.value=null;await run(async()=>{await refresh();if(t==='Catalog Sync'){await loadCampaign();await loadResetPreview()}})}
@@ -15,13 +15,30 @@ async function previewWorkbook(e){
  await run(async()=>{const form=new FormData();form.append('file',file);syncPreview.value=await api('/admin/catalog/preview',{method:'POST',form});notice.value=syncPreview.value.already_applied?'This workbook was used before. Counts below show what is still pending now.':'Workbook checked. Nothing has been changed yet.'})
 }
 function chooseChanged(key,checked){selectedChanged.value=checked?[...new Set([...selectedChanged.value,key])]:selectedChanged.value.filter(x=>x!==key)}
-async function pollSyncBatch(){
- if(!syncBatch.value?.id||syncBatch.value.done)return;
+async function refreshSyncBatch(){
+ if(!syncBatch.value?.id)return;
  try{
   syncBatch.value=await api('/admin/catalog/batches/'+syncBatch.value.id);
-  if(syncBatch.value.done){notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`;await loadCampaign();}
+  if(syncBatch.value.done){notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`;await loadCampaign()}
  }catch(e){error.value=e.message}
 }
+async function runWebBatch(){
+ if(!syncBatch.value?.id||webRunnerActive.value)return;
+ webRunnerActive.value=true;webRunnerStop.value=false;error.value='';
+ try{
+  while(!webRunnerStop.value&&syncBatch.value&&!syncBatch.value.done){
+   syncBatch.value=await api('/admin/catalog/batches/'+syncBatch.value.id+'/run-next',{method:'POST',body:{}});
+   await loadCampaign();
+   if(syncBatch.value.active>0&&syncBatch.value.queued===0&&!syncBatch.value.done){
+    notice.value='Another processing request is still active. This tab paused to avoid duplicate work.';break
+   }
+  }
+  if(syncBatch.value?.done)notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`;
+  else if(webRunnerStop.value)notice.value='Batch paused in this browser. Remaining papers are still safely queued.';
+ }catch(e){error.value=e.message}
+ finally{webRunnerActive.value=false}
+}
+function pauseWebBatch(){webRunnerStop.value=true}
 async function applyWorkbook(){
  if(!syncFile.value||!syncPreview.value)return;
  await run(async()=>{
@@ -31,7 +48,7 @@ async function applyWorkbook(){
   const d=await api('/admin/catalog/apply',{method:'POST',form});
   notice.value=d.queued?`Batch #${d.batch_id} started: ${d.queued} papers queued. ${d.remaining_pending} remain for later batches.`:'No eligible papers were queued.';
   syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,finished:0,percent:0,done:false,items:[]}:null;
-  syncPreview.value=null;syncFile.value=null;selectedChanged.value=[];invalidateCatalog();await refreshCatalog();await refresh();await pollSyncBatch();
+  syncPreview.value=null;syncFile.value=null;selectedChanged.value=[];invalidateCatalog();await refreshCatalog();await refresh();await refreshSyncBatch();if(syncBatch.value&&!syncBatch.value.done)await runWebBatch();
  })
 }
 async function loadCampaign(){campaign.value=await api('/admin/catalog/campaign')}
@@ -43,7 +60,7 @@ async function refreshMasterCatalog(){
 }
 async function processCampaign(retry=false){
  if(!campaign.value?.current)return;
- await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:campaign.value.current.stage,term_id:campaign.value.current.term_id,limit:20}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${campaign.value.current.label} · ${campaign.value.current.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value)await pollSyncBatch()})
+ await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:campaign.value.current.stage,term_id:campaign.value.current.term_id,limit:20}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${campaign.value.current.label} · ${campaign.value.current.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value){await refreshSyncBatch();if(!syncBatch.value.done)await runWebBatch()}})
 }
 async function resetLibrary(){
  if(resetPhrase.value!=='RESET PYQ LIBRARY')return;
@@ -56,7 +73,7 @@ async function archivePaper(p){if(!confirm('Hide this paper from students? Exist
 async function restorePaper(p){await run(async()=>{await api('/admin/papers/'+p.id+'/restore',{method:'POST',body:{}});notice.value='Paper restored.';invalidateCatalog();await refreshCatalog();await refresh()})}
 async function deletePaper(p){if(!confirm('Permanently delete this catalog paper? This is allowed only when it has no linked questions, imports, attempts or progress.'))return;await run(async()=>{await api('/admin/papers/'+p.id,{method:'DELETE'});notice.value='Paper permanently deleted.';invalidateCatalog();await refreshCatalog();await refresh()})}
 async function refreshCatalog(){invalidateCatalog();const catalog=await loadCatalog();courses.value=catalog.courses;meta.value=catalog.meta;await uploadForm.value?.refreshCatalog()}
-onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{const catalog=await loadCatalog();courses.value=catalog.courses;meta.value=catalog.meta;await refresh()});timer=setInterval(()=>{if(tab.value==='Processing')refresh().catch(e=>error.value=e.message);if(tab.value==='Catalog Sync'&&syncBatch.value&&!syncBatch.value.done)pollSyncBatch()},3000)});onUnmounted(()=>clearInterval(timer));
+onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{const catalog=await loadCatalog();courses.value=catalog.courses;meta.value=catalog.meta;await refresh();const latest=await api('/admin/catalog/batches/latest');if(latest.batch_id){syncBatch.value={id:latest.batch_id};await refreshSyncBatch()}});timer=setInterval(()=>{if(tab.value==='Processing')refresh().catch(e=>error.value=e.message)},8000)});onUnmounted(()=>{webRunnerStop.value=true;clearInterval(timer)});
 </script>
 <template><section v-if="session.user?.role!=='ADMIN'" class="empty panel"><h1>Administrator access required</h1><a href="#/login" class="btn btn-primary">Sign in</a></section><template v-else><div class="eyebrow">AUTOMATIC QUESTION BANK</div><h1>Processing & sources</h1><p class="muted">Upload once. Reliable questions become available automatically.</p><nav class="admin-tabs"><button v-for="t in tabs" :class="{active:tab===t}" @click="chooseTab(t)">{{t}}</button></nav><div v-if="error" class="alert alert-danger" role="alert">{{error}}</div><div v-if="notice" class="alert alert-success" role="status">{{notice}}</div>
 <template v-if="tab==='Processing'"><div class="admin-stat-grid"><div class="panel" v-for="k in ['papers','processed','queued','active_processing','failed','questions','flagged_questions']"><span class="eyebrow">{{k.replaceAll('_',' ')}}</span><strong>{{stats[k]??0}}</strong></div></div><details class="panel my-4"><summary>Advanced processing controls</summary><div class="d-flex gap-3 flex-wrap my-4"><button class="btn btn-primary" :disabled="busy" @click="queue(false)">Queue next 20 pending</button><button class="btn btn-outline-primary" :disabled="busy" @click="queue(true)">Retry next 20 failed/pending</button><button class="btn btn-light" @click="run(refresh)">Refresh</button></div></details><article class="panel job-card" v-for="f in jobs"><div class="section-row"><strong>#{{f.paper_id}} · {{f.filename}}</strong><span class="status">{{f.status}}</span></div><p class="muted small">{{f.extracted}} question records · {{f.pages??'—'}} pages · {{f.retries}} retries</p><a v-if="f.source_url" :href="f.source_url" target="_blank" rel="noopener noreferrer">Source link ↗</a><p v-if="f.error" class="alert alert-danger mt-3">{{f.error}}</p><details class="mt-3"><summary>Processing evidence & logs</summary><pre>{{JSON.stringify({events:f.events,warnings:f.warnings,duplicate_of:f.duplicate_of_id},null,2)}}</pre></details><button v-if="['PROCESSING_FAILED','EXTRACTION_FAILED'].includes(f.status)" class="btn btn-light mt-3" @click="run(async()=>{await api('/admin/ingestion/'+f.id+'/retry',{method:'POST'});await refresh()})">Retry processing</button></article><p v-if="!jobs.length" class="empty panel">No processing jobs yet.</p></template>
@@ -118,9 +135,10 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
 </section>
 
 <section v-if="syncBatch" class="panel catalog-batch-progress mb-4">
- <div class="section-row"><div><div class="eyebrow">ACTIVE BATCH #{{syncBatch.id}}</div><h2>{{syncBatch.done?'Batch complete':'Processing up to 20 papers'}}</h2></div><strong>{{syncBatch.percent??0}}%</strong></div>
+ <div class="section-row"><div><div class="eyebrow">ACTIVE BATCH #{{syncBatch.id}}</div><h2>{{syncBatch.done?'Batch complete':(webRunnerActive?'Processing on this web service':'Batch queued / paused')}}</h2><p class="muted mb-0">Free mode processes one paper per request. Keep this admin tab open while running; closing it safely pauses after the current paper.</p></div><strong>{{syncBatch.percent??0}}%</strong></div>
  <div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:(syncBatch.percent??0)+'%'}"></div></div>
  <div class="admin-stat-grid mt-3"><div class="panel"><span class="eyebrow">successful</span><strong>{{syncBatch.completed??0}}</strong></div><div class="panel"><span class="eyebrow">failed</span><strong>{{syncBatch.failed??0}}</strong></div><div class="panel"><span class="eyebrow">active</span><strong>{{syncBatch.active??0}}</strong></div><div class="panel"><span class="eyebrow">waiting</span><strong>{{syncBatch.queued??0}}</strong></div></div>
+ <div v-if="!syncBatch.done" class="d-flex gap-2 flex-wrap mt-3"><button v-if="!webRunnerActive" class="btn btn-primary" @click="runWebBatch">Resume processing</button><button v-else class="btn btn-outline-primary" @click="pauseWebBatch">Pause after current paper</button><button class="btn btn-light" :disabled="webRunnerActive" @click="refreshSyncBatch">Refresh status</button></div>
  <div class="sync-list mt-3"><div v-for="i in syncBatch.items||[]" class="sync-row"><span>#{{i.paper_id}} · {{i.status}}</span><strong>{{i.filename}}</strong></div></div>
 </section>
 

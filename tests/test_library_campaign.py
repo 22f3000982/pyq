@@ -99,3 +99,40 @@ def test_live_processing_requires_explicit_cancel(app,client):
     assert blocked.status_code==409
     done=client.post('/api/admin/library-reset',headers=h,json={'confirmation':'RESET PYQ LIBRARY','cleanup_storage':False,'cancel_active':True})
     assert done.status_code==200
+
+
+def test_free_web_runner_processes_one_queued_file_per_request(app,client,monkeypatch):
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    campaign=client.get('/api/admin/catalog/campaign',headers=h).json
+    current=campaign['current']
+    queued=client.post('/api/admin/catalog/campaign/process',headers=h,json={'stage':current['stage'],'term_id':current['term_id'],'limit':1})
+    assert queued.status_code==202
+    batch_id=queued.json['batch_id'];record=IngestionFile.query.filter_by(batch_id=batch_id).one()
+    assert record.status=='FETCH_QUEUED'
+
+    import backend.acquisition as acquisition
+    import backend.ingestion as ingestion
+    def fake_download(file_id):
+        item=db.session.get(IngestionFile,file_id);item.status='QUEUED';item.path='fake.pdf';item.file_hash='a'*64;db.session.commit();return True
+    def fake_process(file_id):
+        item=db.session.get(IngestionFile,file_id);item.status='AVAILABLE';item.finished_at=123;db.session.commit();ingestion.update_batch(item.batch_id);return True
+    monkeypatch.setattr(acquisition,'download_one',fake_download)
+    monkeypatch.setattr(ingestion,'process_one',fake_process)
+
+    step=client.post(f'/api/admin/catalog/batches/{batch_id}/run-next',headers=h,json={})
+    assert step.status_code==200
+    assert step.json['completed']==1
+    assert step.json['queued']==0
+    assert step.json['done'] is True
+    assert step.json['percent']==100
+
+
+def test_latest_batch_returns_resumable_queue(app,client):
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    campaign=client.get('/api/admin/catalog/campaign',headers=h).json
+    current=campaign['current']
+    queued=client.post('/api/admin/catalog/campaign/process',headers=h,json={'stage':current['stage'],'term_id':current['term_id'],'limit':1})
+    batch_id=queued.json['batch_id']
+    latest=client.get('/api/admin/catalog/batches/latest',headers=h)
+    assert latest.status_code==200
+    assert latest.json['batch_id']==batch_id

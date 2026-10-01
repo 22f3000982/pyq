@@ -7,7 +7,7 @@ from urllib.parse import urlparse,urljoin,parse_qs
 from pathlib import Path
 import requests
 from flask import current_app
-from sqlalchemy import func
+from sqlalchemy import func,update
 from sqlalchemy.exc import IntegrityError
 from .models import db,Paper,Question,IngestionBatch,IngestionFile,User
 
@@ -114,6 +114,60 @@ def queue_catalog(user_id=None,retry=False,limit=None,paper_ids=None,force_paper
             f=IngestionFile(batch_id=batch.id,paper_id=p.id,filename=p.name,source_url=p.source_url,status='FETCH_QUEUED');db.session.add(f);count+=1
         selected+=1
     db.session.commit();return batch.id,count
+
+
+def download_one(file_id):
+    """Atomically acquire and download one queued catalog source."""
+    record=db.session.get(IngestionFile,file_id)
+    if record is None:return False
+    if record.status!='FETCH_QUEUED':return record.status in ('QUEUED','DUPLICATE','AVAILABLE','PARTIAL')
+    claimed=db.session.execute(update(IngestionFile).where(
+        IngestionFile.id==file_id,IngestionFile.status=='FETCH_QUEUED'
+    ).values(status='FETCHING',started_at=time.time(),error=None)).rowcount
+    db.session.commit()
+    if not claimed:return False
+    record=db.session.get(IngestionFile,file_id);paper=db.session.get(Paper,record.paper_id)
+    temp=Path(current_app.config['UPLOAD_DIR'])/('fetch-'+uuid.uuid4().hex+'.tmp')
+    try:
+        result=fetch_pdf(record.source_url,temp,current_app.config['MAX_UPLOAD_SIZE'])
+    except Exception as exc:
+        temp.unlink(missing_ok=True);db.session.rollback()
+        record=db.session.get(IngestionFile,file_id);paper=db.session.get(Paper,record.paper_id)
+        record.status='PROCESSING_FAILED';record.error=str(exc)[:1500];record.finished_at=time.time()
+        if paper.status!='ARCHIVED':paper.status='PROCESSING_FAILED'
+        event(record,'ACQUISITION_FAILED',record.error);db.session.commit()
+        from .ingestion import update_batch
+        update_batch(record.batch_id)
+        return False
+    old=IngestionFile.query.filter(IngestionFile.file_hash==result['hash'],IngestionFile.id!=file_id).first()
+    if old:
+        temp.unlink(missing_ok=True);record.duplicate_of_id=old.id;record.status='DUPLICATE';record.path=old.path
+        canonical=db.session.get(Paper,old.paper_id)
+        paper.canonical_paper_id=old.paper_id if old.paper_id!=paper.id else None
+        if canonical and canonical.status in ('AVAILABLE','PARTIALLY_AVAILABLE'):paper.status=canonical.status
+        elif old.paper_id==paper.id and Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').first():paper.status='AVAILABLE'
+        event(record,'DEDUPLICATED',f'Identical PDF content to import {old.id}, paper {old.paper_id}')
+        record.finished_at=time.time();db.session.commit()
+        from .ingestion import update_batch
+        update_batch(record.batch_id)
+        return True
+    path=result['hash']+'.pdf';temp.replace(Path(current_app.config['UPLOAD_DIR'])/path)
+    record.path=path;record.file_hash=result['hash']
+    try:
+        from .storage import publish
+        publish(path);record.status='QUEUED';event(record,'DOWNLOADED',f"{result['size']} bytes; SHA-256 {result['hash']}")
+    except Exception as exc:
+        from .storage import StorageError
+        if not isinstance(exc,StorageError):raise
+        record.status='PROCESSING_FAILED';record.error=str(exc);record.finished_at=time.time()
+        if paper.status!='ARCHIVED':paper.status='PROCESSING_FAILED'
+        event(record,'STORAGE_FAILED',record.error)
+    db.session.commit()
+    if record.status=='PROCESSING_FAILED':
+        from .ingestion import update_batch
+        update_batch(record.batch_id)
+        return False
+    return True
 
 def download_pending(app,workers=4,paper_ids=None,limit=None):
     with app.app_context():

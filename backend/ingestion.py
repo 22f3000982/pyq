@@ -205,6 +205,21 @@ def repair_question_image_asset(image):
         current_app.logger.error('question_image_repair_failed image_id=%s type=%s',image.id,type(exc).__name__)
         return False
 
+def process_one(file_id):
+    """Atomically process one downloaded ingestion record by id."""
+    from .engine import expire_all
+    expire_all()
+    record=db.session.get(IngestionFile,file_id)
+    if record is None:return False
+    if record.status!='QUEUED':return record.status in SUCCESS
+    changed=db.session.execute(update(IngestionFile).where(
+        IngestionFile.id==file_id,IngestionFile.status=='QUEUED'
+    ).values(status='PROCESSING',started_at=time.time(),error=None)).rowcount
+    db.session.commit()
+    if not changed:return False
+    process_file(file_id)
+    return True
+
 def work_once(paper_ids=None):
     from .engine import expire_all
     expire_all()
