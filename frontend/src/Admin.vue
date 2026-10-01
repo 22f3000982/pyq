@@ -1,11 +1,11 @@
 <script setup>
 import {ref,onMounted,onUnmounted} from 'vue';import {api,loadCatalog,invalidateCatalog,session} from './api';import MathText from './MathText.vue';import Upload from './Upload.vue';
 const uploadForm=ref(null);
-const tab=ref('Processing'),tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];
+const tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];const savedTab=localStorage.getItem('pyq-admin-tab');const tab=ref(tabs.includes(savedTab)?savedTab:'Processing');
 const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),masterFile=ref(null),driveStatus=ref(null),webRunnerActive=ref(false),webRunnerStop=ref(false),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
 async function run(fn){busy.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){stats.value=await api('/admin/stats');if(tab.value==='Processing'){const d=await api('/admin/ingestion?page='+page.value);jobs.value=d.items;total.value=d.total}else if(tab.value==='Papers'){const d=await api('/admin/papers?'+new URLSearchParams({page:page.value,limit:24,q:paperSearch.value,status:paperStatus.value,course_id:manageCourse.value}));adminPapers.value=d.items;total.value=d.total}else if(tab.value==='Question bank'){const d=await api('/admin/questions?'+new URLSearchParams({page:page.value,paper_id:paper.value}));questions.value=d.items;total.value=d.total}else if(tab.value==='Settings')settings.value=await api('/admin/settings')}
-async function chooseTab(t){tab.value=t;page.value=1;detail.value=null;await run(async()=>{await refresh();if(t==='Catalog Sync'){await loadCampaign();await loadResetPreview();await loadDriveStatus()}})}
+async function chooseTab(t){tab.value=t;localStorage.setItem('pyq-admin-tab',t);page.value=1;detail.value=null;await run(async()=>{await refresh();if(t==='Catalog Sync'){await loadCampaign();await loadResetPreview();await loadDriveStatus()}})}
 async function loadPapers(){papers.value=(await api('/papers?limit=100&course_id='+course.value)).items;paper.value=''}
 async function queue(retry=false){await run(async()=>{const d=await api('/admin/process-catalog',{method:'POST',body:{retry,limit:20}});notice.value=d.queued+' sources queued (maximum 20 this run). The worker stops after the bounded queue is exhausted.';await refresh()})}
 function chooseFiles(e){files.value=Array.from(e.target.files).map(file=>({file,paper_id:paper.value}))}
@@ -105,6 +105,7 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
  <h2>Build the PYQ library systematically</h2>
  <ol class="campaign-steps">
   <li><strong>Optional clean start:</strong> use Library Reset once if the current catalog is mixed/test data.</li>
+  <li><strong>Connect Google Drive:</strong> authorize the Google/IITM account that can open the source PDFs. This is required for private links.</li>
   <li><strong>Upload the latest Excel:</strong> this creates the full source catalog only; it does not start 700 downloads.</li>
   <li><strong>Follow the highlighted target:</strong> Quiz 1 newest term first, then older terms; after Quiz 1 comes Quiz 2, End Term FN, End Term AN, then other assessments.</li>
   <li><strong>Process 20 at a time:</strong> each batch stops automatically. Retry failed papers separately.</li>
