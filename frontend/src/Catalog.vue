@@ -11,8 +11,8 @@ onMounted(async()=>{try{
  if(isCourse){[course.value,meta.value]=await Promise.all([api('/courses/'+props.route.split('/')[2]),api('/metadata')]);await Promise.all([load(),api('/courses/'+course.value.id+'/topics').then(d=>topics.value=d)]);return}
  await Promise.all([api('/stats').then(d=>stats.value=d),api('/metadata').then(d=>meta.value=d)]);loading.value=false;
 }catch(e){error.value=e.message;loading.value=false}});
-async function start(mode){if(!session.user)return go('/login');try{const a=await api('/attempts',{method:'POST',body:{paper_id:paper.value.id,mode,duration_seconds:Number(timedMinutes.value)*60}});go('/attempt/'+a.id)}catch(e){error.value=e.message}}
-async function topicStart(topic){if(!session.user)return go('/login');try{const a=await api('/attempts',{method:'POST',body:{collection:'topic',course_id:course.value.id,topic,mode:'practice'}});go('/attempt/'+a.id)}catch(e){error.value=e.message}}
+async function start(mode){try{const a=await api('/attempts',{method:'POST',body:{paper_id:paper.value.id,mode,duration_seconds:Number(timedMinutes.value)*60}});go('/attempt/'+a.id)}catch(e){error.value=e.message}}
+async function topicStart(topic){try{const a=await api('/attempts',{method:'POST',body:{collection:'topic',course_id:course.value.id,topic,mode:'practice'}});go('/attempt/'+a.id)}catch(e){error.value=e.message}}
 </script>
 <template>
 <div v-if="error" class="alert alert-danger" role="alert">{{error}}</div>

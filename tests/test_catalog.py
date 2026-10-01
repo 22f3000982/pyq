@@ -20,7 +20,7 @@ def test_import_real_workbook_idempotent(app):
 def test_auth_and_catalog(client,app):
     assert client.post('/api/auth/register',json={}).status_code==403
     h=login(client)
-    assert client.get('/api/session').json['user']['role']=='STUDENT'
+    assert client.get('/api/session').json['user'] is None
     import_workbook(WORKBOOK)
     r=client.get('/api/courses?q=software&limit=1').json
     assert len(r['items'])==1 and r['total']==2

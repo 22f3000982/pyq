@@ -1,5 +1,5 @@
 """Scoring and snapshots are server-owned; never accept client marks or keys."""
-import math,time,re
+import math,time,re,threading
 from pathlib import Path
 from .models import db,Attempt,AttemptAnswer,PaperProgress
 CHOICE_TYPES={'MCQ','MSQ','TRUE_FALSE'}
@@ -76,10 +76,10 @@ def aggregate(a):
     return {'score':round(score,6),'total_marks':total if known_total else None,'percentage':round(score/total*100,2) if total and known_total and not counts['UNGRADED'] else None,'accuracy':round(counts['CORRECT']/graded*100,2) if graded else None,'correct':counts['CORRECT'],'incorrect':counts['INCORRECT'],'skipped':counts['SKIPPED'],'ungraded':counts['UNGRADED'],'attempted':len(items)-counts['SKIPPED'],'negative_marks':sum(-i.awarded for i in items if i.awarded is not None and i.awarded<0),'time_taken':round(max(0,a.submitted_at-a.started_at)),'pending_manual':counts['UNGRADED']>0}
 
 RESULT_TTL_SECONDS = 3600
-ACTIVE_TTL_SECONDS = 7*86400
+ACTIVE_TTL_SECONDS = 86400
 
 def save_progress(a):
-    if not a.paper_id or not a.records_progress:return
+    if a.user_id is None or not a.paper_id or not a.records_progress:return
     # Database-level UPSERT handles racing submissions without duplicate rows.
     dialect=db.session.get_bind().dialect.name
     if dialect=='postgresql':
@@ -92,19 +92,31 @@ def save_progress(a):
     db.session.execute(stmt)
     db.session.expire_all()
 
-def cleanup_sessions(now=None,user_id=None):
+def cleanup_sessions(now=None,user_id=None,guest_hash=None):
     """Called by the worker and authenticated session endpoints; never retain history."""
     now=time.time() if now is None else now
     query=db.session.query(Attempt.id)
     if user_id is not None:query=query.filter(Attempt.user_id==user_id)
-    ids=[id for id, in query.filter(Attempt.status!='ACTIVE',Attempt.expires_at<=now)]
-    # Untimed abandoned practice sessions have a bounded lifetime as well.
-    ids += [id for id, in query.filter(Attempt.status=='ACTIVE',Attempt.deadline.is_(None),Attempt.expires_at<=now)]
+    if guest_hash is not None:query=query.filter(Attempt.guest_hash==guest_hash)
+    # Expired timed sessions need no grading once their review lifetime has ended.
+    ids=[id for id, in query.filter(Attempt.expires_at<=now).limit(100)]
     if ids:
         db.session.query(AttemptAnswer).filter(AttemptAnswer.attempt_id.in_(ids)).delete(synchronize_session=False)
         db.session.query(Attempt).filter(Attempt.id.in_(ids)).delete(synchronize_session=False)
         db.session.commit()
     return len(ids)
+
+_cleanup_lock=threading.Lock()
+_next_cleanup=0
+
+def maintain_temporary_sessions():
+    """Bounded opportunistic cleanup also works on hosting without a worker."""
+    global _next_cleanup
+    if time.monotonic()<_next_cleanup or not _cleanup_lock.acquire(blocking=False):return
+    try:
+        cleanup_sessions()
+        _next_cleanup=time.monotonic()+300
+    finally:_cleanup_lock.release()
 
 def submit_attempt(a,now=None,record_progress=True):
     if a.status!='ACTIVE':return a
@@ -121,11 +133,12 @@ def submit_attempt(a,now=None,record_progress=True):
 def expire_attempt(a):
     if a.status=='ACTIVE' and a.deadline and time.time()>=a.deadline:submit_attempt(a)
 
-def expire_all(user_id=None):
+def expire_all(user_id=None,guest_hash=None):
     query=Attempt.query.filter(Attempt.status=='ACTIVE',Attempt.deadline<=time.time())
     if user_id is not None:query=query.filter(Attempt.user_id==user_id)
+    if guest_hash is not None:query=query.filter(Attempt.guest_hash==guest_hash)
     for a in query.all():submit_attempt(a)
-    cleanup_sessions(user_id=user_id)
+    cleanup_sessions(user_id=user_id,guest_hash=guest_hash)
 
 def palette_state(i):
     answered=i.answer not in (None,'',[])

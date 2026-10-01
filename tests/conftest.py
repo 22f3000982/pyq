@@ -55,7 +55,7 @@ def client(app):return app.test_client()
 def login(client,admin=False):
     token=client.get('/api/session').json['csrf']
     if admin:r=client.post('/api/auth/login',json={'email':'admin@example.test','password':'test-password-123'},headers={'X-CSRF-Token':token})
-    else:r=client.post('/api/auth/register',json={'email':'student@example.test','name':'Student','password':'test-password-123'},headers={'X-CSRF-Token':token})
+    else:return {'X-CSRF-Token':token}
     assert r.status_code in (200,201),r.json
     return {'X-CSRF-Token':r.json['csrf']}
 

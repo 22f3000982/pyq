@@ -4,16 +4,16 @@ from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_direct
 from sqlalchemy import or_,insert
 from sqlalchemy.orm import selectinload,joinedload
 from .models import *
-from .api import integer_argument,require_user,body,paginate,visible_papers
+from .api import integer_argument,require_visitor,body,paginate,visible_papers
 from .engine import *
 exams=Blueprint('exams',__name__,url_prefix='/api')
 
 def owned(id):
     a=db.get_or_404(Attempt,id)
-    if a.user_id!=g.user.id:abort(404)
+    if a.guest_hash!=g.guest_hash:abort(404)
     expire_attempt(a)
     if a.expires_at<=time.time():
-        cleanup_sessions(user_id=g.user.id);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
+        cleanup_sessions(guest_hash=g.guest_hash);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
     return a
 
 def attempt_json(a):return {'id':a.id,'paper_id':a.paper_id,'title':a.title,'mode':a.mode,'status':a.status,'started_at':a.started_at,'deadline':a.deadline,'submitted_at':a.submitted_at,'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,'records_progress':a.records_progress,'palette':[{'question_id':i.question_id,'number':i.snapshot['number'],'state':palette_state(i),'visited':i.visited,'marked':i.marked} for i in sorted(a.items,key=lambda i:(i.snapshot.get("paper_id",0),question_order(i.snapshot["number"]),i.position))]}
@@ -66,7 +66,7 @@ def bootstrap_json(a):
     items=sorted(a.items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))
     use_paper_image_delivery(a.paper_id)
     prepare_image_paths([i.snapshot for i in items],attempt_image_ttl(a))
-    bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter(Bookmark.user_id==g.user.id,Bookmark.question_id.in_([i.question_id for i in items]))}
+    bookmarks=set()
     return {**attempt_json(a),'items':[item_json(a,i,bookmarks) for i in items]}
 
 def start_response(a):
@@ -85,8 +85,7 @@ def start_payload(a,snapshots):
         use_paper_image_delivery(a.paper_id)
         prepare_image_paths(ordered,attempt_image_ttl(a))
         qids=[s['id'] for s in ordered]
-        bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter(
-            Bookmark.user_id==g.user.id,Bookmark.question_id.in_(qids))}
+        bookmarks=set()
         result['items']=[{'question':question_with_image_urls(s),'answer':None,'marked':False,
                           'visited':False,'status':a.status,'bookmarked':s['id'] in bookmarks}
                          for s in ordered]
@@ -111,19 +110,19 @@ def item_json(a,i,bookmarks):
     return result
 
 def collection_query(kind):
-    q=Question.query.filter(Question.status=='AVAILABLE')
-    if kind=='bookmarks':q=q.join(Bookmark).filter(Bookmark.user_id==g.user.id)
+    q=Question.query.filter(Question.status=='AVAILABLE',Question.paper_id.in_(visible_papers(Paper.query).with_entities(Paper.id)))
+    if kind=='bookmarks':abort(410,description='Bookmarks are stored in this browser.')
     elif kind=='mistakes':abort(410,description='Permanent mistake history is not stored. Use Practice wrong answers on your current result.')
     if request.args.get('course_id'):q=q.join(Paper).filter(Paper.course_id==integer_argument('course_id'))
     if request.args.get('topic'):q=q.filter(Question.topic==request.args['topic'])
     return q
 
 @exams.post('/attempts')
-@require_user()
+@require_visitor
 def start():
-    # Starting a paper is a latency-sensitive hot path. Timed expiration already
-    # runs in the worker and on attempt/history access, so do not scan a user's
-    # existing sessions before every new exam.
+    maintain_temporary_sessions()
+    expire_all(guest_hash=g.guest_hash)
+    if Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').count()>=5:abort(429,description='Finish one of your active sessions before starting another paper.')
     b=body();mode=b.get('mode','practice')
     if mode not in ('practice','exam'):abort(400,description='Choose practice or exam')
     if b.get('collection')=='mistakes' and b.get('attempt_id'):
@@ -131,12 +130,16 @@ def start():
         if source.status!='SUBMITTED' or mode!='practice':abort(409,description='Submit this attempt before practising its wrong answers')
         wrong=[i for i in source.items if i.outcome=='INCORRECT']
         if not wrong:abort(409,description='No incorrect answers in this attempt')
-        a=Attempt(user_id=g.user.id,paper_id=source.paper_id,mode='practice',title=('Wrong-answer practice · '+source.title)[:300],records_progress=False)
+        a=Attempt(user_id=None,guest_hash=g.guest_hash,paper_id=source.paper_id,mode='practice',title=('Wrong-answer practice · '+source.title)[:300],records_progress=False)
         return finish_new_attempt(a,[i.snapshot for i in wrong])
     kind=b.get('collection');p=None
     if kind:
         if kind not in ('bookmarks','topic') or mode!='practice':abort(400,description='Invalid practice collection')
-        q=collection_query(kind)
+        if kind=='bookmarks':
+            ids=b.get('question_ids',[])
+            if not isinstance(ids,list) or not 1<=len(ids)<=500 or any(type(i)!=int for i in ids):abort(400,description='Select 1–500 bookmarked questions.')
+            q=Question.query.join(Paper).filter(Question.id.in_(ids),Question.status=='AVAILABLE',Paper.status!='ARCHIVED')
+        else:q=collection_query(kind)
         if kind=='topic':
             if not b.get('topic') or not b.get('course_id'):abort(400,description='Course and topic required')
             q=q.join(Paper).filter(Paper.course_id==b['course_id'],Question.topic==b['topic'])
@@ -161,46 +164,46 @@ def start():
         snapshots=[question_snapshot(q) for q in questions]
     if not snapshots:abort(409,description='Questions not imported yet.')
     # Unknown keys/marks remain ungraded; the result reports them separately.
-    a=Attempt(user_id=g.user.id,paper_id=p.id if p else None,mode=mode,title=title[:300],deadline=deadline,records_progress=p is not None,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
+    a=Attempt(user_id=None,guest_hash=g.guest_hash,paper_id=p.id if p else None,mode=mode,title=title[:300],deadline=deadline,records_progress=p is not None,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
     return finish_new_attempt(a,snapshots)
 
 @exams.get('/attempts')
-@require_user()
+@require_visitor
 def history():
-    expire_all(user_id=g.user.id)
-    return jsonify(paginate(Attempt.query.filter_by(user_id=g.user.id,status='ACTIVE').order_by(Attempt.started_at.desc()),attempt_json))
+    expire_all(guest_hash=g.guest_hash)
+    return jsonify(paginate(Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').order_by(Attempt.started_at.desc()),attempt_json))
 
 @exams.get('/attempts/<int:id>')
-@require_user()
+@require_visitor
 def attempt(id):
     a=owned(id)
     return jsonify(bootstrap_json(a) if request.args.get('bootstrap')=='1' else attempt_json(a))
 
 @exams.get('/attempts/<int:id>/status')
-@require_user()
+@require_visitor
 def attempt_status(id):
     return jsonify(attempt_status_json(owned(id)))
 
 @exams.get('/attempts/<int:id>/questions/<int:qid>')
-@require_user()
+@require_visitor
 def attempt_question(id,qid):
     a=owned(id);i=AttemptAnswer.query.filter_by(attempt_id=a.id,question_id=qid).first_or_404()
     use_paper_image_delivery(a.paper_id)
     prepare_image_paths([i.snapshot],attempt_image_ttl(a))
-    return jsonify(item_json(a,i,{qid} if db.session.get(Bookmark,(g.user.id,qid)) else set()))
+    return jsonify(item_json(a,i,set()))
 
 @exams.get('/attempts/<int:id>/questions')
-@require_user()
+@require_visitor
 def attempt_questions(id):
     a=owned(id)
     use_paper_image_delivery(a.paper_id)
-    bookmarks={qid for qid, in db.session.query(Bookmark.question_id).filter_by(user_id=g.user.id)}
+    bookmarks=set()
     items=sorted(a.items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))
     prepare_image_paths([i.snapshot for i in items],attempt_image_ttl(a))
     return jsonify(items=[item_json(a,i,bookmarks) for i in items],status=a.status)
 
 @exams.post('/attempts/<int:id>/answers')
-@require_user()
+@require_visitor
 def answer(id):
     b=body()
     batched='items' in b
@@ -224,13 +227,13 @@ def answer(id):
     # response remains fully backward compatible with the previous API.
     rows=(db.session.query(Attempt,AttemptAnswer)
           .join(AttemptAnswer,AttemptAnswer.attempt_id==Attempt.id)
-          .filter(Attempt.id==id,Attempt.user_id==g.user.id,
+          .filter(Attempt.id==id,Attempt.guest_hash==g.guest_hash,
                   AttemptAnswer.question_id.in_(qids)).all())
     if not rows or len(rows)!=len(qids):abort(404)
     a=rows[0][0];by_qid={i.question_id:i for _,i in rows}
     expire_attempt(a)
     if a.expires_at<=time.time():
-        cleanup_sessions(user_id=g.user.id);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
+        cleanup_sessions(guest_hash=g.guest_hash);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
     if a.status!='ACTIVE':abort(409,description='Attempt already submitted or time expired')
 
     saved_at=time.time();results=[]
@@ -252,11 +255,11 @@ def answer(id):
     return jsonify(items=results) if batched else jsonify({k:v for k,v in results[0].items() if k!='question_id'})
 
 @exams.post('/attempts/<int:id>/submit')
-@require_user()
+@require_visitor
 def submit(id):return jsonify(attempt_json(submit_attempt(owned(id))))
 
 @exams.get('/attempts/<int:id>/review')
-@require_user()
+@require_visitor
 def review(id):
     a=owned(id)
     if a.status=='ACTIVE':abort(409,description='Submit the attempt before reviewing solutions')
@@ -264,18 +267,13 @@ def review(id):
     return jsonify(paginate(q,lambda i:{'question':i.snapshot,'answer':i.answer,'outcome':i.outcome,'awarded':i.awarded,'manual_note':i.manual_note}))
 
 @exams.route('/questions/<int:id>/bookmark',methods=['POST','DELETE'])
-@require_user()
+@require_visitor
 def bookmark(id):
-    q=db.get_or_404(Question,id)
-    if q.status!='AVAILABLE':abort(404)
-    old=db.session.get(Bookmark,(g.user.id,id))
-    if request.method=='POST' and not old:db.session.add(Bookmark(user_id=g.user.id,question_id=id))
-    if request.method=='DELETE' and old:db.session.delete(old)
-    db.session.commit();return jsonify(bookmarked=request.method=='POST')
+    abort(410,description='Bookmarks are stored in this browser.')
 
 @exams.get('/bookmarks')
 @exams.get('/mistakes')
-@require_user()
+@require_visitor
 def collections():
     kind=request.path.rsplit('/',1)[1]
     return jsonify(paginate(collection_query(kind).order_by(Question.id),lambda q:question_with_image_urls(question_snapshot(q))))
@@ -290,24 +288,24 @@ def progress_json(p):
     return {'paper_id':p.paper_id,'name':paper.name,'course':paper.course.name,'exam':paper.exam_type.name,'term':paper.term.name,'attempted':p.attempted,'last_score':p.last_score,'last_attempted_at':p.last_attempted_at}
 
 @exams.get('/progress')
-@require_user()
+@require_visitor
 def progress():
-    return jsonify(paginate(PaperProgress.query.filter_by(user_id=g.user.id).order_by(PaperProgress.last_attempted_at.desc(),PaperProgress.paper_id),progress_json))
+    return jsonify(items=[],total=0,page=1,limit=24)
 
 @exams.get('/dashboard')
-@require_user()
+@require_visitor
 def dashboard():
-    expire_all(user_id=g.user.id)
-    return jsonify(papers_attempted=PaperProgress.query.filter_by(user_id=g.user.id).count(),bookmarks=Bookmark.query.filter_by(user_id=g.user.id).count(),active_sessions=Attempt.query.filter_by(user_id=g.user.id,status='ACTIVE').count())
+    expire_all(guest_hash=g.guest_hash)
+    return jsonify(papers_attempted=0,bookmarks=0,active_sessions=Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').count())
 
 @exams.get('/images/<int:id>')
-@require_user()
+@require_visitor
 def question_image(id):
     row=db.session.query(QuestionImage,Question.status).join(Question,Question.id==QuestionImage.question_id).filter(QuestionImage.id==id).first()
     if row is None:abort(404)
     image,status=row
     if status!='AVAILABLE' and g.user.role!='ADMIN':
-        prior=AttemptAnswer.query.join(Attempt).filter(Attempt.user_id==g.user.id,AttemptAnswer.question_id==image.question_id).first()
+        prior=AttemptAnswer.query.join(Attempt).filter(Attempt.guest_hash==g.guest_hash,AttemptAnswer.question_id==image.question_id).first()
         if not prior:abort(404)
     # Normal requests keep the fast direct signed/CDN path. If the browser
     # reports that direct image as failed, QuestionContent retries with ?proxy=1;
@@ -350,7 +348,7 @@ def source_pdf(id):
     return send_asset(f.path,mimetype='application/pdf',as_attachment=True,download_name='paper-'+str(p.id)+'.pdf')
 
 @exams.post('/attempts/<int:id>/switch-mode')
-@require_user()
+@require_visitor
 def switch_mode(id):
     source=owned(id);b=body();mode=b.get('mode')
     if source.status!='ACTIVE':abort(409,description='This attempt has ended')
@@ -363,9 +361,11 @@ def switch_mode(id):
         deadline=time.time()+duration
     # Freeze the old timed score before any answers are revealed. A new continuation
     # uses the same snapshots/responses; a practice-to-exam continuation is assisted.
+    records_progress=source.records_progress
+    source.records_progress=False
     submit_attempt(source,record_progress=False)
     title=('Assisted timed continuation · ' if mode=='exam' else 'Practice continuation · ')+source.title
-    a=Attempt(user_id=g.user.id,paper_id=source.paper_id,mode=mode,title=title[:300],deadline=deadline,records_progress=source.records_progress,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
+    a=Attempt(user_id=None,guest_hash=g.guest_hash,paper_id=source.paper_id,mode=mode,title=title[:300],deadline=deadline,records_progress=records_progress,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
     db.session.add(a);db.session.flush()
     for i in source.items:
         db.session.add(AttemptAnswer(attempt_id=a.id,question_id=i.question_id,position=i.position,snapshot=i.snapshot,answer=i.answer,visited=i.visited,marked=i.marked,response_touched=i.response_touched))
