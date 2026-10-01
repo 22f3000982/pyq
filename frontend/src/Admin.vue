@@ -24,17 +24,25 @@ async function refreshSyncBatch(){
 }
 async function runWebBatch(){
  if(!syncBatch.value?.id||webRunnerActive.value)return;
- webRunnerActive.value=true;webRunnerStop.value=false;error.value='';
+ webRunnerActive.value=true;webRunnerStop.value=false;error.value='';let consecutiveFailures=0;
  try{
   while(!webRunnerStop.value&&syncBatch.value&&!syncBatch.value.done){
+   const beforeFailed=syncBatch.value.failed||0,beforeCompleted=syncBatch.value.completed||0;
    syncBatch.value=await api('/admin/catalog/batches/'+syncBatch.value.id+'/run-next',{method:'POST',body:{}});
    await loadCampaign();
+   const failedNow=(syncBatch.value.failed||0)>beforeFailed,completedNow=(syncBatch.value.completed||0)>beforeCompleted;
+   consecutiveFailures=failedNow&&!completedNow?consecutiveFailures+1:0;
+   if(consecutiveFailures>=3&&!syncBatch.value.done){
+    webRunnerStop.value=true;
+    notice.value='Processing paused automatically after 3 consecutive failures. Read the paper error messages below before retrying.';
+    break
+   }
    if(syncBatch.value.active>0&&syncBatch.value.queued===0&&!syncBatch.value.done){
     notice.value='Another processing request is still active. This tab paused to avoid duplicate work.';break
    }
   }
-  if(syncBatch.value?.done)notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`;
-  else if(webRunnerStop.value)notice.value='Batch paused in this browser. Remaining papers are still safely queued.';
+  if(syncBatch.value?.done)notice.value=syncBatch.value.completed?`Batch finished: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`:`Batch finished with 0 successful and ${syncBatch.value.failed} failed. Read the failure reasons below before retrying.`;
+  else if(webRunnerStop.value&&!notice.value)notice.value='Batch paused in this browser. Remaining papers are still safely queued.';
  }catch(e){error.value=e.message}
  finally{webRunnerActive.value=false}
 }
