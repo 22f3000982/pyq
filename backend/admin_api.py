@@ -237,7 +237,7 @@ def retry_campaign_failed():
 @require_user(True)
 def library_reset_preview():
     from .library_campaign import library_inventory
-    return jsonify(library_inventory(include_storage=True),confirmation='RESET PYQ LIBRARY')
+    return jsonify(**library_inventory(include_storage=True),confirmation='RESET PYQ LIBRARY')
 
 @admin.post('/library-reset')
 @require_user(True)
