@@ -189,6 +189,15 @@ class ImportRun(db.Model):
     workbook_hash = db.Column(db.String(64))
     report = db.Column(db.JSON)
 
+class ExternalCredential(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    provider = db.Column(db.String(40), unique=True, nullable=False)
+    account_email = db.Column(db.String(254))
+    refresh_token_enc = db.Column(db.Text, nullable=False)
+    scope = db.Column(db.Text)
+    created_at = db.Column(db.Float, default=time.time, nullable=False)
+    updated_at = db.Column(db.Float, default=time.time, onupdate=time.time, nullable=False)
+
 class QuestionReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question_id = db.Column(db.ForeignKey('question.id'), nullable=False, index=True)
