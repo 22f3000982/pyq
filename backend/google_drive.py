@@ -20,7 +20,9 @@ def configured():
 def redirect_uri():
     explicit=(current_app.config.get('GOOGLE_OAUTH_REDIRECT_URI') or '').strip()
     if explicit:return explicit
-    return request.host_url.rstrip('/')+'/api/admin/google-drive/callback'
+    scheme=request.headers.get('X-Forwarded-Proto',request.scheme).split(',')[0].strip()
+    host=request.headers.get('X-Forwarded-Host',request.host).split(',')[0].strip()
+    return scheme+'://'+host+'/api/admin/google-drive/callback'
 
 def _fernet():
     material=(current_app.config['SECRET_KEY']+'|google-drive-oauth-v1').encode()
