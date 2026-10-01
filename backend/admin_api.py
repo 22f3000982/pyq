@@ -249,6 +249,40 @@ def library_reset():
     try:return jsonify(reset_library(g.user.id,cleanup_storage=payload.get('cleanup_storage',True),cancel_active=payload.get('cancel_active',False)))
     except RuntimeError as exc:abort(409,description=str(exc))
 
+@admin.get('/catalog/batches/latest')
+@require_user(True)
+def latest_catalog_batch():
+    from .ingestion import SUCCESS,FAILURES
+    batch=(IngestionBatch.query.join(IngestionFile,IngestionFile.batch_id==IngestionBatch.id)
+           .filter(IngestionFile.status.in_(['FETCH_QUEUED','QUEUED','FETCHING','PROCESSING']))
+           .order_by(IngestionBatch.id.desc()).first())
+    if not batch:return jsonify(batch_id=None)
+    return jsonify(batch_id=batch.id)
+
+@admin.post('/catalog/batches/<int:id>/run-next')
+@require_user(True)
+def run_catalog_batch_next(id):
+    """Free-plan runner: do exactly one paper synchronously on the web service."""
+    from .acquisition import download_one
+    from .ingestion import process_one,SUCCESS,FAILURES,update_batch
+    batch=db.get_or_404(IngestionBatch,id)
+    record=(IngestionFile.query.filter_by(batch_id=id)
+            .filter(IngestionFile.status.in_(['FETCH_QUEUED','QUEUED']))
+            .order_by(IngestionFile.id).first())
+    if record:
+        if record.status=='FETCH_QUEUED':download_one(record.id)
+        record=db.session.get(IngestionFile,record.id)
+        if record and record.status=='QUEUED':process_one(record.id)
+        update_batch(id)
+    files=IngestionFile.query.filter_by(batch_id=id).order_by(IngestionFile.id).all()
+    total=len(files);success=sum(f.status in SUCCESS for f in files);failed=sum(f.status in FAILURES for f in files)
+    active=sum(f.status in ('FETCHING','PROCESSING') for f in files)
+    queued=sum(f.status in ('FETCH_QUEUED','QUEUED') for f in files)
+    finished=success+failed;percent=round((finished/total)*100,1) if total else 100
+    return jsonify(id=id,status=batch.status,total=total,completed=success,failed=failed,active=active,queued=queued,
+                   finished=finished,percent=percent,done=(total==0 or finished==total),
+                   items=[{'id':f.id,'paper_id':f.paper_id,'filename':f.filename,'status':f.status,'error':f.error,'extracted':f.extracted} for f in files])
+
 @admin.get('/catalog/batches/<int:id>')
 @require_user(True)
 def catalog_batch(id):
