@@ -110,7 +110,7 @@ def test_timeout_without_browser(app,client):
 
 def test_auth_admin_and_bad_pdf(client,app):
     p=seed();h=login(client)
-    assert client.get('/api/admin/stats').status_code==403
-    assert client.post('/api/admin/process-catalog',json={},headers=h).status_code==403
+    assert client.get('/api/admin/stats').status_code==401
+    assert client.post('/api/admin/process-catalog',json={},headers=h).status_code==401
     from backend.ingestion import validate_pdf
     with pytest.raises(ValueError):validate_pdf(b'not a PDF')

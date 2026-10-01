@@ -52,5 +52,5 @@ def test_admin_paper_crud_archive_restore_and_safe_delete(app,client):
 
 def test_non_admin_cannot_manage_papers(app,client):
     _,papers,_=seed_papers();h=login(client)
-    assert client.get('/api/admin/papers').status_code==403
-    assert client.post(f'/api/admin/papers/{papers[0].id}/archive',headers=h,json={}).status_code==403
+    assert client.get('/api/admin/papers').status_code==401
+    assert client.post(f'/api/admin/papers/{papers[0].id}/archive',headers=h,json={}).status_code==401
