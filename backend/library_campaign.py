@@ -2,6 +2,7 @@
 import time
 from collections import defaultdict
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from flask import current_app
 from .models import *
 from .storage import project_prefix_inventory,purge_project_prefix,StorageError
@@ -81,7 +82,7 @@ def _paper_state(p,ready,latest):
     return 'pending'
 
 def campaign():
-    papers=Paper.query.options(db.joinedload(Paper.exam_type),db.joinedload(Paper.term),db.joinedload(Paper.course)).filter(Paper.source_url.isnot(None)).all()
+    papers=Paper.query.options(joinedload(Paper.exam_type),joinedload(Paper.term),joinedload(Paper.course)).filter(Paper.source_url.isnot(None)).all()
     ready={pid for pid, in db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct()}
     latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
     latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}
