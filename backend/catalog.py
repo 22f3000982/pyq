@@ -341,26 +341,15 @@ def import_workbook(path):
         term=next((x for x in terms_list if x.id==p.term_id),None) or next((x for x in terms.values() if x.id==p.term_id),None)
         exam=next((x for x in exams_list if x.id==p.exam_type_id),None) or next((x for x in exams.values() if x.id==p.exam_type_id),None)
         if course and term and exam:index.setdefault(paper_key(course.code or course.name,term.name,exam.name,p.session,p.name),p)
-    source_candidates={}
-    for p in papers_list:
-        token=source_token(p.source_url)
-        if token:source_candidates.setdefault(token,[]).append(p)
-    for source in SourceEntry.query.all():
-        paper=next((p for p in papers_list if p.id==source.paper_id),None);token=source_token(source.url)
-        if paper and token and all(x.id!=paper.id for x in source_candidates.setdefault(token,[])):source_candidates[token].append(paper)
     provenance_seen={identity for identity, in db.session.query(SourceEntry.identity).all()};pending=[]
     for entry in scan['entries']:
         paper=index.get(entry['key'])
         if not paper:
-            candidates=source_candidates.get(entry['source_token'],[])
-            if len(candidates)==1:paper=candidates[0]
-        if not paper:
             paper=Paper(identity=digest('sync-v2|'+entry['key']),course=by_code[entry['course_code']],term=terms[entry['term_name']],
                         exam_type=exams[entry['exam_name']],name=entry['name'],session=entry['session'],variant=entry['variant'],
                         source_url=entry['url'],warnings=entry['warnings'],source_metadata={'catalog_sync_key':entry['key']})
-            db.session.add(paper);db.session.flush();papers_list.append(paper);source_candidates.setdefault(entry['source_token'],[]).append(paper);report['new_papers']+=1
+            db.session.add(paper);db.session.flush();index[entry['key']]=paper;report['new_papers']+=1
         else:report['existing_papers']+=1
-        index[entry['key']]=paper
         provenance=digest('|'.join([scan['workbook_hash'],entry['sheet'],entry['cell'],entry['key']]))
         if provenance not in provenance_seen:
             provenance_seen.add(provenance);pending.append(SourceEntry(identity=provenance,paper_id=paper.id,workbook_hash=scan['workbook_hash'],
