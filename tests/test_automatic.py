@@ -43,7 +43,7 @@ def test_real_automatic_pipeline_to_student_result(app,client):
     assert result['score']==5 and result['total_marks']==100
     assert client.get(f'/api/attempts/{aid}/review').json['items'][0]['question']['answers']==q.answers
     assert client.get('/api/attempts').json['total']==0
-    assert client.get('/api/progress').json['total']==1
+    assert client.get('/api/progress').json['total']==0
     assert QuestionImage.query.count()>0
     assert all('pdf' not in img.path for img in QuestionImage.query.all())
     # No approval endpoints remain.

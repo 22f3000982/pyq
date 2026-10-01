@@ -122,7 +122,8 @@ class Attempt(db.Model):
     # Expired session URLs must never resolve to a later session on SQLite.
     __table_args__ = (db.Index('ix_attempt_user_status','user_id','status'), {'sqlite_autoincrement': True})
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.ForeignKey('user.id'), nullable=False, index=True)
+    user_id = db.Column(db.ForeignKey('user.id'), nullable=True, index=True)
+    guest_hash = db.Column(db.String(64), index=True)
     paper_id = db.Column(db.ForeignKey('paper.id'), index=True)
     mode = db.Column(db.String(20), nullable=False)
     title = db.Column(db.String(300), nullable=False)

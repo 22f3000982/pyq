@@ -14,7 +14,7 @@ application, overwrite SQLite, delete PDFs, or process the remaining catalog.
    deleting local originals. You do not need another ZIP.
 5. After `DATABASE AND R2 READY`, use `START.cmd` and refresh with Ctrl+F5.
 
-Existing logins, courses, questions, PDFs and latest progress remain in use.
+Existing admin credentials, courses, questions and PDFs remain in use. Student accounts are no longer required.
 The Windows launchers use this folder's `.venv` when present and otherwise invoke
 the installed Python launcher; they do not depend on another project folder.
 
@@ -104,16 +104,29 @@ The code includes a Dockerfile and existing Flask/Vue application. For a hosted
 installation, configure DATABASE_URL, SECRET_KEY, STORAGE_BACKEND=r2, the same R2
 values, and COOKIE_SECURE=true privately. `render.yaml` defines the web and worker
 services. Run a web process with gunicorn and a separate worker with `flask --app
-backend:create_app worker`. The worker is required
-for uploads, deadline processing and expiry cleanup. Use a writable UPLOAD_DIR for
+backend:create_app worker`. The worker supports uploads and bulk processing. The free web runner can process catalog batches; temporary exam expiry also runs on access and bounded cleanup runs on new sessions. Use a writable UPLOAD_DIR for
 its regenerable cache; do not expose that directory as a public static directory.
 `compose.yaml` is the existing local PostgreSQL/Redis development setup, not a
 Supabase deployment recipe. Hosting has not been deployed by this update.
 
-Only latest user/paper progress is permanent. Detailed result/review and wrong-answer
-practice remain temporary (one hour); active practice expires after seven days.
+Latest paper percentages and bookmarks are stored only in browser localStorage. Each reattempt replaces the previous score for that paper. Clearing site data removes these records; they do not sync between devices. Detailed result/review and wrong-answer practice remain temporary (one hour); abandoned practice sessions expire after one day.
 Bulk processing stays paused. Existing Excel import and future PDF uploads remain.
 
 After deployment, bounded catalog ingestion is explicit: `python bulk_ingest.py
 --limit 20`; use `--retry-failed --limit 10` for failed papers and `--dry-run` to
 inspect the next batch without changing the database.
+
+## Direct student access and admin login
+
+Students open a paper and start Practice or Exam without registering or signing in.
+Admin login: `/#/admin/login`; admin panel: `/#/admin`. Existing admin email/password
+credentials remain valid. All administrative APIs still require an active admin session.
+
+Exam sessions are owned by a random signed browser-session cookie, with only its
+hash stored on temporary attempts. No guest user rows, permanent server progress,
+or server bookmarks are created. Timer, scoring, answer-key privacy and CSRF checks
+remain server enforced. At most five active sessions per browser are allowed.
+
+The normal startup migration adds nullable guest ownership to temporary attempts;
+it preserves existing accounts and content. Old account scores are not copied into
+browser storage. Returning visitors start with browser-local progress.

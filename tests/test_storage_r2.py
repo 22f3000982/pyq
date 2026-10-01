@@ -60,7 +60,7 @@ def test_real_upload_ingestion_then_cold_cache_student_assets(app,client,remote)
         assert meta.get('sha256')==hashlib.sha256(data).hexdigest()
     root=Path(app.config['UPLOAD_DIR']);(root/f.path).unlink()
     for image in images:(root/image.path).unlink(missing_ok=True)
-    assert client.get('/api/images/'+str(images[0].id)).status_code==401
+    assert client.get('/api/images/'+str(images[0].id)).status_code==200
     login(client)
     assert client.get('/api/images/'+str(images[0].id)).status_code==200
     assert client.get('/api/papers/'+str(p.id)+'/source').data.startswith(b'%PDF-')

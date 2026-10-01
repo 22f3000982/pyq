@@ -1,4 +1,5 @@
-import secrets,re
+import secrets,re,hashlib
+from types import SimpleNamespace
 from functools import wraps
 from flask import Blueprint,jsonify,request,session,g,abort
 from werkzeug.security import generate_password_hash,check_password_hash
@@ -25,6 +26,18 @@ def require_user(admin=False):
             return fn(*a,**kw)
         return inner
     return deco
+
+def require_visitor(fn):
+    """Signed session cookie identifies a browser; no student account is created."""
+    @wraps(fn)
+    def inner(*args,**kwargs):
+        session.setdefault('visitor',secrets.token_urlsafe(32))
+        session.permanent=True
+        g.guest_hash=hashlib.sha256(session['visitor'].encode()).hexdigest()
+        admin=db.session.get(User,session.get('uid')) if session.get('uid') else None
+        g.user=admin if admin and admin.active and admin.role=='ADMIN' else SimpleNamespace(id=None,role='GUEST',name='Guest',active=True)
+        return fn(*args,**kwargs)
+    return inner
 
 def body():
     value=request.get_json(silent=True)
@@ -61,13 +74,7 @@ def paper_rows(papers):
     ids=[p.id for p in papers]
     key='paper-metadata:'+hashlib.sha256(','.join(map(str,ids)).encode()).hexdigest()
     rows=cached(key,lambda:_paper_content_rows(papers))
-    user=db.session.get(User,session.get('uid')) if session.get('uid') else None
-    progress={r.paper_id:r for r in PaperProgress.query.filter(PaperProgress.user_id==user.id,PaperProgress.paper_id.in_(ids))} if user and user.active else {}
-    result=[]
-    for row in rows:
-        pr=progress.get(row['id'])
-        result.append({**row,'progress':{'attempted':pr.attempted,'last_score':pr.last_score,'last_attempted_at':pr.last_attempted_at} if pr else None})
-    return result
+    return [{**row,'progress':None} for row in rows]
 
 PAPER_LOAD=(joinedload(Paper.course),joinedload(Paper.term),joinedload(Paper.exam_type))
 def visible_papers(query=None):
@@ -91,31 +98,28 @@ def paginate_rows(query,mapper):
 @api.get('/session')
 def current_session():
     session.setdefault('csrf',secrets.token_urlsafe(32))
+    session.setdefault('visitor',secrets.token_urlsafe(32));session.permanent=True
     u=db.session.get(User,session.get('uid')) if session.get('uid') else None
-    return jsonify(csrf=session['csrf'],user=user_json(u) if u and u.active else None)
+    return jsonify(csrf=session['csrf'],user=user_json(u) if u and u.active and u.role=='ADMIN' else None)
 
 @api.post('/auth/register')
 @limiter.limit('10 per hour')
 def register():
-    b=body();email=str(b.get('email','')).strip().lower();password=b.get('password','');name=str(b.get('name','')).strip()
-    if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+',email) or len(email)>254:abort(400,description='Enter a valid email address.')
-    if not isinstance(password,str) or not 12<=len(password)<=128:abort(400,description='Use a password of 12–128 characters.')
-    if not 1<=len(name)<=100:abort(400,description='Enter a name of 1–100 characters.')
-    u=User(email=email,name=name,password_hash=generate_password_hash(password));db.session.add(u);db.session.commit()
-    session.clear();session.update(uid=u.id,csrf=secrets.token_urlsafe(32));session.permanent=True
-    return jsonify(user=user_json(u),csrf=session['csrf']),201
+    abort(410,description='Student accounts are no longer required. Open a paper to start practising.')
 
 @api.post('/auth/login')
 @limiter.limit('10 per minute')
 def login():
     b=body();u=User.query.filter_by(email=str(b.get('email','')).lower().strip()).first();password=b.get('password','')
-    if not isinstance(password,str) or len(password)>128 or not u or not u.active or not check_password_hash(u.password_hash,password):abort(401,description='Invalid email or password.')
-    session.clear();session.update(uid=u.id,csrf=secrets.token_urlsafe(32));session.permanent=True
+    if not isinstance(password,str) or len(password)>128 or not u or not u.active or u.role!='ADMIN' or not check_password_hash(u.password_hash,password):abort(401,description='Invalid email or password.')
+    visitor=session.get('visitor') or secrets.token_urlsafe(32)
+    session.clear();session.update(uid=u.id,visitor=visitor,csrf=secrets.token_urlsafe(32));session.permanent=True
     return jsonify(user=user_json(u),csrf=session['csrf'])
 
 @api.post('/auth/logout')
 def logout():
-    session.clear();session['csrf']=secrets.token_urlsafe(32)
+    visitor=session.get('visitor') or secrets.token_urlsafe(32)
+    session.clear();session.update(visitor=visitor,csrf=secrets.token_urlsafe(32));session.permanent=True
     return jsonify(csrf=session['csrf'])
 
 @api.get('/stats')

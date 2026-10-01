@@ -48,11 +48,10 @@ def test_expiry_ownership_collections(client,app):
     assert client.post(f'/api/attempts/{aid}/answers',json={'question_id':qid,'answer':['A']},headers=h).status_code==409
     assert client.get(f'/api/attempts/{aid}').json['result']['score']==-1
     assert client.get('/api/mistakes').status_code==410
-    for _ in range(2):assert client.post(f'/api/questions/{qid}/bookmark',headers=h).status_code==200
-    assert client.get('/api/bookmarks').json['total']==1
-    for kind in ('bookmarks',):
-        a=client.post('/api/attempts',json={'collection':kind,'mode':'practice'},headers=h).json
-        assert len(a['palette'])==1
+    assert client.post(f'/api/questions/{qid}/bookmark',headers=h).status_code==410
+    assert client.get('/api/bookmarks').status_code==410
+    bookmarked=client.post('/api/attempts',json={'collection':'bookmarks','question_ids':[qid],'mode':'practice'},headers=h).json
+    assert len(bookmarked['palette'])==1
     other=app.test_client();h2=login(other,True)
     assert other.get(f'/api/attempts/{aid}').status_code==404
 

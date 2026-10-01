@@ -33,9 +33,10 @@ def test_cache_hits_invalidation_rollback_and_no_personal_state(app,client,redis
         assert 'answers' not in item['question']
         assert '_asset_path' not in json.dumps(item)
     client.get(f'/api/papers/{pid}')
-    with client.session_transaction() as sess:uid=sess['uid']
+    from backend.models import User
+    uid=User.query.filter_by(role='ADMIN').one().id
     db.session.add(PaperProgress(user_id=uid,paper_id=pid,last_score=80,last_attempted_at=1));db.session.commit()
-    assert client.get(f'/api/papers/{pid}').json['progress']['last_score']==80
+    assert client.get(f'/api/papers/{pid}').json['progress'] is None
     assert app.test_client().get(f'/api/papers/{pid}').json['progress'] is None
     assert not any('attempt' in k or 'progress' in k for k in redis_cache.scan_iter())
 
@@ -107,7 +108,7 @@ def test_signed_delivery_no_download_and_csp(app,client,monkeypatch):
     image=QuestionImage.query.first()
     r=client.get(f'/api/images/{image.id}')
     assert r.status_code==302 and r.headers['Cache-Control']=='private, max-age=300'
-    assert app.test_client().get(f'/api/images/{image.id}').status_code==401
+    assert app.test_client().get(f'/api/images/{image.id}').status_code==302
 
 
 def test_unverified_paper_uses_proxy_first_without_failed_signed_probe(app,client,monkeypatch):

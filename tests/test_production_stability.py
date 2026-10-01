@@ -52,7 +52,7 @@ def test_bundle_ownership_no_keys_natural_order_and_no_r2_calls(app,client,monke
         assert 'feedback' not in item
         assert '[[IMAGE:formula]]' in item['question']['text']
         assert item['question']['images'][0]['url'].startswith('/api/images/')
-    other=app.test_client();assert other.get(f"/api/attempts/{a['id']}/questions").status_code==401
+    other=app.test_client();assert other.get(f"/api/attempts/{a['id']}/questions").status_code==404
     db.session.add(User(email='other@example.test',name='Other',password_hash='unused'));db.session.commit()
     with other.session_transaction() as sess:sess['uid']=User.query.filter_by(email='other@example.test').one().id
     assert other.get(f"/api/attempts/{a['id']}/questions").status_code==404
@@ -61,7 +61,7 @@ def test_image_proxy_auth_cache_and_missing_content(app,client,tmp_path):
     seed(1);image=QuestionImage.query.first()
     from backend.storage import local_path
     path=local_path(image.path);path.parent.mkdir(exist_ok=True,parents=True);path.write_bytes(b'PNG')
-    assert client.get(f'/api/images/{image.id}').status_code==401
+    assert client.get(f'/api/images/{image.id}').status_code==200
     login(client);r=client.get(f'/api/images/{image.id}')
     assert r.status_code==200 and r.data==b'PNG'
     assert r.headers['Cache-Control']=='private, max-age=31536000, immutable'
