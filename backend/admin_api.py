@@ -181,6 +181,74 @@ def import_catalog():
     try:return jsonify(**import_workbook(path),batch_id=None,queued=0)
     finally:path.unlink(missing_ok=True)
 
+@admin.post('/catalog/refresh')
+@require_user(True)
+def refresh_master_catalog():
+    """Import the entire workbook as catalog metadata only. Nothing is queued."""
+    from .catalog import import_workbook
+    path=_workbook_upload()
+    try:
+        result=import_workbook(path)
+        return jsonify(**result,queued=0,note='Master catalog refreshed. No papers were queued.'),201
+    finally:path.unlink(missing_ok=True)
+
+@admin.get('/catalog/campaign')
+@require_user(True)
+def catalog_campaign():
+    from .library_campaign import campaign
+    return jsonify(campaign())
+
+@admin.post('/catalog/campaign/process')
+@require_user(True)
+def process_campaign_group():
+    from .library_campaign import campaign,group_papers
+    from .acquisition import queue_catalog
+    payload=body();current=campaign().get('current')
+    if not current:abort(409,description='The catalog campaign is already complete.')
+    stage=str(payload.get('stage') or current['stage'])
+    try:term_id=int(payload.get('term_id') or current['term_id']);limit=int(payload.get('limit',20))
+    except (TypeError,ValueError):abort(400,description='Invalid campaign batch request')
+    if not 1<=limit<=20:abort(400,description='Campaign batches are limited to 1–20 papers')
+    if stage!=current['stage'] or term_id!=current['term_id']:
+        abort(409,description='Finish the current campaign target before processing another term.')
+    papers=group_papers(stage,term_id,'pending')
+    ids=[p.id for p in papers[:limit]]
+    if not ids:return jsonify(batch_id=None,queued=0,current=current,note='No pending papers in the current target.'),200
+    batch,count=queue_catalog(g.user.id,retry=False,limit=limit,paper_ids=ids)
+    return jsonify(batch_id=batch,queued=count,current=current),202
+
+@admin.post('/catalog/campaign/retry-failed')
+@require_user(True)
+def retry_campaign_failed():
+    from .library_campaign import campaign,group_papers
+    from .acquisition import queue_catalog
+    payload=body();current=campaign().get('current')
+    if not current:abort(409,description='The catalog campaign is already complete.')
+    try:limit=int(payload.get('limit',20))
+    except (TypeError,ValueError):abort(400,description='Invalid retry limit')
+    if not 1<=limit<=20:abort(400,description='Retry batches are limited to 1–20 papers')
+    papers=group_papers(current['stage'],current['term_id'],'failed')
+    ids=[p.id for p in papers[:limit]]
+    if not ids:return jsonify(batch_id=None,queued=0,note='No failed papers in the current target.'),200
+    batch,count=queue_catalog(g.user.id,retry=True,limit=limit,paper_ids=ids)
+    return jsonify(batch_id=batch,queued=count,current=current),202
+
+@admin.get('/library-reset/preview')
+@require_user(True)
+def library_reset_preview():
+    from .library_campaign import library_inventory
+    return jsonify(library_inventory(include_storage=True),confirmation='RESET PYQ LIBRARY')
+
+@admin.post('/library-reset')
+@require_user(True)
+def library_reset():
+    from .library_campaign import reset_library
+    payload=body()
+    if payload.get('confirmation')!='RESET PYQ LIBRARY':
+        abort(400,description='Type RESET PYQ LIBRARY exactly to confirm.')
+    try:return jsonify(reset_library(g.user.id,cleanup_storage=payload.get('cleanup_storage',True)))
+    except RuntimeError as exc:abort(409,description=str(exc))
+
 @admin.get('/catalog/batches/<int:id>')
 @require_user(True)
 def catalog_batch(id):
