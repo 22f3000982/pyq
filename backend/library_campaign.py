@@ -113,10 +113,12 @@ def campaign():
         row['finished']=row['available']+row['ignored']
         row['percent']=round((row['finished']/row['total'])*100,1) if row['total'] else 100
         row['complete']=row['pending']==0 and row['queued']==0 and row['failed']==0
-    current=next((r for r in rows if not r['complete']),None)
+    # Failed papers stay visible and retryable without blocking older terms.
+    current=next((r for r in rows if r['pending'] or r['queued']),None)
+    retry_target=next((r for r in rows if r['failed']),None)
     ready_count=totals['available'];total=len(papers)
     return {'total':total,'available':ready_count,'pending':totals['pending'],'queued':totals['queued'],'failed':totals['failed'],'ignored':totals['ignored'],
-            'percent':round((ready_count/total)*100,1) if total else 0,'groups':rows,'current':current}
+            'percent':round((ready_count/total)*100,1) if total else 0,'groups':rows,'current':current,'retry_target':retry_target}
 
 def group_papers(stage,term_id,state='pending'):
     papers=Paper.query.options(joinedload(Paper.exam_type),joinedload(Paper.term)).filter_by(term_id=term_id).filter(Paper.source_url.isnot(None)).order_by(Paper.id).all()

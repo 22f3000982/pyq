@@ -2,7 +2,7 @@ from pathlib import Path
 import re,hashlib,json
 from .numeric import parse_numeric_key
 
-Q_PATTERN=r'Question\s+Number\s*:\s*(\d+)\s+Question\s+Id\s*:\s*(\d+)\s+Question\s+Type\s*:\s*([\w/-]+)'
+Q_PATTERN=r'Question\s+Number\s*:\s*(\d+)\s+Question\s+Id\s*:\s*(\d+)(?:\s+Question\s+Type\s*:\s*([\w/-]+))?'
 MARKER=r'\[\[IMAGE:([^]]+)\]\]'
 
 def source_metadata(text):
@@ -29,7 +29,7 @@ def parse_document(layout):
     for g in re.finditer(r'Question Numbers\s*:\s*\((\d+)\s*to\s*(\d+)\).*?Question Label\s*:\s*Comprehension\s*\n(.*?)Sub questions',text,re.S|re.I):groups.append((int(g[1]),int(g[2]),g[3],g.start()))
     for i,m in enumerate(matches):
         end=matches[i+1].start() if i+1<len(matches) else len(text)
-        chunk=text[m.end():end];number,qid,kind=m[1],m[2],m[3].upper();warnings=[];images=[];evidence={'source_question_id':qid,'answer_indicators':{},'method':'tcs_layout'}
+        chunk=text[m.end():end];number,qid,kind=m[1],m[2],(m[3] or '').upper();warnings=[];images=[];evidence={'source_question_id':qid,'answer_indicators':{},'method':'tcs_layout'}
         chunk=re.split(r'\n\s*(?:Sub-Section Number|Question Id)\s*:',chunk)[0]
         mark=re.search(r'Correct Marks\s*:\s*([\d.]+)',chunk,re.I)
         wrong=re.search(r'(?:Wrong|Negative|Incorrect) Marks\s*:\s*([\d.]+)',chunk,re.I)
@@ -38,6 +38,14 @@ def parse_document(layout):
         label=re.search(r'Question Label\s*:[^\n]*\n',chunk,re.I)
         if not label:
             issues.append({'number':number,'error':'Question label/boundary not recognized'});continue
+        if not kind:
+            # Some official TCS exports omit Question Type but retain Question Label.
+            label_text=label[0].split(':',1)[1].strip().casefold()
+            if 'multiple choice' in label_text:kind='MCQ'
+            elif 'multiple select' in label_text or 'multiple response' in label_text:kind='MSQ'
+            elif 'short answer' in label_text or re.search(r'Possible Answers?\s*:',chunk,re.I):kind='SA'
+            elif 'true' in label_text and 'false' in label_text:kind='TRUE_FALSE'
+            else:kind='SUBJECTIVE'
         body=chunk[label.end():];parts=re.split(r'Options\s*:',body,maxsplit=1,flags=re.I)
         stem=parts[0];options=[];answers=None;source_pages={pn for start,stop,pn in layout['pages'] if start<end and stop>m.start()}
         for lo,hi,passage,groupstart in groups:

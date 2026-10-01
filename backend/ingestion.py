@@ -107,6 +107,15 @@ def fallback(layout,config):
             records.append(q)
     return records,issues
 
+def extraction_failure_message(layout,records,available):
+    if available:return None
+    text=re.sub(r'\[\[(?:IMAGE|PAGE_FAILED):[^]]+\]\]','',layout['text']).strip()
+    if records:
+        return f'{len(records)} question records detected, but none passed automatic validation. Check extraction warnings for missing stems/options or failed source pages.'
+    if text:
+        return f'PDF text extracted ({len(text)} characters), but question boundaries were not recognized. This is a question-format/parser issue; the PDF is not classified as image-only. Check extraction warnings and source layout.'
+    return 'No readable PDF text was recovered. Check page extraction warnings; scanned pages need working OCR.'
+
 def process_file(id):
     f=db.session.get(IngestionFile,id);paper=db.session.get(Paper,f.paper_id);f.status='PROCESSING';f.started_at=time.time();paper.status='PROCESSING';event(f,'PROCESSING','Automatic extraction started');db.session.commit()
     try:
@@ -167,7 +176,7 @@ def process_file(id):
         if archived_from:meta['_admin_archived_from']=archived_from
         paper.source_metadata=meta
         if meta.get('duration_seconds'):paper.duration_seconds=meta['duration_seconds']
-        f.extracted=len(new_ids);f.warnings=layout['warnings']+issues;f.finished_at=time.time();f.error=None if available else 'No question records detected. This may be an image-only notes PDF; OCR is unavailable, so upload a text-based question paper or enable OCR.'
+        f.extracted=len(new_ids);f.warnings=layout['warnings']+issues;f.finished_at=time.time();f.error=extraction_failure_message(layout,records,available)
         f.status='PARTIAL' if available and failed else 'AVAILABLE' if available else 'EXTRACTION_FAILED'
         db.session.expire(paper,['status'])
         if paper.status!='ARCHIVED':
