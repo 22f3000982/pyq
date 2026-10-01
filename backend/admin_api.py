@@ -266,6 +266,15 @@ def run_catalog_batch_next(id):
     from .acquisition import download_one
     from .ingestion import process_one,SUCCESS,FAILURES,update_batch
     batch=db.get_or_404(IngestionBatch,id)
+    # Recover a request that died mid-paper (browser/network/server restart).
+    stale_before=time.time()-1800
+    for stale in IngestionFile.query.filter_by(batch_id=id).filter(
+        IngestionFile.status.in_(['FETCHING','PROCESSING']),IngestionFile.started_at<stale_before
+    ):
+        stale.status='QUEUED' if stale.path else 'FETCH_QUEUED'
+        stale.error='Previous on-demand processing request expired; safely resumed.'
+        stale.started_at=None
+    db.session.commit()
     record=(IngestionFile.query.filter_by(batch_id=id)
             .filter(IngestionFile.status.in_(['FETCH_QUEUED','QUEUED']))
             .order_by(IngestionFile.id).first())
