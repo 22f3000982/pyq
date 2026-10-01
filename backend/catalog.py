@@ -319,9 +319,13 @@ def import_workbook(path):
     report={'new_courses':0,'new_papers':0,'existing_papers':0,'linked_cells':scan['linked_cells'],
             'issues':scan['issues'],'terms':scan['terms']}
     for item in scan['courses']:
-        course=by_code.get(item['code']) or by_name.get(norm_key(item['name']))
+        incoming=item['code'];course=by_code.get(incoming) or by_name.get(norm_key(item['name']))
         if not course:
-            course=Course(name=item['name'],code=item['code']);db.session.add(course);by_code[item['code']]=course;by_name[norm_key(item['name'])]=course;report['new_courses']+=1
+            course=Course(name=item['name'],code=incoming);db.session.add(course);report['new_courses']+=1
+        elif not course.code:course.code=incoming
+        by_code[incoming]=course
+        if course.code:by_code[course.code]=course
+        by_name[norm_key(item['name'])]=course;by_name[norm_key(course.name)]=course
         course.level=item['level'];course.course_type=item['course_type'];course.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(course.name)]
     for name in scan['terms']:
         if name not in terms:
@@ -337,15 +341,26 @@ def import_workbook(path):
         term=next((x for x in terms_list if x.id==p.term_id),None) or next((x for x in terms.values() if x.id==p.term_id),None)
         exam=next((x for x in exams_list if x.id==p.exam_type_id),None) or next((x for x in exams.values() if x.id==p.exam_type_id),None)
         if course and term and exam:index.setdefault(paper_key(course.code or course.name,term.name,exam.name,p.session,p.name),p)
+    source_candidates={}
+    for p in papers_list:
+        token=source_token(p.source_url)
+        if token:source_candidates.setdefault(token,[]).append(p)
+    for source in SourceEntry.query.all():
+        paper=next((p for p in papers_list if p.id==source.paper_id),None);token=source_token(source.url)
+        if paper and token and all(x.id!=paper.id for x in source_candidates.setdefault(token,[])):source_candidates[token].append(paper)
     provenance_seen={identity for identity, in db.session.query(SourceEntry.identity).all()};pending=[]
     for entry in scan['entries']:
         paper=index.get(entry['key'])
         if not paper:
+            candidates=source_candidates.get(entry['source_token'],[])
+            if len(candidates)==1:paper=candidates[0]
+        if not paper:
             paper=Paper(identity=digest('sync-v2|'+entry['key']),course=by_code[entry['course_code']],term=terms[entry['term_name']],
                         exam_type=exams[entry['exam_name']],name=entry['name'],session=entry['session'],variant=entry['variant'],
                         source_url=entry['url'],warnings=entry['warnings'],source_metadata={'catalog_sync_key':entry['key']})
-            db.session.add(paper);db.session.flush();index[entry['key']]=paper;report['new_papers']+=1
+            db.session.add(paper);db.session.flush();papers_list.append(paper);source_candidates.setdefault(entry['source_token'],[]).append(paper);report['new_papers']+=1
         else:report['existing_papers']+=1
+        index[entry['key']]=paper
         provenance=digest('|'.join([scan['workbook_hash'],entry['sheet'],entry['cell'],entry['key']]))
         if provenance not in provenance_seen:
             provenance_seen.add(provenance);pending.append(SourceEntry(identity=provenance,paper_id=paper.id,workbook_hash=scan['workbook_hash'],
