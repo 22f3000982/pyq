@@ -3,7 +3,7 @@ import uuid,time,hashlib
 from pathlib import Path
 import fitz
 from sqlalchemy import or_
-from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory
+from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory,redirect
 from .models import *
 from .api import integer_argument,require_user,body,paginate,paginate_rows,paper_json,paper_rows,course_json,user_json,PAPER_LOAD
 from .engine import question_snapshot,validate_question,aggregate
@@ -12,6 +12,33 @@ admin=Blueprint('admin',__name__,url_prefix='/api/admin')
 
 def admin_question(q):return {**question_snapshot(q),'status':q.status,'confidence':q.confidence,'warnings':q.warnings,'ingestion_file_id':q.ingestion_file_id}
 def file_json(f):return {k:getattr(f,k) for k in ('id','batch_id','paper_id','filename','status','error','warnings','pages','extracted','retries','started_at','finished_at','source_url','events','duplicate_of_id')}
+
+@admin.get('/google-drive/status')
+@require_user(True)
+def google_drive_status():
+    from .google_drive import status
+    return jsonify(status())
+
+@admin.get('/google-drive/connect')
+@require_user(True)
+def google_drive_connect():
+    from .google_drive import authorization_url
+    try:return redirect(authorization_url())
+    except RuntimeError as exc:abort(409,description=str(exc))
+
+@admin.get('/google-drive/callback')
+@require_user(True)
+def google_drive_callback():
+    from .google_drive import complete_callback
+    try:complete_callback(request.args.get('code'),request.args.get('state'))
+    except RuntimeError as exc:abort(400,description=str(exc))
+    return redirect('/#/admin')
+
+@admin.post('/google-drive/disconnect')
+@require_user(True)
+def google_drive_disconnect():
+    from .google_drive import disconnect
+    return jsonify(disconnect())
 
 @admin.get('/stats')
 @require_user(True)
