@@ -70,8 +70,8 @@ async function refreshMasterCatalog(){
  await run(async()=>{const form=new FormData();form.append('file',masterFile.value);const d=await api('/admin/catalog/refresh',{method:'POST',form});notice.value=`Master catalog refreshed: ${d.new_papers} new papers, ${d.existing_papers} already known. Nothing was queued.`;masterFile.value=null;invalidateCatalog();await refreshCatalog();await loadCampaign();await loadResetPreview()})
 }
 async function processCampaign(retry=false){
- if(!campaign.value?.current)return;
- await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:campaign.value.current.stage,term_id:campaign.value.current.term_id,limit:20}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${campaign.value.current.label} · ${campaign.value.current.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value){await refreshSyncBatch();if(!syncBatch.value.done)await runWebBatch()}})
+ const target=retry?campaign.value?.retry_target:campaign.value?.current;if(!target)return;
+ await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:target.stage,term_id:target.term_id,limit:20}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${target.label} · ${target.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value){await refreshSyncBatch();if(!syncBatch.value.done)await runWebBatch()}})
 }
 async function resetLibrary(){
  if(resetPhrase.value!=='RESET PYQ LIBRARY')return;
@@ -150,9 +150,13 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
  </div>
  <div v-if="campaign.current" class="campaign-current mt-3">
   <div><span class="eyebrow">CURRENT TARGET</span><h3>{{campaign.current.label}} · {{campaign.current.term}}</h3><p class="muted">{{campaign.current.available}} / {{campaign.current.total}} ready · {{campaign.current.pending}} pending · {{campaign.current.failed}} failed · {{campaign.current.queued}} queued</p></div>
-  <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" :disabled="busy||campaign.current.pending===0||campaign.current.queued>0" @click="processCampaign(false)">Process next 20</button><button v-if="campaign.current.failed" class="btn btn-outline-primary" :disabled="busy||campaign.current.queued>0" @click="processCampaign(true)">Retry failed (max 20)</button></div>
+  <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" :disabled="busy||campaign.current.pending===0||campaign.current.queued>0" @click="processCampaign(false)">Process next 20</button></div>
  </div>
- <p v-else class="alert alert-success mt-3 mb-0">All catalog papers are complete.</p>
+ <p v-else class="alert mt-3 mb-0" :class="campaign.failed?'alert-warning':'alert-success'">{{campaign.failed?'All pending papers processed. Failed papers remain available for retry below.':'All catalog papers are complete.'}}</p>
+ <div v-if="campaign.retry_target" class="mt-3">
+  <p class="muted">{{campaign.retry_target.failed}} failed paper(s) in {{campaign.retry_target.label}} · {{campaign.retry_target.term}}. Failures do not block the next term.</p>
+  <button class="btn btn-outline-primary" :disabled="busy||webRunnerActive||campaign.queued>0" @click="processCampaign(true)">Retry failed (max 20)</button>
+ </div>
 </section>
 
 <section v-if="campaign?.groups?.length" class="panel mb-4">

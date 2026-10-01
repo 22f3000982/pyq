@@ -136,3 +136,20 @@ def test_latest_batch_returns_resumable_queue(app,client):
     latest=client.get('/api/admin/catalog/batches/latest',headers=h)
     assert latest.status_code==200
     assert latest.json['batch_id']==batch_id
+
+
+def test_failed_term_does_not_block_next_and_remains_retryable(app,client):
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    p=Paper.query.join(ExamType).join(Term).filter(ExamType.name=='Quiz 1',Term.name=='May 2026').one()
+    b=IngestionBatch(user_id=User.query.filter_by(role='ADMIN').first().id);db.session.add(b);db.session.flush()
+    db.session.add(IngestionFile(batch_id=b.id,paper_id=p.id,filename='failed.pdf',status='EXTRACTION_FAILED',source_url=p.source_url));db.session.commit()
+    c=client.get('/api/admin/catalog/campaign',headers=h).json
+    assert c['current']['term']=='Jan 2026'
+    assert c['retry_target']['term']=='May 2026'
+    assert c['failed']==1
+    processed=client.post('/api/admin/catalog/campaign/process',headers=h,json={'limit':20})
+    assert processed.status_code==202 and processed.json['queued']==1
+    assert db.session.get(Paper,IngestionFile.query.filter_by(batch_id=processed.json['batch_id']).one().paper_id).term.name=='Jan 2026'
+    retried=client.post('/api/admin/catalog/campaign/retry-failed',headers=h,json={'limit':20})
+    assert retried.status_code==202 and retried.json['queued']==1
+    assert IngestionFile.query.filter_by(batch_id=retried.json['batch_id']).one().paper_id==p.id

@@ -249,8 +249,8 @@ def process_campaign_group():
 def retry_campaign_failed():
     from .library_campaign import campaign,group_papers
     from .acquisition import queue_catalog
-    payload=body();current=campaign().get('current')
-    if not current:abort(409,description='The catalog campaign is already complete.')
+    payload=body();current=campaign().get('retry_target')
+    if not current:abort(409,description='There are no failed campaign papers to retry.')
     try:limit=int(payload.get('limit',20))
     except (TypeError,ValueError):abort(400,description='Invalid retry limit')
     if not 1<=limit<=20:abort(400,description='Retry batches are limited to 1–20 papers')
