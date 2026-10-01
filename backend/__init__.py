@@ -40,7 +40,10 @@ def create_app(config=None):
         LLM_PROVIDER=os.getenv('LLM_PROVIDER','none'), LLM_API_KEY=os.getenv('LLM_API_KEY',''),
         LLM_MODEL=os.getenv('LLM_MODEL',''), LLM_BASE_URL=os.getenv('LLM_BASE_URL',''),
         OCR_ENABLED=os.getenv('OCR_ENABLED','true').lower()=='true',
-        CATALOG_AUTO_PROCESS=os.getenv('CATALOG_AUTO_PROCESS','false').lower()=='true')
+        CATALOG_AUTO_PROCESS=os.getenv('CATALOG_AUTO_PROCESS','false').lower()=='true',
+        GOOGLE_OAUTH_CLIENT_ID=os.getenv('GOOGLE_OAUTH_CLIENT_ID',''),
+        GOOGLE_OAUTH_CLIENT_SECRET=os.getenv('GOOGLE_OAUTH_CLIENT_SECRET',''),
+        GOOGLE_OAUTH_REDIRECT_URI=os.getenv('GOOGLE_OAUTH_REDIRECT_URI',''))
     legacy_bucket=os.getenv('R2_BUCKET_NAME','')
     storage_backend=os.getenv('STORAGE_BACKEND','local').lower()
     image_delivery=os.getenv('IMAGE_DELIVERY','').strip().lower()

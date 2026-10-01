@@ -1,11 +1,11 @@
 <script setup>
 import {ref,onMounted,onUnmounted} from 'vue';import {api,loadCatalog,invalidateCatalog,session} from './api';import MathText from './MathText.vue';import Upload from './Upload.vue';
 const uploadForm=ref(null);
-const tab=ref('Processing'),tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];
-const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),masterFile=ref(null),webRunnerActive=ref(false),webRunnerStop=ref(false),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
+const tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];const savedTab=localStorage.getItem('pyq-admin-tab');const tab=ref(tabs.includes(savedTab)?savedTab:'Processing');
+const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),masterFile=ref(null),driveStatus=ref(null),webRunnerActive=ref(false),webRunnerStop=ref(false),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
 async function run(fn){busy.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){stats.value=await api('/admin/stats');if(tab.value==='Processing'){const d=await api('/admin/ingestion?page='+page.value);jobs.value=d.items;total.value=d.total}else if(tab.value==='Papers'){const d=await api('/admin/papers?'+new URLSearchParams({page:page.value,limit:24,q:paperSearch.value,status:paperStatus.value,course_id:manageCourse.value}));adminPapers.value=d.items;total.value=d.total}else if(tab.value==='Question bank'){const d=await api('/admin/questions?'+new URLSearchParams({page:page.value,paper_id:paper.value}));questions.value=d.items;total.value=d.total}else if(tab.value==='Settings')settings.value=await api('/admin/settings')}
-async function chooseTab(t){tab.value=t;page.value=1;detail.value=null;await run(async()=>{await refresh();if(t==='Catalog Sync'){await loadCampaign();await loadResetPreview()}})}
+async function chooseTab(t){tab.value=t;localStorage.setItem('pyq-admin-tab',t);page.value=1;detail.value=null;await run(async()=>{await refresh();if(t==='Catalog Sync'){await loadCampaign();await loadResetPreview();await loadDriveStatus()}})}
 async function loadPapers(){papers.value=(await api('/papers?limit=100&course_id='+course.value)).items;paper.value=''}
 async function queue(retry=false){await run(async()=>{const d=await api('/admin/process-catalog',{method:'POST',body:{retry,limit:20}});notice.value=d.queued+' sources queued (maximum 20 this run). The worker stops after the bounded queue is exhausted.';await refresh()})}
 function chooseFiles(e){files.value=Array.from(e.target.files).map(file=>({file,paper_id:paper.value}))}
@@ -60,6 +60,9 @@ async function applyWorkbook(){
  })
 }
 async function loadCampaign(){campaign.value=await api('/admin/catalog/campaign')}
+async function loadDriveStatus(){driveStatus.value=await api('/admin/google-drive/status')}
+function connectDrive(){window.location.href='/api/admin/google-drive/connect'}
+async function disconnectDrive(){if(!confirm('Disconnect Google Drive source access?'))return;await run(async()=>{await api('/admin/google-drive/disconnect',{method:'POST',body:{}});await loadDriveStatus();notice.value='Google Drive disconnected.'})}
 async function loadResetPreview(){resetPreview.value=await api('/admin/library-reset/preview')}
 function chooseMasterFile(e){masterFile.value=e.target.files?.[0]||null}
 async function refreshMasterCatalog(){
@@ -81,7 +84,7 @@ async function archivePaper(p){if(!confirm('Hide this paper from students? Exist
 async function restorePaper(p){await run(async()=>{await api('/admin/papers/'+p.id+'/restore',{method:'POST',body:{}});notice.value='Paper restored.';invalidateCatalog();await refreshCatalog();await refresh()})}
 async function deletePaper(p){if(!confirm('Permanently delete this catalog paper? This is allowed only when it has no linked questions, imports, attempts or progress.'))return;await run(async()=>{await api('/admin/papers/'+p.id,{method:'DELETE'});notice.value='Paper permanently deleted.';invalidateCatalog();await refreshCatalog();await refresh()})}
 async function refreshCatalog(){invalidateCatalog();const catalog=await loadCatalog();courses.value=catalog.courses;meta.value=catalog.meta;await uploadForm.value?.refreshCatalog()}
-onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{const catalog=await loadCatalog();courses.value=catalog.courses;meta.value=catalog.meta;await refresh();const latest=await api('/admin/catalog/batches/latest');if(latest.batch_id){syncBatch.value={id:latest.batch_id};await refreshSyncBatch()}});timer=setInterval(()=>{if(tab.value==='Processing')refresh().catch(e=>error.value=e.message)},8000)});onUnmounted(()=>{webRunnerStop.value=true;clearInterval(timer)});
+onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{const catalog=await loadCatalog();courses.value=catalog.courses;meta.value=catalog.meta;await refresh();if(tab.value==='Catalog Sync'){await loadCampaign();await loadResetPreview();await loadDriveStatus()}const latest=await api('/admin/catalog/batches/latest');if(latest.batch_id){syncBatch.value={id:latest.batch_id};await refreshSyncBatch()}});timer=setInterval(()=>{if(tab.value==='Processing')refresh().catch(e=>error.value=e.message)},8000)});onUnmounted(()=>{webRunnerStop.value=true;clearInterval(timer)});
 </script>
 <template><section v-if="session.user?.role!=='ADMIN'" class="empty panel"><h1>Administrator access required</h1><a href="#/login" class="btn btn-primary">Sign in</a></section><template v-else><div class="eyebrow">AUTOMATIC QUESTION BANK</div><h1>Processing & sources</h1><p class="muted">Upload once. Reliable questions become available automatically.</p><nav class="admin-tabs"><button v-for="t in tabs" :class="{active:tab===t}" @click="chooseTab(t)">{{t}}</button></nav><div v-if="error" class="alert alert-danger" role="alert">{{error}}</div><div v-if="notice" class="alert alert-success" role="status">{{notice}}</div>
 <template v-if="tab==='Processing'"><div class="admin-stat-grid"><div class="panel" v-for="k in ['papers','processed','queued','active_processing','failed','questions','flagged_questions']"><span class="eyebrow">{{k.replaceAll('_',' ')}}</span><strong>{{stats[k]??0}}</strong></div></div><details class="panel my-4"><summary>Advanced processing controls</summary><div class="d-flex gap-3 flex-wrap my-4"><button class="btn btn-primary" :disabled="busy" @click="queue(false)">Queue next 20 pending</button><button class="btn btn-outline-primary" :disabled="busy" @click="queue(true)">Retry next 20 failed/pending</button><button class="btn btn-light" @click="run(refresh)">Refresh</button></div></details><article class="panel job-card" v-for="f in jobs"><div class="section-row"><strong>#{{f.paper_id}} · {{f.filename}}</strong><span class="status">{{f.status}}</span></div><p class="muted small">{{f.extracted}} question records · {{f.pages??'—'}} pages · {{f.retries}} retries</p><a v-if="f.source_url" :href="f.source_url" target="_blank" rel="noopener noreferrer">Source link ↗</a><p v-if="f.error" class="alert alert-danger mt-3">{{f.error}}</p><details class="mt-3"><summary>Processing evidence & logs</summary><pre>{{JSON.stringify({events:f.events,warnings:f.warnings,duplicate_of:f.duplicate_of_id},null,2)}}</pre></details><button v-if="['PROCESSING_FAILED','EXTRACTION_FAILED'].includes(f.status)" class="btn btn-light mt-3" @click="run(async()=>{await api('/admin/ingestion/'+f.id+'/retry',{method:'POST'});await refresh()})">Retry processing</button></article><p v-if="!jobs.length" class="empty panel">No processing jobs yet.</p></template>
@@ -102,11 +105,32 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
  <h2>Build the PYQ library systematically</h2>
  <ol class="campaign-steps">
   <li><strong>Optional clean start:</strong> use Library Reset once if the current catalog is mixed/test data.</li>
+  <li><strong>Connect Google Drive:</strong> authorize the Google/IITM account that can open the source PDFs. This is required for private links.</li>
   <li><strong>Upload the latest Excel:</strong> this creates the full source catalog only; it does not start 700 downloads.</li>
   <li><strong>Follow the highlighted target:</strong> Quiz 1 newest term first, then older terms; after Quiz 1 comes Quiz 2, End Term FN, End Term AN, then other assessments.</li>
   <li><strong>Process 20 at a time:</strong> each batch stops automatically. Retry failed papers separately.</li>
   <li><strong>Future months:</strong> upload the newly updated Excel again; only new catalog entries are added.</li>
  </ol>
+</section>
+
+<section class="panel mb-4">
+ <div class="section-row">
+  <div><div class="eyebrow">GOOGLE DRIVE SOURCE ACCESS</div><h2>{{driveStatus?.connected?'Connected':'Connect the account that can open the PYQ PDFs'}}</h2>
+   <p class="muted mb-0" v-if="driveStatus?.connected">Connected as {{driveStatus.email||'Google account'}}. Private/shared Drive PDFs can now be downloaded through the official Drive API.</p>
+   <p class="muted mb-0" v-else-if="driveStatus?.configured">Authorize once with the Google/IITM account that can open the workbook paper links. The app stores only an encrypted refresh token.</p>
+   <p class="muted mb-0" v-else>OAuth server credentials are not configured yet. Add the Google OAuth Client ID and Client Secret in Render, then use the redirect URI shown below.</p>
+  </div>
+  <span class="status" :class="{ready:driveStatus?.connected}">{{driveStatus?.connected?'CONNECTED':'NOT CONNECTED'}}</span>
+ </div>
+ <div v-if="driveStatus" class="mt-3">
+  <p class="small muted mb-2"><strong>Authorized redirect URI:</strong> {{driveStatus.redirect_uri}}</p>
+  <div class="d-flex gap-2 flex-wrap">
+   <button v-if="driveStatus.configured&&!driveStatus.connected" class="btn btn-primary" @click="connectDrive">Connect Google Drive</button>
+   <button v-if="driveStatus.connected" class="btn btn-outline-primary" @click="disconnectDrive">Disconnect</button>
+   <button class="btn btn-light" @click="run(loadDriveStatus)">Refresh status</button>
+  </div>
+  <p v-if="!driveStatus.configured" class="alert alert-warning mt-3 mb-0">Render needs GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET. In Google Cloud, enable Google Drive API, create a Web application OAuth client, and add the redirect URI above exactly.</p>
+ </div>
 </section>
 
 <section class="panel mb-4">

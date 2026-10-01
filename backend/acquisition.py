@@ -20,6 +20,13 @@ def safe_url(url):
         raise ValueError('Source host is not in the configured download allowlist: '+str(u.hostname))
     return url
 
+def drive_file_id(url):
+    u=urlparse(url);query=parse_qs(u.query)
+    match=re.search(r'/file/d/([\w-]+)',u.path)
+    if u.hostname=='drive.google.com' and (match or query.get('id')):
+        return match[1] if match else query['id'][0]
+    return None
+
 def download_url(url):
     safe_url(url);u=urlparse(url);query=parse_qs(u.query)
     if u.hostname in ('google.com','www.google.com') and u.path=='/url' and query.get('q'):
@@ -34,6 +41,11 @@ def download_url(url):
     return url
 
 def fetch_pdf(url,destination,max_bytes=20*1024*1024):
+    file_id=drive_file_id(url)
+    if file_id:
+        from .google_drive import credential,download_file
+        if credential() is not None:
+            return download_file(file_id,destination,max_bytes)
     url=download_url(url)
     session=requests.Session();session.trust_env=True
     for _ in range(8):
