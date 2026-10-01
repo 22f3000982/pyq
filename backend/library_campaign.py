@@ -1,7 +1,7 @@
 """Fresh-library reset and systematic catalog campaign helpers."""
 import time
 from collections import defaultdict
-from sqlalchemy import func
+from sqlalchemy import func,or_
 from sqlalchemy.orm import joinedload
 from flask import current_app
 from .models import *
@@ -25,7 +25,7 @@ def library_inventory(include_storage=True):
     now=time.time();stale_before=now-1800
     active_q=IngestionFile.query.filter(IngestionFile.status.in_(['FETCHING','PROCESSING']))
     counts['active_ingestion']=active_q.count()
-    counts['stale_ingestion']=active_q.filter(db.or_(IngestionFile.started_at.is_(None),IngestionFile.started_at<stale_before)).count()
+    counts['stale_ingestion']=active_q.filter(or_(IngestionFile.started_at.is_(None),IngestionFile.started_at<stale_before)).count()
     counts['live_ingestion']=counts['active_ingestion']-counts['stale_ingestion']
     result={'counts':counts}
     if include_storage:
