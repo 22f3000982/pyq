@@ -29,6 +29,9 @@ async function runWebBatch(){
   while(!webRunnerStop.value&&syncBatch.value&&!syncBatch.value.done){
    syncBatch.value=await api('/admin/catalog/batches/'+syncBatch.value.id+'/run-next',{method:'POST',body:{}});
    await loadCampaign();
+   if(syncBatch.value.active>0&&syncBatch.value.queued===0&&!syncBatch.value.done){
+    notice.value='Another processing request is still active. This tab paused to avoid duplicate work.';break
+   }
   }
   if(syncBatch.value?.done)notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`;
   else if(webRunnerStop.value)notice.value='Batch paused in this browser. Remaining papers are still safely queued.';
