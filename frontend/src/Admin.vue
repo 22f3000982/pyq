@@ -24,17 +24,25 @@ async function refreshSyncBatch(){
 }
 async function runWebBatch(){
  if(!syncBatch.value?.id||webRunnerActive.value)return;
- webRunnerActive.value=true;webRunnerStop.value=false;error.value='';
+ webRunnerActive.value=true;webRunnerStop.value=false;error.value='';let consecutiveFailures=0;
  try{
   while(!webRunnerStop.value&&syncBatch.value&&!syncBatch.value.done){
+   const beforeFailed=syncBatch.value.failed||0,beforeCompleted=syncBatch.value.completed||0;
    syncBatch.value=await api('/admin/catalog/batches/'+syncBatch.value.id+'/run-next',{method:'POST',body:{}});
    await loadCampaign();
+   const failedNow=(syncBatch.value.failed||0)>beforeFailed,completedNow=(syncBatch.value.completed||0)>beforeCompleted;
+   consecutiveFailures=failedNow&&!completedNow?consecutiveFailures+1:0;
+   if(consecutiveFailures>=3&&!syncBatch.value.done){
+    webRunnerStop.value=true;
+    notice.value='Processing paused automatically after 3 consecutive failures. Read the paper error messages below before retrying.';
+    break
+   }
    if(syncBatch.value.active>0&&syncBatch.value.queued===0&&!syncBatch.value.done){
     notice.value='Another processing request is still active. This tab paused to avoid duplicate work.';break
    }
   }
-  if(syncBatch.value?.done)notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`;
-  else if(webRunnerStop.value)notice.value='Batch paused in this browser. Remaining papers are still safely queued.';
+  if(syncBatch.value?.done)notice.value=syncBatch.value.completed?`Batch finished: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`:`Batch finished with 0 successful and ${syncBatch.value.failed} failed. Read the failure reasons below before retrying.`;
+  else if(webRunnerStop.value&&!notice.value)notice.value='Batch paused in this browser. Remaining papers are still safely queued.';
  }catch(e){error.value=e.message}
  finally{webRunnerActive.value=false}
 }
@@ -135,11 +143,12 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
 </section>
 
 <section v-if="syncBatch" class="panel catalog-batch-progress mb-4">
- <div class="section-row"><div><div class="eyebrow">ACTIVE BATCH #{{syncBatch.id}}</div><h2>{{syncBatch.done?'Batch complete':(webRunnerActive?'Processing on this web service':'Batch queued / paused')}}</h2><p class="muted mb-0">Free mode processes one paper per request. Keep this admin tab open while running; closing it safely pauses after the current paper.</p></div><strong>{{syncBatch.percent??0}}%</strong></div>
+ <div class="section-row"><div><div class="eyebrow">ACTIVE BATCH #{{syncBatch.id}}</div><h2>{{syncBatch.done?(syncBatch.completed?'Batch complete':'Batch failed — no papers imported'):(webRunnerActive?'Processing on this web service':'Batch queued / paused')}}</h2><p class="muted mb-0">Free mode processes one paper per request. Keep this admin tab open while running; closing it safely pauses after the current paper.</p></div><strong>{{syncBatch.percent??0}}%</strong></div>
  <div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:(syncBatch.percent??0)+'%'}"></div></div>
  <div class="admin-stat-grid mt-3"><div class="panel"><span class="eyebrow">successful</span><strong>{{syncBatch.completed??0}}</strong></div><div class="panel"><span class="eyebrow">failed</span><strong>{{syncBatch.failed??0}}</strong></div><div class="panel"><span class="eyebrow">active</span><strong>{{syncBatch.active??0}}</strong></div><div class="panel"><span class="eyebrow">waiting</span><strong>{{syncBatch.queued??0}}</strong></div></div>
+ <div v-if="syncBatch.done&&syncBatch.failed" class="alert alert-warning mt-3 mb-0"><strong>{{syncBatch.failed}} paper(s) reached a failure state.</strong> 100% here means the batch finished, not that it succeeded. The exact reason for each paper is shown below. Fix the common cause before retrying.</div>
  <div v-if="!syncBatch.done" class="d-flex gap-2 flex-wrap mt-3"><button v-if="!webRunnerActive" class="btn btn-primary" @click="runWebBatch">Resume processing</button><button v-else class="btn btn-outline-primary" @click="pauseWebBatch">Pause after current paper</button><button class="btn btn-light" :disabled="webRunnerActive" @click="refreshSyncBatch">Refresh status</button></div>
- <div class="sync-list mt-3"><div v-for="i in syncBatch.items||[]" class="sync-row"><span>#{{i.paper_id}} · {{i.status}}</span><strong>{{i.filename}}</strong></div></div>
+ <div class="sync-list mt-3"><div v-for="i in syncBatch.items||[]" class="sync-row sync-row-detail"><div><span>#{{i.paper_id}} · {{i.status}}</span><small v-if="i.error" class="batch-error">{{i.error}}</small></div><strong>{{i.filename}}</strong></div></div>
 </section>
 
 <details v-if="resetPreview" class="panel danger-zone mb-4">

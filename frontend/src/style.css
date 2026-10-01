@@ -155,3 +155,8 @@
 [data-theme="dark"] .campaign-row{border-color:#435064}
 [data-theme="dark"] .danger-zone{background:#321f23;border-color:#8b4b53}
 @media(max-width:760px){.campaign-current{align-items:stretch;flex-direction:column}.campaign-row{grid-template-columns:1fr}.campaign-row>strong{text-align:right}}
+
+.sync-row-detail{align-items:flex-start}
+.sync-row-detail>div{display:grid;gap:4px;min-width:0}
+.batch-error{display:block;color:#b33a3a;max-width:680px;white-space:normal;word-break:break-word;line-height:1.35}
+[data-theme="dark"] .batch-error{color:#ff9e9e}
