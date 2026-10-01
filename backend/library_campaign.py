@@ -1,7 +1,7 @@
 """Fresh-library reset and systematic catalog campaign helpers."""
 import time
 from collections import defaultdict
-from sqlalchemy import func
+from sqlalchemy import func,or_
 from sqlalchemy.orm import joinedload
 from flask import current_app
 from .models import *
@@ -22,17 +22,31 @@ def library_inventory(include_storage=True):
         'reviews':QuestionReview.query.count(),
     }
     counts['ready_papers']=db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct().count()
-    counts['active_ingestion']=IngestionFile.query.filter(IngestionFile.status.in_(['FETCHING','PROCESSING'])).count()
+    now=time.time();stale_before=now-1800
+    active_q=IngestionFile.query.filter(IngestionFile.status.in_(['FETCHING','PROCESSING']))
+    counts['active_ingestion']=active_q.count()
+    counts['stale_ingestion']=active_q.filter(or_(IngestionFile.started_at.is_(None),IngestionFile.started_at<stale_before)).count()
+    counts['live_ingestion']=counts['active_ingestion']-counts['stale_ingestion']
     result={'counts':counts}
     if include_storage:
         try:result['storage']=project_prefix_inventory()
         except StorageError as exc:result['storage']={'enabled':True,'error':str(exc)}
     return result
 
-def reset_library(user_id,cleanup_storage=True):
+def reset_library(user_id,cleanup_storage=True,cancel_active=False):
     inventory=library_inventory(include_storage=False)
-    if inventory['counts']['active_ingestion']:
-        raise RuntimeError('Wait for the currently processing paper to finish before resetting the library.')
+    if inventory['counts']['live_ingestion'] and not cancel_active:
+        raise RuntimeError('A paper is genuinely still processing. Confirm cancellation to stop it and continue the full library reset.')
+    # A full reset owns the content lifecycle. Old PROCESSING markers can survive
+    # a deploy/worker restart; explicit cancellation prevents those zombie rows
+    # from blocking a clean start forever.
+    active=IngestionFile.query.filter(IngestionFile.status.in_(['FETCHING','PROCESSING'])).all()
+    if active:
+        now=time.time()
+        for f in active:
+            f.status='PAUSED';f.finished_at=now;f.error='Cancelled by administrator during full PYQ library reset.'
+            f.events=(f.events or [])+[{'time':now,'stage':'RESET_CANCELLED','message':'Cancelled by administrator during full PYQ library reset.'}]
+        db.session.commit()
     # Delete dependent content explicitly so PostgreSQL and SQLite behave the same.
     Bookmark.query.delete(synchronize_session=False)
     QuestionReview.query.delete(synchronize_session=False)
@@ -105,7 +119,7 @@ def campaign():
             'percent':round((ready_count/total)*100,1) if total else 0,'groups':rows,'current':current}
 
 def group_papers(stage,term_id,state='pending'):
-    papers=Paper.query.options(db.joinedload(Paper.exam_type),db.joinedload(Paper.term)).filter_by(term_id=term_id).filter(Paper.source_url.isnot(None)).order_by(Paper.id).all()
+    papers=Paper.query.options(joinedload(Paper.exam_type),joinedload(Paper.term)).filter_by(term_id=term_id).filter(Paper.source_url.isnot(None)).order_by(Paper.id).all()
     ready={pid for pid, in db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct()}
     latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
     latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}

@@ -71,3 +71,31 @@ def test_controlled_reset_keeps_users_and_clears_library(app,client):
     assert User.query.count()==2
     assert Paper.query.count()==Question.query.count()==Course.query.count()==0
     assert Attempt.query.count()==PaperProgress.query.count()==Bookmark.query.count()==0
+
+
+def test_reset_preview_marks_old_processing_as_stale_and_allows_cancel(app,client):
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    p=Paper.query.first()
+    b=IngestionBatch(user_id=User.query.filter_by(role='ADMIN').first().id);db.session.add(b);db.session.flush()
+    f=IngestionFile(batch_id=b.id,paper_id=p.id,filename='stuck.pdf',status='PROCESSING',started_at=1,source_url=p.source_url)
+    db.session.add(f);db.session.commit()
+    preview=client.get('/api/admin/library-reset/preview',headers=h)
+    assert preview.status_code==200
+    assert preview.json['counts']['active_ingestion']==1
+    assert preview.json['counts']['stale_ingestion']==1
+    assert preview.json['counts']['live_ingestion']==0
+    done=client.post('/api/admin/library-reset',headers=h,json={'confirmation':'RESET PYQ LIBRARY','cleanup_storage':False,'cancel_active':True})
+    assert done.status_code==200
+    assert Paper.query.count()==0 and IngestionFile.query.count()==0
+
+
+def test_live_processing_requires_explicit_cancel(app,client):
+    import time
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    p=Paper.query.first()
+    b=IngestionBatch(user_id=User.query.filter_by(role='ADMIN').first().id);db.session.add(b);db.session.flush()
+    db.session.add(IngestionFile(batch_id=b.id,paper_id=p.id,filename='live.pdf',status='PROCESSING',started_at=time.time(),source_url=p.source_url));db.session.commit()
+    blocked=client.post('/api/admin/library-reset',headers=h,json={'confirmation':'RESET PYQ LIBRARY','cleanup_storage':False,'cancel_active':False})
+    assert blocked.status_code==409
+    done=client.post('/api/admin/library-reset',headers=h,json={'confirmation':'RESET PYQ LIBRARY','cleanup_storage':False,'cancel_active':True})
+    assert done.status_code==200
