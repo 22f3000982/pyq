@@ -129,7 +129,7 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
    <button v-if="driveStatus.connected" class="btn btn-outline-primary" @click="disconnectDrive">Disconnect</button>
    <button class="btn btn-light" @click="run(loadDriveStatus)">Refresh status</button>
   </div>
-  <p v-if="!driveStatus.configured" class="alert alert-warning mt-3 mb-0">Render needs GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET. In Google Cloud, create a Web application OAuth client and add the redirect URI above exactly.</p>
+  <p v-if="!driveStatus.configured" class="alert alert-warning mt-3 mb-0">Render needs GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET. In Google Cloud, enable Google Drive API, create a Web application OAuth client, and add the redirect URI above exactly.</p>
  </div>
 </section>
 
