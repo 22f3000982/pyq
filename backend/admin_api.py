@@ -246,7 +246,7 @@ def library_reset():
     payload=body()
     if payload.get('confirmation')!='RESET PYQ LIBRARY':
         abort(400,description='Type RESET PYQ LIBRARY exactly to confirm.')
-    try:return jsonify(reset_library(g.user.id,cleanup_storage=payload.get('cleanup_storage',True)))
+    try:return jsonify(reset_library(g.user.id,cleanup_storage=payload.get('cleanup_storage',True),cancel_active=payload.get('cancel_active',False)))
     except RuntimeError as exc:abort(409,description=str(exc))
 
 @admin.get('/catalog/batches/<int:id>')
