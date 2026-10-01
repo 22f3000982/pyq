@@ -24,8 +24,8 @@ export async function api(path,options={}){
 function browserData(data){
  if(data?.paper_id&&data.result){try{saveResult(data)}catch(e){session.storageWarning=e.message}}
  const decorate=row=>{if(row?.course_id&&row?.id)row.progress=paperProgress(row.id);if(row?.question)row.bookmarked=isBookmarked(row.question.id)};
- decorate(data);if(data?.items)for(const row of data.items)decorate(row);
- if(data?.papers)for(const row of data.papers)decorate(row);
+ decorate(data);if(Array.isArray(data?.items))for(const row of data.items)decorate(row);
+ if(Array.isArray(data?.papers))for(const row of data.papers)decorate(row);
  return data;
 }
 export function loadCatalog(){
