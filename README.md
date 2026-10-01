@@ -133,10 +133,10 @@ browser storage. Returning visitors start with browser-local progress.
 
 ### Responsive interface and content reports
 
-The mobile-first layout and theme tokens live in `frontend/src/responsive.css`,
-loaded after the legacy component styles. Theme selection stays in this browser;
-the switch sits above the navigation so it cannot cover quiz controls. Source
-images and the drawing canvas retain their original white backgrounds.
+The original layout and theme styles remain in `frontend/src/style.css`.
+`frontend/src/features.css` adds only compact available-paper cards and styles
+for reporting and loading feedback. Available papers show their term, source
+filename, question/marks counts and a test link in a compact responsive grid.
 
 Next to Bookmark, **Report Broken Format** opens an optional-detail form for text,
 formula, image, options or other issues. Reports require no student login. The
