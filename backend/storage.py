@@ -204,3 +204,60 @@ def private_asset_url(name,image_id=None,expires=600):
         except StorageError:raise
         except Exception as exc:raise failure(exc,'signed URL generation') from None
     return '/api/images/'+str(image_id) if image_id is not None else None
+
+
+def project_prefix_inventory():
+    """Count objects owned by this app's configured R2 prefix. Read-only."""
+    if not enabled():return {'enabled':False,'objects':0,'bytes':0,'buckets':{}}
+    prefix=current_app.config.get('R2_PREFIX','pyq').strip('/')
+    prefix=(prefix+'/' if prefix else '')
+    buckets=[]
+    for key in ('R2_PDF_BUCKET_NAME','R2_IMAGE_BUCKET_NAME','R2_BUCKET_NAME'):
+        value=current_app.config.get(key)
+        if value and value not in buckets:buckets.append(value)
+    total_objects=total_bytes=0;details={}
+    try:
+        sdk=client()
+        for bucket in buckets:
+            token=None;count_objects=count_bytes=0
+            while True:
+                args={'Bucket':bucket,'Prefix':prefix,'MaxKeys':1000}
+                if token:args['ContinuationToken']=token
+                page=sdk.list_objects_v2(**args)
+                items=page.get('Contents') or []
+                count_objects+=len(items);count_bytes+=sum(int(x.get('Size') or 0) for x in items)
+                if not page.get('IsTruncated'):break
+                token=page.get('NextContinuationToken')
+            details[bucket]={'objects':count_objects,'bytes':count_bytes}
+            total_objects+=count_objects;total_bytes+=count_bytes
+        return {'enabled':True,'objects':total_objects,'bytes':total_bytes,'buckets':details}
+    except StorageError:raise
+    except Exception as exc:raise failure(exc,'inventory') from None
+
+def purge_project_prefix():
+    """Delete only objects beneath this app's configured R2 prefix."""
+    if not enabled():return {'enabled':False,'deleted':0,'buckets':{}}
+    prefix=current_app.config.get('R2_PREFIX','pyq').strip('/')
+    if not prefix:raise StorageError('Refusing to purge an empty R2 prefix.')
+    prefix=prefix+'/'
+    buckets=[]
+    for key in ('R2_PDF_BUCKET_NAME','R2_IMAGE_BUCKET_NAME','R2_BUCKET_NAME'):
+        value=current_app.config.get(key)
+        if value and value not in buckets:buckets.append(value)
+    sdk=client();total=0;details={}
+    try:
+        for bucket in buckets:
+            deleted=0
+            while True:
+                page=sdk.list_objects_v2(Bucket=bucket,Prefix=prefix,MaxKeys=1000)
+                objects=[{'Key':x['Key']} for x in (page.get('Contents') or [])]
+                if not objects:break
+                result=sdk.delete_objects(Bucket=bucket,Delete={'Objects':objects,'Quiet':True})
+                errors=result.get('Errors') or []
+                if errors:raise StorageError('R2 cleanup reported object deletion errors.')
+                deleted+=len(objects)
+                if len(objects)<1000:break
+            details[bucket]={'deleted':deleted};total+=deleted
+        return {'enabled':True,'deleted':total,'buckets':details}
+    except StorageError:raise
+    except Exception as exc:raise failure(exc,'cleanup') from None

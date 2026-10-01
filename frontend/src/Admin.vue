@@ -2,10 +2,10 @@
 import {ref,onMounted,onUnmounted} from 'vue';import {api,loadCatalog,invalidateCatalog,session} from './api';import MathText from './MathText.vue';import Upload from './Upload.vue';
 const uploadForm=ref(null);
 const tab=ref('Processing'),tabs=['Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];
-const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
+const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),masterFile=ref(null),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
 async function run(fn){busy.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){stats.value=await api('/admin/stats');if(tab.value==='Processing'){const d=await api('/admin/ingestion?page='+page.value);jobs.value=d.items;total.value=d.total}else if(tab.value==='Papers'){const d=await api('/admin/papers?'+new URLSearchParams({page:page.value,limit:24,q:paperSearch.value,status:paperStatus.value,course_id:manageCourse.value}));adminPapers.value=d.items;total.value=d.total}else if(tab.value==='Question bank'){const d=await api('/admin/questions?'+new URLSearchParams({page:page.value,paper_id:paper.value}));questions.value=d.items;total.value=d.total}else if(tab.value==='Settings')settings.value=await api('/admin/settings')}
-async function chooseTab(t){tab.value=t;page.value=1;detail.value=null;await run(refresh)}
+async function chooseTab(t){tab.value=t;page.value=1;detail.value=null;await run(async()=>{await refresh();if(t==='Catalog Sync'){await loadCampaign();await loadResetPreview()}})}
 async function loadPapers(){papers.value=(await api('/papers?limit=100&course_id='+course.value)).items;paper.value=''}
 async function queue(retry=false){await run(async()=>{const d=await api('/admin/process-catalog',{method:'POST',body:{retry,limit:20}});notice.value=d.queued+' sources queued (maximum 20 this run). The worker stops after the bounded queue is exhausted.';await refresh()})}
 function chooseFiles(e){files.value=Array.from(e.target.files).map(file=>({file,paper_id:paper.value}))}
@@ -19,7 +19,7 @@ async function pollSyncBatch(){
  if(!syncBatch.value?.id||syncBatch.value.done)return;
  try{
   syncBatch.value=await api('/admin/catalog/batches/'+syncBatch.value.id);
-  if(syncBatch.value.done)notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed. Upload the latest Excel again to see the remaining backlog.`;
+  if(syncBatch.value.done){notice.value=`Batch complete: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`;await loadCampaign();}
  }catch(e){error.value=e.message}
 }
 async function applyWorkbook(){
@@ -33,6 +33,22 @@ async function applyWorkbook(){
   syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,finished:0,percent:0,done:false,items:[]}:null;
   syncPreview.value=null;syncFile.value=null;selectedChanged.value=[];invalidateCatalog();await refreshCatalog();await refresh();await pollSyncBatch();
  })
+}
+async function loadCampaign(){campaign.value=await api('/admin/catalog/campaign')}
+async function loadResetPreview(){resetPreview.value=await api('/admin/library-reset/preview')}
+function chooseMasterFile(e){masterFile.value=e.target.files?.[0]||null}
+async function refreshMasterCatalog(){
+ if(!masterFile.value)throw Error('Choose the latest Excel workbook first.');
+ await run(async()=>{const form=new FormData();form.append('file',masterFile.value);const d=await api('/admin/catalog/refresh',{method:'POST',form});notice.value=`Master catalog refreshed: ${d.new_papers} new papers, ${d.existing_papers} already known. Nothing was queued.`;masterFile.value=null;invalidateCatalog();await refreshCatalog();await loadCampaign();await loadResetPreview()})
+}
+async function processCampaign(retry=false){
+ if(!campaign.value?.current)return;
+ await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:campaign.value.current.stage,term_id:campaign.value.current.term_id,limit:20}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${campaign.value.current.label} · ${campaign.value.current.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value)await pollSyncBatch()})
+}
+async function resetLibrary(){
+ if(resetPhrase.value!=='RESET PYQ LIBRARY')return;
+ if(!confirm('This will permanently clear PYQ papers, questions, attempts, progress and bookmarks while keeping user accounts. Continue?'))return;
+ await run(async()=>{const d=await api('/admin/library-reset',{method:'POST',body:{confirmation:resetPhrase.value,cleanup_storage:cleanupStorage.value}});notice.value=d.warning?'Library reset completed, but R2 cleanup needs attention: '+d.warning:`Library reset complete. Removed ${d.before.papers} papers and ${d.before.questions} questions; R2 objects deleted: ${d.storage?.deleted??0}.`;resetPhrase.value='';syncBatch.value=null;campaign.value=null;invalidateCatalog();await refreshCatalog();await loadCampaign();await loadResetPreview();await refresh()})
 }
 async function createPaper(){await run(async()=>{if(!manageCourse.value)throw Error('Choose a course.');const d=await api('/admin/papers',{method:'POST',body:{...newPaper.value,course_id:Number(manageCourse.value),term_id:Number(newPaper.value.term_id),exam_type_id:Number(newPaper.value.exam_type_id)}});notice.value='Paper created. You can upload its PDF from Upload PDFs.';newPaper.value={name:'',term_id:'',exam_type_id:'',session:''};invalidateCatalog();await refreshCatalog();await refresh()})}
 async function savePaper(){if(!editPaper.value)return;await run(async()=>{const p=editPaper.value;await api('/admin/papers/'+p.id,{method:'PATCH',body:{name:p.name,course_id:Number(p.course_id),term_id:Number(p.term_id),exam_type_id:Number(p.exam_type_id),session:p.session||'',duration_seconds:p.duration_seconds||null,source_url:p.source_url||null}});notice.value='Paper updated.';editPaper.value=null;invalidateCatalog();await refreshCatalog();await refresh()})}
@@ -56,43 +72,67 @@ onMounted(async()=>{if(session.user?.role!=='ADMIN')return;await run(async()=>{c
 </template>
 <template v-if="tab==='Question bank'"><article class="panel mb-3" v-for="q in questions"><div class="section-row"><h3>Question {{q.number}} · {{q.kind}}</h3><span class="status">{{q.status}}</span></div><MathText :text="q.text"/><p class="small muted">Source pages: {{q.source_pages?.join(', ')||q.source_page}} · confidence {{Math.round(q.confidence*100)}}%</p><details><summary>Extraction metadata</summary><pre>{{JSON.stringify({answers:q.answers,marks:q.marks,negative_marks:q.negative_marks,evidence:q.evidence,warnings:q.warnings},null,2)}}</pre></details></article><p v-if="!questions.length" class="empty panel">Questions appear here after automatic processing.</p></template>
 <template v-if="tab==='Catalog Sync'">
+<section class="panel mb-4 campaign-guide">
+ <div class="eyebrow">HOW TO USE — FIRST TIME</div>
+ <h2>Build the PYQ library systematically</h2>
+ <ol class="campaign-steps">
+  <li><strong>Optional clean start:</strong> use Library Reset once if the current catalog is mixed/test data.</li>
+  <li><strong>Upload the latest Excel:</strong> this creates the full source catalog only; it does not start 700 downloads.</li>
+  <li><strong>Follow the highlighted target:</strong> Quiz 1 newest term first, then older terms; after Quiz 1 comes Quiz 2, End Term FN, End Term AN, then other assessments.</li>
+  <li><strong>Process 20 at a time:</strong> each batch stops automatically. Retry failed papers separately.</li>
+  <li><strong>Future months:</strong> upload the newly updated Excel again; only new catalog entries are added.</li>
+ </ol>
+</section>
+
 <section class="panel mb-4">
- <div class="section-row"><div><div class="eyebrow">MANUAL MONTHLY SYNC</div><h2>Check latest Excel workbook</h2><p class="muted mb-0">Download the student-maintained workbook and upload it here. The first step is preview-only: no catalog or paper is changed until you confirm.</p></div></div>
- <input type="file" accept=".xlsx" class="form-control mt-3" @change="previewWorkbook" :disabled="busy" aria-label="Latest Excel workbook">
+ <div class="section-row"><div><div class="eyebrow">MASTER EXCEL CATALOG</div><h2>Refresh source catalog</h2><p class="muted mb-0">Upload the student-maintained XLSX. Every valid linked paper becomes a catalog entry, but no PDF is processed until you start a campaign batch.</p></div></div>
+ <input type="file" accept=".xlsx" class="form-control mt-3" @change="chooseMasterFile" :disabled="busy">
+ <button class="btn btn-primary mt-3" :disabled="busy||!masterFile" @click="refreshMasterCatalog">Refresh master catalog</button>
 </section>
-<template v-if="syncPreview">
- <section class="panel mb-4">
-  <div class="section-row"><div><h2>Sync preview</h2><p class="muted mb-0">Workbook {{syncPreview.workbook_hash.slice(0,10)}}… · {{syncPreview.linked_cells}} linked cells</p></div><span class="status" :class="{ready:!syncPreview.already_applied}">{{syncPreview.already_applied?'Previously applied':'Preview only'}}</span></div>
-  <div class="admin-stat-grid mt-3">
-   <div class="panel" v-for="k in ['new','unprocessed','queued','failed','changed','available','ignored','invalid','absent']"><span class="eyebrow">{{k.replaceAll('_',' ')}}</span><strong>{{syncPreview.summary[k]??0}}</strong></div>
-  </div>
-  <div class="sync-choice-grid mt-3">
-   <label class="sync-choice"><input type="checkbox" v-model="processNew"><span><strong>Process new papers first</strong><small>{{syncPreview.summary.new}} genuinely new papers detected</small></span></label>
-   <label class="sync-choice"><input type="checkbox" v-model="processUnprocessed"><span><strong>Then process old backlog</strong><small>{{syncPreview.summary.unprocessed}} known papers still waiting for extraction</small></span></label>
-  </div>
-  <div class="batch-limit-row mt-3"><label><strong>Papers to process this run</strong><select class="form-select" v-model.number="batchLimit"><option :value="5">5</option><option :value="10">10</option><option :value="20">20</option><option :value="30">30</option><option :value="50">50</option></select></label><p class="muted mb-0">New papers are picked first, then the older pending backlog. The worker stops automatically after this batch.</p></div>
-  <p class="alert alert-info mt-3"><strong>{{syncPreview.summary.pending??((syncPreview.summary.new||0)+(syncPreview.summary.unprocessed||0))}} papers pending.</strong> {{syncPreview.summary.queued||0}} are already queued/processing and will not be selected again.</p>
-  <p v-if="syncPreview.summary.absent" class="alert alert-warning mt-3">{{syncPreview.summary.absent}} existing papers are absent from this workbook. No paper will be deleted or archived automatically.</p>
- </section>
- <details v-if="syncPreview.summary.new" class="panel mb-3"><summary><strong>New papers ({{syncPreview.summary.new}})</strong></summary><div class="sync-list"><div v-for="i in syncPreview.items.new.slice(0,100)" class="sync-row"><span>{{i.course_name}} · {{i.exam_name}} · {{i.term_name}} {{i.session}}</span><strong>{{i.name}}</strong></div><p v-if="syncPreview.summary.new>100" class="muted">Showing first 100. All {{syncPreview.summary.new}} will be included when enabled above.</p></div></details>
- <details v-if="syncPreview.summary.unprocessed" class="panel mb-3"><summary><strong>Existing but unprocessed ({{syncPreview.summary.unprocessed}})</strong></summary><div class="sync-list"><div v-for="i in syncPreview.items.unprocessed.slice(0,100)" class="sync-row"><span>#{{i.paper_id}} · {{i.course_name}} · {{i.exam_name}} · {{i.term_name}}</span><strong>{{i.name}}</strong></div><p v-if="syncPreview.summary.unprocessed>100" class="muted">Showing first 100. All {{syncPreview.summary.unprocessed}} will be included when enabled above.</p></div></details>
- <section v-if="syncPreview.summary.changed" class="panel mb-3"><h3>Changed source links</h3><p class="muted">Nothing is replaced automatically. Select only papers whose new Excel link should replace the current source and be reprocessed.</p><label v-for="i in syncPreview.items.changed" class="sync-change-row"><input type="checkbox" :checked="selectedChanged.includes(i.key)" @change="chooseChanged(i.key,$event.target.checked)"><span><strong>{{i.course_name}} · {{i.exam_name}} · {{i.term_name}} {{i.session}}</strong><small>{{i.name}}</small><small class="muted">Current: {{i.old_url}}</small><small class="muted">Workbook: {{i.url}}</small></span></label></section>
- <details v-if="syncPreview.summary.ignored" class="panel mb-3"><summary>Ignored / archived ({{syncPreview.summary.ignored}})</summary><div class="sync-list"><div v-for="i in syncPreview.items.ignored.slice(0,100)" class="sync-row"><span>{{i.course_name}} · {{i.exam_name}} · {{i.term_name}}</span><strong>{{i.name}}</strong></div></div></details>
- <details v-if="syncPreview.summary.invalid" class="panel mb-3"><summary>Workbook issues ({{syncPreview.summary.invalid}})</summary><pre>{{JSON.stringify(syncPreview.issues.slice(0,100),null,2)}}</pre></details>
- <section class="panel sync-apply-bar"><div><strong>Ready for a bounded batch</strong><p class="muted mb-0">At most {{batchLimit}} papers will be queued. Available/archived papers stay untouched and missing workbook rows are never deleted.</p></div><button class="btn btn-primary" :disabled="busy||(!processNew&&!processUnprocessed&&!selectedChanged.length)" @click="applyWorkbook">Process next {{batchLimit}}</button></section>
-</template>
-<section v-if="syncBatch" class="panel catalog-batch-progress">
- <div class="section-row"><div><div class="eyebrow">BATCH #{{syncBatch.id}}</div><h2>{{syncBatch.done?'Batch complete':'Processing selected papers'}}</h2></div><strong>{{syncBatch.percent??0}}%</strong></div>
- <div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:(syncBatch.percent??0)+'%'}"></div></div>
+
+<section v-if="campaign" class="panel mb-4">
+ <div class="section-row"><div><div class="eyebrow">FULL PYQ LIBRARY PROGRESS</div><h2>{{campaign.available}} / {{campaign.total}} papers ready</h2></div><strong class="campaign-percent">{{campaign.percent}}%</strong></div>
+ <div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:campaign.percent+'%'}"></div></div>
  <div class="admin-stat-grid mt-3">
-  <div class="panel"><span class="eyebrow">successful</span><strong>{{syncBatch.completed??0}}</strong></div>
-  <div class="panel"><span class="eyebrow">failed</span><strong>{{syncBatch.failed??0}}</strong></div>
-  <div class="panel"><span class="eyebrow">active</span><strong>{{syncBatch.active??0}}</strong></div>
-  <div class="panel"><span class="eyebrow">waiting</span><strong>{{syncBatch.queued??0}}</strong></div>
+  <div class="panel"><span class="eyebrow">available</span><strong>{{campaign.available}}</strong></div>
+  <div class="panel"><span class="eyebrow">pending</span><strong>{{campaign.pending}}</strong></div>
+  <div class="panel"><span class="eyebrow">queued</span><strong>{{campaign.queued}}</strong></div>
+  <div class="panel"><span class="eyebrow">failed</span><strong>{{campaign.failed}}</strong></div>
  </div>
- <div v-if="syncBatch.items?.length" class="sync-list mt-3"><div v-for="i in syncBatch.items" class="sync-row"><span>#{{i.paper_id}} · {{i.status}}</span><strong>{{i.filename}}</strong></div></div>
- <p v-if="syncBatch.done" class="alert alert-success mt-3 mb-0">This batch stopped automatically. Upload the Excel again whenever you are ready for the next batch.</p>
+ <div v-if="campaign.current" class="campaign-current mt-3">
+  <div><span class="eyebrow">CURRENT TARGET</span><h3>{{campaign.current.label}} · {{campaign.current.term}}</h3><p class="muted">{{campaign.current.available}} / {{campaign.current.total}} ready · {{campaign.current.pending}} pending · {{campaign.current.failed}} failed · {{campaign.current.queued}} queued</p></div>
+  <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" :disabled="busy||campaign.current.pending===0||campaign.current.queued>0" @click="processCampaign(false)">Process next 20</button><button v-if="campaign.current.failed" class="btn btn-outline-primary" :disabled="busy||campaign.current.queued>0" @click="processCampaign(true)">Retry failed (max 20)</button></div>
+ </div>
+ <p v-else class="alert alert-success mt-3 mb-0">All catalog papers are complete.</p>
 </section>
+
+<section v-if="campaign?.groups?.length" class="panel mb-4">
+ <h2>Campaign roadmap</h2><p class="muted">Terms are processed newest to oldest inside each stage. A missing paper in Excel is simply absent from the total.</p>
+ <div class="campaign-roadmap">
+  <div v-for="g in campaign.groups" class="campaign-row" :class="{current:campaign.current&&g.stage===campaign.current.stage&&g.term_id===campaign.current.term_id,complete:g.complete}">
+   <div><strong>{{g.label}}</strong><span>{{g.term}}</span></div>
+   <div class="campaign-row-progress"><div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:g.percent+'%'}"></div></div><small>{{g.available}}/{{g.total}} ready · {{g.pending}} pending<span v-if="g.failed"> · {{g.failed}} failed</span></small></div>
+   <strong>{{g.percent}}%</strong>
+  </div>
+ </div>
+</section>
+
+<section v-if="syncBatch" class="panel catalog-batch-progress mb-4">
+ <div class="section-row"><div><div class="eyebrow">ACTIVE BATCH #{{syncBatch.id}}</div><h2>{{syncBatch.done?'Batch complete':'Processing up to 20 papers'}}</h2></div><strong>{{syncBatch.percent??0}}%</strong></div>
+ <div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:(syncBatch.percent??0)+'%'}"></div></div>
+ <div class="admin-stat-grid mt-3"><div class="panel"><span class="eyebrow">successful</span><strong>{{syncBatch.completed??0}}</strong></div><div class="panel"><span class="eyebrow">failed</span><strong>{{syncBatch.failed??0}}</strong></div><div class="panel"><span class="eyebrow">active</span><strong>{{syncBatch.active??0}}</strong></div><div class="panel"><span class="eyebrow">waiting</span><strong>{{syncBatch.queued??0}}</strong></div></div>
+ <div class="sync-list mt-3"><div v-for="i in syncBatch.items||[]" class="sync-row"><span>#{{i.paper_id}} · {{i.status}}</span><strong>{{i.filename}}</strong></div></div>
+</section>
+
+<details v-if="resetPreview" class="panel danger-zone mb-4">
+ <summary><strong>Danger zone · Fresh library reset</strong></summary>
+ <p class="muted mt-3">Use this once when the current PYQ catalog is mixed or uncertain. User accounts are preserved. Papers, questions, bookmarks, progress, temporary attempts, ingestion history, courses/terms/exam metadata and PYQ-owned R2 objects are cleared.</p>
+ <div class="admin-stat-grid mt-3"><div class="panel"><span class="eyebrow">papers</span><strong>{{resetPreview.counts.papers}}</strong></div><div class="panel"><span class="eyebrow">questions</span><strong>{{resetPreview.counts.questions}}</strong></div><div class="panel"><span class="eyebrow">attempts</span><strong>{{resetPreview.counts.attempts}}</strong></div><div class="panel"><span class="eyebrow">R2 objects</span><strong>{{resetPreview.storage?.objects??'—'}}</strong></div></div>
+ <label class="sync-choice mt-3"><input type="checkbox" v-model="cleanupStorage"><span><strong>Clean PYQ-owned R2 prefix too</strong><small>Recommended for a truly fresh start. Other prefixes/buckets are not touched.</small></span></label>
+ <label class="mt-3">Type <strong>RESET PYQ LIBRARY</strong><input class="form-control mt-2" v-model="resetPhrase" autocomplete="off"></label>
+ <button class="btn btn-danger mt-3" :disabled="busy||resetPhrase!=='RESET PYQ LIBRARY'||resetPreview.counts.active_ingestion>0" @click="resetLibrary">Reset PYQ library</button>
+ <p v-if="resetPreview.counts.active_ingestion" class="alert alert-warning mt-3 mb-0">A paper is actively processing. Wait for it to finish before resetting.</p>
+</details>
 </template>
 <section class="panel" v-if="tab==='Settings'"><h2>Extraction services</h2><dl class="settings-list"><template v-for="(v,k) in settings"><dt>{{k.replaceAll('_',' ')}}</dt><dd>{{String(v)}}</dd></template></dl><p class="muted">Native PDF colour/layout extraction runs automatically. Configured models assist extraction; source indicators always take precedence. Secrets remain on the server.</p></section>
 <div v-if="['Processing','Papers','Question bank'].includes(tab)&&total>24" class="pagination-row"><button class="btn btn-light" :disabled="page===1" @click="page--;run(refresh)">Previous</button><span>Page {{page}}</span><button class="btn btn-light" :disabled="page*24>=total" @click="page++;run(refresh)">Next</button></div></template></template>

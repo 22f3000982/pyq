@@ -319,9 +319,13 @@ def import_workbook(path):
     report={'new_courses':0,'new_papers':0,'existing_papers':0,'linked_cells':scan['linked_cells'],
             'issues':scan['issues'],'terms':scan['terms']}
     for item in scan['courses']:
-        course=by_code.get(item['code']) or by_name.get(norm_key(item['name']))
+        incoming=item['code'];course=by_code.get(incoming) or by_name.get(norm_key(item['name']))
         if not course:
-            course=Course(name=item['name'],code=item['code']);db.session.add(course);by_code[item['code']]=course;by_name[norm_key(item['name'])]=course;report['new_courses']+=1
+            course=Course(name=item['name'],code=incoming);db.session.add(course);report['new_courses']+=1
+        elif not course.code:course.code=incoming
+        by_code[incoming]=course
+        if course.code:by_code[course.code]=course
+        by_name[norm_key(item['name'])]=course;by_name[norm_key(course.name)]=course
         course.level=item['level'];course.course_type=item['course_type'];course.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(course.name)]
     for name in scan['terms']:
         if name not in terms:
