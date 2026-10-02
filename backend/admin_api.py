@@ -10,7 +10,7 @@ from .engine import question_snapshot,validate_question,aggregate
 from .ingestion import store_upload,update_batch,root
 admin=Blueprint('admin',__name__,url_prefix='/api/admin')
 
-def admin_question(q):return {**question_snapshot(q),'status':q.status,'confidence':q.confidence,'warnings':q.warnings,'ingestion_file_id':q.ingestion_file_id}
+def admin_question(q):return {**question_snapshot(q),'status':q.status,'confidence':q.confidence,'warnings':q.warnings,'ingestion_file_id':q.ingestion_file_id,'hidden':q.status=='HIDDEN','manual_locked':bool((q.evidence or {}).get('_admin_locked'))}
 def file_json(f):return {k:getattr(f,k) for k in ('id','batch_id','paper_id','filename','status','error','warnings','pages','extracted','retries','started_at','finished_at','source_url','events','duplicate_of_id')}
 
 @admin.get('/google-drive/status')
@@ -344,6 +344,7 @@ def questions():
     q=Question.query
     if request.args.get('paper_id'):q=q.filter_by(paper_id=integer_argument('paper_id'))
     if request.args.get('status'):q=q.filter_by(status=request.args['status'])
+    else:q=q.filter(Question.status!='SUPERSEDED')
     return jsonify(paginate(q.order_by(Question.id),lambda q:{**admin_question(q),'evidence':q.evidence,'source_pages':q.source_pages}))
 
 @admin.post('/process-catalog')
@@ -433,8 +434,9 @@ def source(id):
 @require_user(True)
 def source_page(id,page):
     f=db.get_or_404(IngestionFile,id)
-    if not f.file_hash or not f.pages or not 1<=page<=f.pages:abort(404)
-    name=f'{f.file_hash}-{page}.png'
+    if not f.path or not f.pages or not 1<=page<=f.pages:abort(404)
+    source_hash=f.file_hash or hashlib.sha256(ensure_local(f.path).read_bytes()).hexdigest()
+    name=f'{source_hash}-{page}.png'
     if not (root()/name).exists():
         with fitz.open(ensure_local(f.path)) as doc:doc[page-1].get_pixmap(matrix=fitz.Matrix(1.4,1.4)).save(root()/name)
     return send_asset(name,mimetype='image/png')
@@ -492,3 +494,6 @@ def update_content_report(id):
     if status not in ('OPEN','RESOLVED'):abort(400,description='Invalid report status.')
     r.status=status;r.resolved_at=time.time() if status=='RESOLVED' else None
     db.session.commit();return jsonify(report_json(r))
+
+from .admin_content import register_content_routes
+register_content_routes(admin)
