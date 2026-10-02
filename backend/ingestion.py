@@ -131,7 +131,7 @@ def process_file(id):
         # database could outlive an ephemeral worker file.
         for name in sorted({image['path'] for item in records for image in item.get('images',[])}):publish(name,verify=True)
         event(f,'EXTRACTED',f'{len(records)} question records; {len(layout["assets"])} content images');db.session.commit()
-        issues.extend({'number':i.get('number'),'status':i.get('status'),'warnings':i.get('warnings',[])} for i in records if i.get('status')!='AVAILABLE')
+        issues.extend({'number':i.get('number'),'status':i.get('status'),'warnings':i.get('warnings',[])} for i in records if i.get('status')=='EXTRACTION_FAILED')
         prior_available=Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count()
         content_savepoint=db.session.begin_nested()
         new_ids=[];seen=set();available=0;failed=0
@@ -169,7 +169,7 @@ def process_file(id):
                     if q.status=='EXTRACTION_FAILED':failed+=1
             except Exception as e:
                 failed+=1;issues.append({'number':item.get('number'),'error':str(e)[:500]})
-        if prior_available and (not available or failed or any(i.get('status')!='AVAILABLE' for i in records)):
+        if prior_available and (not available or failed or any(i.get('status')=='EXTRACTION_FAILED' for i in records)):
             content_savepoint.rollback()
             raise ValueError('Replacement extraction did not fully validate. Existing available questions were preserved.')
         content_savepoint.commit()
