@@ -1,6 +1,7 @@
 from pathlib import Path
 import re,hashlib,json
 from .numeric import parse_numeric_key
+from .text_format import source_bold
 
 Q_PATTERN=r'Question\s+Number\s*:\s*(\d+)\s+Question\s+Id\s*:\s*(\d+)(?:\s+Question\s+Type\s*:\s*([\w/-]+))?'
 MARKER=r'\[\[IMAGE:([^]]+)\]\]'
@@ -48,10 +49,12 @@ def parse_document(layout):
             else:kind='SUBJECTIVE'
         body=chunk[label.end():];parts=re.split(r'Options\s*:',body,maxsplit=1,flags=re.I)
         stem=parts[0];options=[];answers=None;source_pages={pn for start,stop,pn in layout['pages'] if start<end and stop>m.start()}
+        shared=None
         for lo,hi,passage,groupstart in groups:
             if lo<=int(number)<=hi:
                 subquestion=stem.strip()
                 stem=passage+'\n\n'+stem;source_pages|={pn for start,stop,pn in layout['pages'] if start<=groupstart<=stop}
+                shared=(passage,groupstart)
                 evidence['shared_passage']=True
                 evidence['shared_passage_text']=passage.strip()
                 evidence['subquestion_text']=subquestion
@@ -60,7 +63,7 @@ def parse_document(layout):
             for n,o in enumerate(opts):
                 raw=parts[1][o.end():opts[n+1].start() if n+1<len(opts) else len(parts[1])]
                 raw=re.split(r'(?im)^\s*(?:Correct Answer|Answer Key|Possible Answers?)\s*:',raw)[0]
-                value,assets=clean_assets(raw,layout,o[1]);images.extend(assets)
+                value,assets=clean_assets(source_bold(raw,layout,m.end(),end),layout,o[1]);images.extend(assets)
                 options.append({'key':o[1],'text':value})
             greens=[];reds=[]
             for o in options:
@@ -102,6 +105,15 @@ def parse_document(layout):
         stem,assets=clean_assets(stem,layout);images.extend(assets)
         # Prevent printed keys leaking into stems/options.
         stem=re.split(r'(?im)^\s*(?:Correct Answer|Answer Key|Possible Answers?)\s*:',stem)[0].strip()
+        if shared:
+            passage,groupstart=shared
+            formatted=source_bold(passage.strip(),layout,groupstart,m.start())
+            # Use the cleaned stem to avoid reintroducing numeric-answer metadata.
+            plain_sub=stem[len(passage.strip()):].strip() if stem.startswith(passage.strip()) else stem
+            subquestion=source_bold(plain_sub,layout,m.end(),end)
+            stem=formatted+'\n\n'+subquestion
+            evidence['shared_passage_text']=formatted;evidence['subquestion_text']=subquestion
+        else:stem=source_bold(stem,layout,m.end(),end)
         evidence['layout_assets']={Path(a['path']).stem:{k:a[k] for k in ('inline','width','height') if k in a} for a in images}
         marks=float(mark[1]) if mark else None;negative=float(wrong[1]) if wrong else None
         state='AVAILABLE'

@@ -22,15 +22,20 @@ def pixels_kind(data):
     if nr>=4 and nr>ng*3:return 'red'
     return None
 
-def join_items(items):
+def join_items(items,bold_ranges=None):
     result='';end=None
-    for x,text,right in sorted(items,key=lambda item:item[0]):
+    for item in sorted(items,key=lambda item:item[0]):
+        x,text,right,*style=item
         if result and end is not None and x-end>1 and not result[-1].isspace() and not text[:1].isspace():result+=' '
+        start=len(result)
         result+=text;end=right
+        if bold_ranges is not None and style and style[0] and text.strip():
+            left=start+len(text)-len(text.lstrip());right=len(result.rstrip())
+            bold_ranges.append((left,right))
     return result
 
 def layout_document(doc,asset_dir,sha,ocr=True):
-    texts=[];spans=[];assets={};indicators={};warnings=[];page_ranges=[];offset=0
+    texts=[];spans=[];assets={};indicators={};warnings=[];page_ranges=[];offset=0;bold_ranges=[]
     for pn,page in enumerate(doc,1):
         try:
             data=page.get_text('dict');lines=[];images=[];ids=[]
@@ -41,7 +46,7 @@ def layout_document(doc,asset_dir,sha,ocr=True):
                     for span in line['spans']:
                         text=span['text'];bbox=fitz.Rect(span['bbox'])
                         if span['flags']&1 and text.strip():text=r'\(^{'+text+r'}\)'
-                        items.append((bbox.x0,text,bbox.x1))
+                        items.append((bbox.x0,text,bbox.x1,bool(span['flags']&16 or re.search(r'(?:bold|demi|semibold|black)',span.get('font',''),re.I))))
                         key=re.match(r'\s*(\d{7,})\.\s*',text)
                         if key:
                             ids.append((key[1],bbox))
@@ -92,8 +97,14 @@ def layout_document(doc,asset_dir,sha,ocr=True):
             # Vector-only figures must not silently disappear. Crop vector-only blocks away from markers.
             # Embedded image extraction handles the inspected exam exports. Unsupported vectors are logged.
             if page.get_drawings() and not images:warnings.append(f'Page {pn}: vector graphics present; text/layout parser may not recover every figure')
-            text='\n'.join(join_items(line['items']) for line in sorted(lines,key=lambda l:(round(l['bbox'].y0,1),l['bbox'].x0)))
+            page_bold=[];pieces=[];line_offset=0
+            for line in sorted(lines,key=lambda l:(round(l['bbox'].y0,1),l['bbox'].x0)):
+                ranges=[];piece=join_items(line['items'],ranges)
+                page_bold.extend((line_offset+a,line_offset+b) for a,b in ranges)
+                pieces.append(piece);line_offset+=len(piece)+1
+            text='\n'.join(pieces)
             if len(re.sub(r'\[\[IMAGE:[^]]+\]\]','',text).strip())<30:
+                page_bold=[]
                 if not ocr or not shutil.which('tesseract'):
                     warnings.append(f'Page {pn}: OCR unavailable');text=f'[[PAGE_FAILED:{pn}]]'
                 else:
@@ -115,6 +126,8 @@ def layout_document(doc,asset_dir,sha,ocr=True):
                                 if detected:indicators.setdefault(key[1],[]).append({'kind':detected,'method':'ocr_marker_pixels','page':pn})
                     warnings.append(f'Page {pn}: OCR used; confidence reduced')
         except Exception as e:
+            page_bold=[]
             warnings.append(f'Page {pn}: extraction failed: {type(e).__name__}: {str(e)[:250]}');text=f'[[PAGE_FAILED:{pn}]]'
+        bold_ranges.extend((offset+a,offset+b) for a,b in page_bold)
         texts.append(text);page_ranges.append((offset,offset+len(text),pn));offset+=len(text)+1
-    return {'text':'\n'.join(texts),'pages':page_ranges,'assets':assets,'indicators':indicators,'warnings':warnings}
+    return {'text':'\n'.join(texts),'pages':page_ranges,'assets':assets,'indicators':indicators,'warnings':warnings,'bold_ranges':bold_ranges}
