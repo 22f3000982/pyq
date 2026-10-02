@@ -168,6 +168,7 @@ def register_content_routes(admin):
     def process_now(id):
         from .ingestion import process_file,update_batch
         f=db.get_or_404(IngestionFile,id)
+        if db.session.get(Paper,f.paper_id).status=='ARCHIVED':abort(409,description='Restore the archived paper before processing')
         if not f.path:abort(409,description='Upload a replacement PDF first')
         if not db.session.execute(update(IngestionFile).where(IngestionFile.id==id,IngestionFile.status=='QUEUED').values(status='PROCESSING',started_at=time.time())).rowcount:
             db.session.rollback();abort(409,description='Job is no longer queued. Refresh its status.')

@@ -119,3 +119,4 @@ def test_partial_replacement_does_not_replace_valid_bank(app,client,monkeypatch)
     client.post(f'/api/admin/ingestion/{fid}/process-now',headers=h,json={})
     assert [(x.id,x.text,x.status) for x in Question.query.filter_by(paper_id=p.id).all()]==before
     assert db.session.get(IngestionFile,fid).status=='EXTRACTION_FAILED'
+    assert any(w.get('number')=='2' for w in db.session.get(IngestionFile,fid).warnings)

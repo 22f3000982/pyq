@@ -203,7 +203,13 @@ def process_file(id):
     except Exception as e:
         try:
             db.session.rollback();f=db.session.get(IngestionFile,id);paper=db.session.get(Paper,f.paper_id)
-            f.status='EXTRACTION_FAILED';f.error=f'{type(e).__name__}: {str(e)[:1200]}';f.finished_at=time.time();paper.status='AVAILABLE' if Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count() else 'EXTRACTION_FAILED';event(f,'EXTRACTION_FAILED',f.error);db.session.commit()
+            f.status='EXTRACTION_FAILED';f.error=f'{type(e).__name__}: {str(e)[:1200]}';f.finished_at=time.time()
+            if 'issues' in locals():f.warnings=layout.get('warnings',[])+issues
+            if paper.status!='ARCHIVED':
+                existing=Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count()
+                failed_existing=Question.query.filter_by(paper_id=paper.id,status='EXTRACTION_FAILED').count()
+                paper.status=('PARTIALLY_AVAILABLE' if failed_existing else 'AVAILABLE') if existing else 'EXTRACTION_FAILED'
+            event(f,'EXTRACTION_FAILED',f.error);db.session.commit()
         except Exception:
             db.session.remove();current_app.logger.error('ingestion_persistence_failed type=%s',type(e).__name__)
     # Aliases share question records instead of inventing independent papers for one PDF.
