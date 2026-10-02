@@ -120,7 +120,7 @@ def process_file(id):
     f=db.session.get(IngestionFile,id);paper=db.session.get(Paper,f.paper_id);f.status='PROCESSING';f.started_at=time.time();paper.status='PROCESSING';event(f,'PROCESSING','Automatic extraction started');db.session.commit()
     try:
         data=ensure_local(f.path).read_bytes();f.pages=validate_pdf(data)
-        with fitz.open(stream=data,filetype='pdf') as doc:layout=layout_document(doc,root(),f.file_hash,current_app.config['OCR_ENABLED'])
+        with fitz.open(stream=data,filetype='pdf') as doc:layout=layout_document(doc,root(),(f.file_hash or hashlib.sha256(data).hexdigest()),current_app.config['OCR_ENABLED'])
         event(f,'DETECTING_ANSWERS','PDF layout, images and green/red visual indicators extracted');db.session.commit()
         records,meta,issues=parse_document(layout)
         if not records:
@@ -131,6 +131,9 @@ def process_file(id):
         # database could outlive an ephemeral worker file.
         for name in sorted({image['path'] for item in records for image in item.get('images',[])}):publish(name,verify=True)
         event(f,'EXTRACTED',f'{len(records)} question records; {len(layout["assets"])} content images');db.session.commit()
+        issues.extend({'number':i.get('number'),'status':i.get('status'),'warnings':i.get('warnings',[])} for i in records if i.get('status')=='EXTRACTION_FAILED')
+        prior_available=Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count()
+        content_savepoint=db.session.begin_nested()
         new_ids=[];seen=set();available=0;failed=0
         for item in records:
             try:
@@ -141,8 +144,14 @@ def process_file(id):
                     if fingerprint in seen:continue
                     seen.add(fingerprint)
                     q=Question.query.filter_by(paper_id=paper.id,fingerprint=fingerprint).first()
-                    if q:
-                        q.status=item.get('status','EXTRACTION_FAILED');q.evidence=item.get('evidence',{});q.warnings=item.get('warnings',[]);q.confidence=item.get('confidence',.5)
+                    if not q:
+                        matches=Question.query.filter(Question.paper_id==paper.id,Question.number==str(item['number']),Question.status!='SUPERSEDED').all()
+                        if len(matches)==1:q=matches[0]
+                    if q and (q.evidence or {}).get('_admin_locked'):
+                        new_ids.append(q.id);available+=q.status=='AVAILABLE'
+                        continue
+                    if q and q.fingerprint==fingerprint:
+                        q.status=item.get('status','EXTRACTION_FAILED');q.evidence={**item.get('evidence',{}),**({'_active_image_ids':q.evidence['_active_image_ids']} if '_active_image_ids' in (q.evidence or {}) else {})};q.warnings=item.get('warnings',[]);q.confidence=item.get('confidence',.5)
                         new_ids.append(q.id);available+=q.status=='AVAILABLE';failed+=q.status=='EXTRACTION_FAILED';continue
                     if not q:
                         # Preserve identity when automatically upgrading the earlier parser's rows.
@@ -151,17 +160,25 @@ def process_file(id):
                     q.fingerprint=fingerprint;q.ingestion_file_id=f.id;q.number=item['number'];q.kind=item['kind'];q.text=item['text'];q.answers=item.get('answers');q.answer_status='ANSWER_AVAILABLE' if item.get('answers') is not None else 'ANSWER_UNAVAILABLE'
                     q.marks=item.get('marks');q.negative_marks=item.get('negative_marks');q.explanation=item.get('explanation');q.topic=item.get('topic');q.source_pages=item.get('source_pages') or [1];q.source_page=q.source_pages[0];q.evidence=item.get('evidence',{});q.warnings=item.get('warnings',[]);q.status=item.get('status','EXTRACTION_FAILED');q.confidence=item.get('confidence',.5)
                     # Replace normalized children safely; previous attempts already hold snapshots.
-                    q.options=[];q.images=[];db.session.flush()
+                    q.options=[];db.session.flush()
                     q.options=[QuestionOption(key=o['key'],text=o['text'],position=n) for n,o in enumerate(item['options'])]
-                    q.images=[QuestionImage(path=a['path'],alt='Source diagram or notation',option_key=a.get('option_key'),source_page=a.get('page')) for a in item.get('images',[])]
-                    db.session.flush();new_ids.append(q.id)
+                    new_images=[QuestionImage(path=a['path'],alt='Source diagram or notation',option_key=a.get('option_key'),source_page=a.get('page')) for a in item.get('images',[])]
+                    q.images.extend(new_images)
+                    db.session.flush();q.evidence={**(q.evidence or {}),'_active_image_ids':[i.id for i in new_images]};new_ids.append(q.id)
                     if q.status=='AVAILABLE':available+=1
                     if q.status=='EXTRACTION_FAILED':failed+=1
             except Exception as e:
                 failed+=1;issues.append({'number':item.get('number'),'error':str(e)[:500]})
+        if prior_available and (not available or failed or any(i.get('status')=='EXTRACTION_FAILED' for i in records)):
+            content_savepoint.rollback()
+            raise ValueError('Replacement extraction did not fully validate. Existing available questions were preserved.')
+        content_savepoint.commit()
         # Retire superseded current-bank records, never historical attempt snapshots.
         if new_ids:
-            for old in Question.query.filter(Question.paper_id==paper.id,Question.id.notin_(new_ids)):old.status='SUPERSEDED'
+            for old in Question.query.filter(Question.paper_id==paper.id,Question.id.notin_(new_ids)):
+                if (old.evidence or {}).get('_admin_locked'):
+                    available+=old.status=='AVAILABLE';issues.append({'number':old.number,'check':'unmatched_admin_override','message':'Preserved admin correction/hide; review source numbering.'})
+                else:old.status='SUPERSEDED'
         event(f,'VALIDATING','Checking numbering, marks, source keys and question structure');db.session.commit()
         numeric_numbers=[int(q['number']) for q in records if str(q['number']).isdigit()]
         if numeric_numbers:
@@ -186,7 +203,13 @@ def process_file(id):
     except Exception as e:
         try:
             db.session.rollback();f=db.session.get(IngestionFile,id);paper=db.session.get(Paper,f.paper_id)
-            f.status='EXTRACTION_FAILED';f.error=f'{type(e).__name__}: {str(e)[:1200]}';f.finished_at=time.time();paper.status='EXTRACTION_FAILED';event(f,'EXTRACTION_FAILED',f.error);db.session.commit()
+            f.status='EXTRACTION_FAILED';f.error=f'{type(e).__name__}: {str(e)[:1200]}';f.finished_at=time.time()
+            if 'issues' in locals():f.warnings=layout.get('warnings',[])+issues
+            if paper.status!='ARCHIVED':
+                existing=Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count()
+                failed_existing=Question.query.filter_by(paper_id=paper.id,status='EXTRACTION_FAILED').count()
+                paper.status=('PARTIALLY_AVAILABLE' if failed_existing else 'AVAILABLE') if existing else 'EXTRACTION_FAILED'
+            event(f,'EXTRACTION_FAILED',f.error);db.session.commit()
         except Exception:
             db.session.remove();current_app.logger.error('ingestion_persistence_failed type=%s',type(e).__name__)
     # Aliases share question records instead of inventing independent papers for one PDF.

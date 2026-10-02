@@ -153,3 +153,37 @@ Starting practice/exam shows an immediate indeterminate progress indicator and
 skeleton while the request runs; start buttons are disabled until success/failure.
 Loading feedback also covers restored attempts and mode switching. It indicates
 activity rather than claiming a percentage or reducing the network duration.
+
+### Admin content recovery and corrections
+
+- **Processing → failed paper → Upload replacement PDF** targets that existing
+  paper with its metadata retained. After upload, **Process now** processes one
+  queued file in this request (no paid worker needed); Refresh also follows a job
+  claimed by the normal worker. The paper must not already have queued/active jobs.
+  For canonical aliases, replace the original canonical paper instead.
+- **View failed questions** selects the paper and Extraction failed filter. Full
+  processing warnings remain in the job details, including rejected record numbers.
+- **Question bank → Edit question**, or **Content Reports → Edit question**, opens
+  text/passage, option, answer-key, marks, explanation and image correction controls
+  with a live preview and original source PDF/page. Choice keys use JSON, e.g.
+  `["A","B"]`; NAT uses a number; `null` means an unavailable answer key.
+- Save correction or Save & resolve report records the before/after state in the
+  existing QuestionReview audit table. Undo latest change is itself audited. Image
+  assets/rows are retained so old snapshots and undo continue working; uncheck an
+  old image and save to remove it from new attempts after adding a replacement.
+- Hide/Restore is available in the bank and editor; use the Hidden filter to find
+  hidden questions. Counts/marks for new attempts include only available questions.
+- Manual edits/hides are locked in question evidence. Extraction matches exact
+  fingerprints or one unambiguous current question number, preserves locked rows,
+  and flags unmatched admin overrides for review rather than overwriting them.
+  If a replacement produces no valid questions, existing available content is
+  retained. Ambiguous/renumbered sources require admin review of preserved overrides.
+- Version checks prevent stale saves and queued/active ingestion blocks concurrent
+  edits. Admin authentication and CSRF protection apply to every content mutation.
+  Existing temporary attempts keep their snapshots. No schema migration is needed.
+
+The exam scientific calculator runs locally, without an external iframe. It
+supports degree/radian trig and inverse/hyperbolic functions, powers, roots, logs,
+factorial, modulus, percentages and memory. Expressions are parsed as arithmetic
+without JavaScript evaluation. Functions use parentheses; `logbase(base,value)`
+and `root(degree,value)` accept two arguments. Use multiplication explicitly.

@@ -1,32 +1,13 @@
 <script setup>
-import {ref} from 'vue';
-import {ExternalLink,X} from 'lucide-vue-next';
-const emit=defineEmits(['close']);
-const root=ref(null);let drag=null;
-const url='https://tcsion.com/OnlineAssessment/ScientificCalculator/Calculator.html';
-function dragStart(e){
- if(e.target.closest('button,a'))return;
- const r=root.value.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top};
- window.addEventListener('pointermove',dragMove);window.addEventListener('pointerup',dragEnd,{once:true});
-}
-function dragMove(e){
- if(!drag)return;
- const w=root.value.offsetWidth,h=root.value.offsetHeight;
- root.value.style.left=Math.max(0,Math.min(window.innerWidth-w,e.clientX-drag.dx))+'px';
- root.value.style.top=Math.max(0,Math.min(window.innerHeight-h,e.clientY-drag.dy))+'px';
-}
+import {ref,onMounted,onUnmounted} from 'vue';import {X} from 'lucide-vue-next';import {calculate,displayNumber} from './scientific';
+const emit=defineEmits(['close']);const root=ref(null),expression=ref(''),result=ref('0'),error=ref(''),degrees=ref(true),memory=ref(0);let drag=null,previous;
+const keys=[['sinh','sinh('],['cosh','cosh('],['tanh','tanh('],['Exp','*10^'],['(','('],[')',')'],['⌫','back'],['C','clear'],['±','sign'],['√','sqrt('],['sinh⁻¹','asinh('],['cosh⁻¹','acosh('],['tanh⁻¹','atanh('],['log₂','logbase(2,'],['ln','ln('],['log','log('],['7','7'],['8','8'],['9','9'],['÷','/'],['π','pi'],['e','e'],['n!','!'],['logᵧx','logbase('],['eˣ','exp('],['10ˣ','10^'],['4','4'],['5','5'],['6','6'],['×','*'],['sin','sin('],['cos','cos('],['tan','tan('],['xʸ','^'],['x³','^3'],['x²','^2'],['1','1'],['2','2'],['3','3'],['−','-'],['sin⁻¹','asin('],['cos⁻¹','acos('],['tan⁻¹','atan('],['ʸ√x','root('],['∛','cbrt('],['|x|','abs('],['0','0'],['.','.'],['+','+'],['=','equal']];
+function press(value){error.value='';if(/^(?:sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|sqrt|cbrt|abs|ln|log|exp)\($/.test(value)&&expression.value){try{calculate(expression.value,degrees.value);expression.value=value+expression.value+')';return}catch{}}if(value==='equal'){try{result.value=displayNumber(calculate(expression.value,degrees.value))}catch(e){error.value=e.message}return}if(value==='clear'){expression.value='';result.value='0';return}if(value==='back'){expression.value=expression.value.slice(0,-1);return}if(value==='sign'){expression.value=expression.value?'-('+expression.value+')':'-';return}if(expression.value.length+value.length<=500)expression.value+=value}
+function useMemory(action){try{if(action==='MC'){memory.value=0;return}if(action==='MR'){press('('+displayNumber(memory.value)+')');return}const value=expression.value?calculate(expression.value,degrees.value):Number(result.value);if(action==='MS')memory.value=value;if(action==='M+')memory.value+=value;if(action==='M-')memory.value-=value;if(!Number.isFinite(memory.value))throw Error('Memory overflow')}catch(e){error.value=e.message}}
+function keyboard(e){if(e.target.closest('input'))return;if(e.key==='Escape'){emit('close');e.stopPropagation();return}if(/^[0-9.+\-*/^()]$/.test(e.key)){press(e.key);e.preventDefault()}else if(e.key==='Enter'){press('equal');e.preventDefault()}else if(e.key==='Backspace'){press('back');e.preventDefault()}}
+function dragStart(e){if(e.target.closest('button'))return;const r=root.value.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top};window.addEventListener('pointermove',dragMove);window.addEventListener('pointerup',dragEnd,{once:true})}
+function dragMove(e){if(!drag)return;root.value.style.left=Math.max(0,Math.min(window.innerWidth-root.value.offsetWidth,e.clientX-drag.dx))+'px';root.value.style.top=Math.max(0,Math.min(window.innerHeight-root.value.offsetHeight,e.clientY-drag.dy))+'px'}
 function dragEnd(){drag=null;window.removeEventListener('pointermove',dragMove)}
+onMounted(()=>{previous=document.activeElement;root.value.focus()});onUnmounted(()=>{dragEnd();window.removeEventListener('pointerup',dragEnd);previous?.focus()});
 </script>
-<template>
-<section ref="root" class="floating-tool calculator-tool" aria-label="TCS iON scientific calculator">
- <header class="floating-tool-header" @pointerdown="dragStart">
-   <strong>TCS iON calculator</strong><span>Drag · resize</span>
-   <div class="floating-tool-actions">
-    <a :href="url" target="_blank" rel="noopener noreferrer" title="Open calculator in new tab"><ExternalLink :size="16"/></a>
-    <button type="button" title="Close" @click="emit('close')"><X :size="17"/></button>
-   </div>
- </header>
- <iframe :src="url" title="TCS iON Scientific Calculator" loading="eager" referrerpolicy="no-referrer"></iframe>
- <p class="calculator-fallback">If TCS blocks embedded viewing in your browser, use the ↗ button to open the official calculator.</p>
-</section>
-</template>
+<template><section ref="root" class="floating-tool calculator-tool native-calculator" tabindex="-1" role="dialog" aria-label="Scientific calculator" @keydown="keyboard"><header class="floating-tool-header" @pointerdown="dragStart"><strong>Scientific Calculator</strong><span>Drag</span><div class="floating-tool-actions"><button type="button" aria-label="Close calculator" @click="emit('close')"><X :size="17"/></button></div></header><div class="calculator-body"><input class="calc-expression" aria-label="Calculator expression" v-model="expression" maxlength="500" @keydown.enter.prevent="press('equal')"><output class="calc-result" aria-label="Calculator result">{{result}}</output><p v-if="error" class="calc-error" role="alert">{{error}}</p><div class="calc-modes"><label><input type="radio" :value="true" v-model="degrees"> Deg</label><label><input type="radio" :value="false" v-model="degrees"> Rad</label><span>{{memory!==0?'M':''}}</span><button v-for="m in ['MC','MR','MS','M+','M-']" @click="useMemory(m)">{{m}}</button></div><div class="calc-keys"><button v-for="[label,value] in keys" :key="label" :class="{equals:value==='equal',clear:value==='clear'||value==='back'}" @click="press(value)">{{label}}</button></div><div class="calc-extra"><button @click="press(' mod ')">mod</button><button @click="press('/100')">%</button><button @click="expression='1/('+expression+')'">1/x</button></div><p class="calculator-help">Functions: sin(30). Two inputs: logbase(2,8), root(3,27). Use × between numbers and constants. Enter = calculate.</p></div></section></template>
