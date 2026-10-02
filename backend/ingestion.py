@@ -104,6 +104,9 @@ def fallback(layout,config):
                     o['text'],imgs=clean_assets(o['text'],layout,o['key']);q['images'].extend(imgs)
             if '[[PAGE_FAILED:' in local:q['status']='EXTRACTION_FAILED';q['warnings'].append('SOURCE_PAGE_EXTRACTION_FAILED')
             q['evidence']['layout_assets']={Path(a['path']).stem:{k:a[k] for k in ('inline','width','height') if k in a} for a in q['images']}
+            from .text_format import source_bold
+            q['text']=source_bold(q['text'],layout)
+            for o in q['options']:o['text']=source_bold(o['text'],layout)
             records.append(q)
     return records,issues
 

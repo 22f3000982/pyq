@@ -187,3 +187,15 @@ supports degree/radian trig and inverse/hyperbolic functions, powers, roots, log
 factorial, modulus, percentages and memory. Expressions are parsed as arithmetic
 without JavaScript evaluation. Functions use parentheses; `logbase(base,value)`
 and `root(degree,value)` accept two arguments. Use multiplication explicitly.
+
+### Source bold and request feedback
+New PDF imports preserve bold text from native PDF font flags/names in question stems,
+shared passages and options. Parsing still uses plain text for boundaries, keys and marks.
+Emphasis is applied only to an unambiguous source slice; uncertain mappings stay plain.
+OCR pages do not contribute bold ranges. Existing papers are not automatically repaired.
+`**bold text**` is also supported in the admin editor preview and student content. Rendering
+uses text nodes and `<strong>` only, never raw HTML, and leaves math/image markers intact.
+
+Loaders reflect actual library, start-session, admin save/upload/process/retry, report and
+submit requests. Failures retain visible errors and restore controls. Reduced-motion
+preferences disable spinner animation. Exam options and navigation have no new animation.
