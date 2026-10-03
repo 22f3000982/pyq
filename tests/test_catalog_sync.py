@@ -216,3 +216,23 @@ def test_level_import_preserves_names_and_is_repeatable(app,client):
     assert again.json['new_papers']==0 and again.json['existing_papers']==1
     assert client.get('/api/admin/catalog/campaign?level=Foundation',headers=h).json['total']==1
     assert client.get('/api/admin/catalog/campaign?level=Degree',headers=h).json['total']==0
+
+
+def test_course_codes_abbreviations_and_project_exclusion(tmp_path):
+    from backend.catalog import scan_workbook
+    wb=openpyxl.Workbook();master=wb.active
+    master.append(['Course Name','Course Code'])
+    master.append(['Machine Learning Foundations','CS2004'])
+    master.append(['Programming Concepts using Java','CS2005'])
+    master.append(['MLP - Project','CS2008P'])
+    term=wb.create_sheet('May 2026');term.append(['Course Level','Course Name','Quiz 1'])
+    term.append(['BSCS2004','Machine Learning Foundations(MLF)','MLF.pdf']);term['C2'].hyperlink='https://example.com/mlf.pdf'
+    term.append(['CS2004','Programming Concepts using Java','Java.pdf']);term['C3'].hyperlink='https://example.com/java.pdf'
+    term.append(['CS2008P','MLP - Project','project.pdf']);term['C4'].hyperlink='https://example.com/project.pdf'
+    term.append([None,'For Degree Level Use this Sheet',None])
+    path=tmp_path/'codes.xlsx';wb.save(path);wb.close()
+    scan=scan_workbook(path,'Diploma')
+    assert len(scan['courses'])==2 and len(scan['entries'])==2
+    assert scan['entries'][0]['course_name']=='Machine Learning Foundations(MLF)'
+    assert scan['entries'][1]['course_code']=='CS2005'
+    assert len(scan['issues'])==1 and 'disagrees' in scan['issues'][0]['warning']

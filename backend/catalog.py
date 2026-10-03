@@ -11,6 +11,12 @@ TERM_MONTH={'Jan':1,'May':5,'Sep':9}
 
 def norm(value):return re.sub(r'\s+',' ',str(value or '')).strip()
 def norm_key(value):return norm(value).casefold()
+def code_key(value):
+    return re.sub(r'^BS(?=[A-Z]{2}\d)', '', norm(value).upper())
+
+def base_name(value):
+    return norm_key(re.sub(r'\s*\([^()]*\)\s*$', '', norm(value)))
+
 def digest(value):return hashlib.sha256(value.encode()).hexdigest()
 
 def headers(sheet):
@@ -52,7 +58,7 @@ def scan_workbook(path,level=None):
     for row in master.iter_rows(min_row=rownum+1):
         get=lambda label:norm(row[cols[label]-1].value) if label in cols else ''
         name,code=get('course name'),get('course code')
-        if not name or not code:continue
+        if not name or not code or re.search(r'\bproject\b',name,re.I):continue
         item={'name':name,'code':code,'level':level or get('course level') or 'Degree','course_type':get('course type')}
         master_courses[code]=item;name_to_code[norm_key(name)]=code
     for alias,target in ALIASES.items():
@@ -60,6 +66,10 @@ def scan_workbook(path,level=None):
         if target_code:name_to_code[norm_key(alias)]=target_code
     report['courses']=list(master_courses.values())
 
+    code_aliases={code_key(code):code for code in master_courses}
+    base_aliases={}
+    for code,item in master_courses.items():
+        base_aliases.setdefault(base_name(item['name']),[]).append(code)
     seen_keys={}
     for sheet in workbook:
         match=re.fullmatch(r'(Jan|May|Sep)\s+(\d{4})',sheet.title)
@@ -73,10 +83,25 @@ def scan_workbook(path,level=None):
         for row in sheet.iter_rows(min_row=rownum+1):
             course_name=norm(row[cols['course name']-1].value)
             if not course_name:continue
-            code=name_to_code.get(norm_key(course_name))
+            if re.search(r'\bproject\b',course_name,re.I):continue
+            raw_code=norm(row[cols.get('course code',cols.get('course level',0))-1].value) if ('course code' in cols or 'course level' in cols) else ''
+            code=code_aliases.get(code_key(raw_code)) or name_to_code.get(norm_key(course_name))
+            candidates=base_aliases.get(base_name(course_name),[])
+            if len(candidates)==1:
+                named_code=candidates[0]
+                if code and code!=named_code:
+                    report['issues'].append({'sheet':sheet.title,'course':course_name,'warning':'Course code disagrees with course name; matched the recognized name'})
+                code=named_code
+            if code and base_name(course_name)!=base_name(master_courses[code]['name']):
+                report['issues'].append({'sheet':sheet.title,'course':course_name,'warning':'Course name differs from master list; matched course code'})
             if not code:
+                # Footer notes have neither a course code nor assessment content.
+                if not raw_code and not any(row[col-1].value or row[col-1].hyperlink for col in examcols.values()):continue
                 report['issues'].append({'sheet':sheet.title,'course':course_name,'warning':'Unknown course; not auto-merged'});continue
             course=master_courses[code]
+            # Preserve the first abbreviation-bearing Excel name for search/display.
+            if base_name(course_name)==base_name(course['name']) and re.search(r'\([^()]+\)\s*$',course_name) and not re.search(r'\([^()]+\)\s*$',course['name']):
+                course['name']=course_name
             for header,column in examcols.items():
                 cell=row[column-1];value=norm(cell.value) if isinstance(cell.value,(str,int,float)) else ''
                 url=cell.hyperlink.target if cell.hyperlink else None
@@ -115,6 +140,7 @@ def scan_workbook(path,level=None):
                                 'warning':'Same logical paper appears with different source links; first source kept'})
                         continue
                     seen_keys[key]=entry;report['entries'].append(entry);report['terms'][sheet.title]+=1
+    for entry in report['entries']:entry['course_name']=master_courses[entry['course_code']]['name']
     workbook.close();return report
 
 def _existing_catalog():
@@ -211,6 +237,9 @@ def _ensure_metadata(scan):
     for item in scan['courses']:
         incoming_code=item['code'];incoming_name=norm_key(item['name'])
         c=by_code.get(incoming_code) or by_name.get(incoming_name)
+        if not c:
+            candidates=[x for x in Course.query.all() if code_key(x.code)==code_key(incoming_code) or base_name(x.name)==base_name(item['name'])]
+            if len(candidates)==1:c=candidates[0]
         if not c:
             c=Course(name=item['name'],code=incoming_code);db.session.add(c);db.session.flush();new_courses+=1
         elif not c.code:
@@ -324,6 +353,9 @@ def import_workbook(path,level=None):
             'issues':scan['issues'],'terms':scan['terms']}
     for item in scan['courses']:
         incoming=item['code'];course=by_code.get(incoming) or by_name.get(norm_key(item['name']))
+        if not course:
+            candidates=[x for x in courses_list if code_key(x.code)==code_key(incoming) or base_name(x.name)==base_name(item['name'])]
+            if len(candidates)==1:course=candidates[0]
         if not course:
             course=Course(name=item['name'],code=incoming);db.session.add(course);report['new_courses']+=1
         elif not course.code:course.code=incoming
