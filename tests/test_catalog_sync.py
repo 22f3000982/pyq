@@ -204,3 +204,15 @@ def test_apply_accepts_workbook_code_alias_for_existing_course_name(app,client):
     paper=Paper.query.one()
     assert paper.course_id==existing.id
     assert Course.query.count()==1
+
+
+def test_level_import_preserves_names_and_is_repeatable(app,client):
+    h=login(client,True);data=workbook_bytes()
+    result=post_file(client,'/api/admin/catalog/refresh',h,data,{'level':'Foundation'})
+    assert result.status_code==201 and result.json['queued']==0
+    c=Course.query.one();assert c.name=='Deep Learning' and c.level=='Foundation'
+    assert Paper.query.count()==1 and Question.query.count()==0
+    again=post_file(client,'/api/admin/catalog/refresh',h,data,{'level':'Foundation'})
+    assert again.json['new_papers']==0 and again.json['existing_papers']==1
+    assert client.get('/api/admin/catalog/campaign?level=Foundation',headers=h).json['total']==1
+    assert client.get('/api/admin/catalog/campaign?level=Degree',headers=h).json['total']==0

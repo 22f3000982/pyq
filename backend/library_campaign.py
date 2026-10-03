@@ -96,8 +96,9 @@ def _paper_state(p,ready,latest):
     if p.status=='ARCHIVED':return 'ignored'
     return 'pending'
 
-def campaign():
+def campaign(level=None):
     papers=Paper.query.options(joinedload(Paper.exam_type),joinedload(Paper.term),joinedload(Paper.course)).filter(Paper.source_url.isnot(None)).all()
+    if level:papers=[p for p in papers if p.course.level==level]
     ready={pid for pid, in db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct()}
     latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
     latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}
@@ -121,8 +122,9 @@ def campaign():
     return {'total':total,'available':ready_count,'pending':totals['pending'],'queued':totals['queued'],'failed':totals['failed'],'ignored':totals['ignored'],
             'percent':round((ready_count/total)*100,1) if total else 0,'groups':rows,'current':current,'retry_target':retry_target}
 
-def group_papers(stage,term_id,state='pending'):
+def group_papers(stage,term_id,state='pending',level=None):
     papers=Paper.query.options(joinedload(Paper.exam_type),joinedload(Paper.term)).filter_by(term_id=term_id).filter(Paper.source_url.isnot(None)).order_by(Paper.id).all()
+    if level:papers=[p for p in papers if p.course.level==level]
     ready={pid for pid, in db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct()}
     latest_ids=db.session.query(func.max(IngestionFile.id)).group_by(IngestionFile.paper_id)
     latest={f.paper_id:f for f in IngestionFile.query.filter(IngestionFile.id.in_(latest_ids)).all()}

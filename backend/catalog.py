@@ -39,7 +39,9 @@ def paper_key(course_code,term_name,exam_name,session,name):
 def structural_key(course_code,term_name,exam_name,session):
     return tuple(map(norm_key,[course_code,term_name,exam_name,session]))
 
-def scan_workbook(path):
+def scan_workbook(path,level=None):
+    if level is not None and level not in ("Degree","Diploma","Foundation"):
+        raise ValueError("Choose Degree, Diploma or Foundation")
     raw=open(path,'rb').read();sha=hashlib.sha256(raw).hexdigest()
     workbook=openpyxl.load_workbook(path)
     report={'workbook_hash':sha,'linked_cells':0,'issues':[],'terms':{},'courses':[],'entries':[]}
@@ -51,7 +53,7 @@ def scan_workbook(path):
         get=lambda label:norm(row[cols[label]-1].value) if label in cols else ''
         name,code=get('course name'),get('course code')
         if not name or not code:continue
-        item={'name':name,'code':code,'level':get('course level'),'course_type':get('course type')}
+        item={'name':name,'code':code,'level':level or get('course level') or 'Degree','course_type':get('course type')}
         master_courses[code]=item;name_to_code[norm_key(name)]=code
     for alias,target in ALIASES.items():
         target_code=name_to_code.get(norm_key(target))
@@ -220,7 +222,7 @@ def _ensure_metadata(scan):
         by_code[incoming_code]=c
         if c.code:by_code[c.code]=c
         by_name[incoming_name]=c;by_name[norm_key(c.name)]=c
-        c.level=item['level'];c.course_type=item['course_type'];c.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(c.name)]
+        c.name=item['name'];c.level=item['level'];c.course_type=item['course_type'];c.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(c.name)]
     terms={t.name:t for t in Term.query.all()}
     for name in scan['terms']:
         if name not in terms:
@@ -233,8 +235,8 @@ def _ensure_metadata(scan):
             exams[entry['exam_name']]=ExamType(name=entry['exam_name']);db.session.add(exams[entry['exam_name']])
     db.session.flush();return by_code,terms,exams,new_courses
 
-def apply_sync(path,expected_hash=None,process_new=True,process_unprocessed=True,changed_keys=None,queue=True,batch_limit=20):
-    scan=scan_workbook(path)
+def apply_sync(path,expected_hash=None,process_new=True,process_unprocessed=True,changed_keys=None,queue=True,batch_limit=20,level=None):
+    scan=scan_workbook(path,level)
     if expected_hash and scan['workbook_hash']!=expected_hash:raise ValueError('Workbook changed after preview; preview the file again')
     batch_limit=max(1,min(int(batch_limit or 20),50))
     preview=compare_scan(scan);changed_keys=set(changed_keys or [])
@@ -293,8 +295,10 @@ def apply_sync(path,expected_hash=None,process_new=True,process_unprocessed=True
     report.update(batch_id=batch_id or None,queued=queued)
     return report
 
-def preview_workbook(path):
-    result=compare_scan(scan_workbook(path))
+def preview_workbook(path,level=None):
+    scan=scan_workbook(path,level)
+    result=compare_scan(scan)
+    result["courses"]=scan["courses"]
     # Keep the admin preview payload bounded even when the catalog grows into
     # thousands of papers. Counts remain exact; only actionable samples travel.
     result['items']={
@@ -310,9 +314,9 @@ def preview_workbook(path):
     result['absent']=result['absent'][:100]
     return result
 
-def import_workbook(path):
+def import_workbook(path,level=None):
     """Legacy catalog-only import kept efficient for setup/CLI and older clients."""
-    scan=scan_workbook(path)
+    scan=scan_workbook(path,level)
     courses_list=Course.query.all();terms_list=Term.query.all();exams_list=ExamType.query.all();papers_list=Paper.query.all()
     by_code={c.code:c for c in courses_list if c.code};by_name={norm_key(c.name):c for c in courses_list}
     terms={t.name:t for t in terms_list};exams={e.name:e for e in exams_list}
@@ -326,7 +330,7 @@ def import_workbook(path):
         by_code[incoming]=course
         if course.code:by_code[course.code]=course
         by_name[norm_key(item['name'])]=course;by_name[norm_key(course.name)]=course
-        course.level=item['level'];course.course_type=item['course_type'];course.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(course.name)]
+        course.name=item['name'];course.level=item['level'];course.course_type=item['course_type'];course.aliases=[a for a,target in ALIASES.items() if norm_key(target)==norm_key(course.name)]
     for name in scan['terms']:
         if name not in terms:
             m=re.fullmatch(r'(Jan|May|Sep)\s+(\d{4})',name);terms[name]=Term(name=name,year=int(m[2]),month=TERM_MONTH[m[1]]);db.session.add(terms[name])

@@ -6,7 +6,7 @@ const uploadForm=ref(null);
 const tabs=['Content Reports','Processing','Upload PDFs','Papers','Question bank','Catalog Sync','Settings'];const savedTab=localStorage.getItem('pyq-admin-tab');const tab=ref(tabs.includes(savedTab)?savedTab:'Processing');
 const editingQuestion=ref(null),replacement=ref(null),questionStatus=ref('');
 const reports=ref([]),reportStatus=ref('OPEN'),reportDetail=ref(null);
-const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),masterFile=ref(null),driveStatus=ref(null),webRunnerActive=ref(false),webRunnerStop=ref(false),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
+const stats=ref({}),jobs=ref([]),questions=ref([]),courses=ref([]),papers=ref([]),adminPapers=ref([]),meta=ref({terms:[],exams:[]}),course=ref(''),paper=ref(''),files=ref([]),error=ref(''),notice=ref(''),busy=ref(false),page=ref(1),total=ref(0),settings=ref({}),detail=ref(null),paperSearch=ref(''),paperStatus=ref(''),editPaper=ref(null),manageCourse=ref(''),syncFile=ref(null),syncPreview=ref(null),syncBatch=ref(null),batchLimit=ref(20),selectedChanged=ref([]),processNew=ref(true),processUnprocessed=ref(true),campaign=ref(null),resetPreview=ref(null),resetPhrase=ref(''),cleanupStorage=ref(true),catalogLevel=ref('Degree'),masterPreview=ref(null),masterFile=ref(null),driveStatus=ref(null),webRunnerActive=ref(false),webRunnerStop=ref(false),newPaper=ref({name:'',term_id:'',exam_type_id:'',session:''}),newTerm=ref({kind:'term',name:'',year:2026,month:9});let timer;
 async function run(fn){if(busy.value)return;busy.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){stats.value=await api('/admin/stats');if(tab.value==='Content Reports'){const d=await api('/admin/content-reports?'+new URLSearchParams({status:reportStatus.value,page:page.value,limit:24}));reports.value=d.items;total.value=d.total}else if(tab.value==='Processing'){const d=await api('/admin/ingestion?page='+page.value);jobs.value=d.items;total.value=d.total}else if(tab.value==='Papers'){const d=await api('/admin/papers?'+new URLSearchParams({page:page.value,limit:24,q:paperSearch.value,status:paperStatus.value,course_id:manageCourse.value}));adminPapers.value=d.items;total.value=d.total}else if(tab.value==='Question bank'){const d=await api('/admin/questions?'+new URLSearchParams({page:page.value,paper_id:paper.value,status:questionStatus.value}));questions.value=d.items;total.value=d.total}else if(tab.value==='Settings')settings.value=await api('/admin/settings')}
 async function chooseTab(t){if(busy.value)return;tab.value=t;localStorage.setItem('pyq-admin-tab',t);page.value=1;detail.value=null;await run(async()=>{await refresh();if(t==='Catalog Sync'){await loadCampaign();await loadResetPreview();await loadDriveStatus()}})}
@@ -16,7 +16,7 @@ function chooseFiles(e){files.value=Array.from(e.target.files).map(file=>({file,
 async function upload(){await run(async()=>{if(files.value.some(f=>!f.paper_id))throw Error('Choose a paper for each PDF.');const form=new FormData();files.value.forEach(f=>form.append('files',f.file));form.append('paper_ids',JSON.stringify(files.value.map(f=>Number(f.paper_id))));const d=await api('/admin/papers/bulk-upload',{method:'POST',form});notice.value='Batch '+d.batch_id+' accepted. Extraction and availability are automatic; no approval is needed.';files.value=[];await refresh()})}
 async function previewWorkbook(e){
  const file=e.target.files?.[0];if(!file)return;syncFile.value=file;syncPreview.value=null;selectedChanged.value=[];syncBatch.value=null;
- await run(async()=>{const form=new FormData();form.append('file',file);syncPreview.value=await api('/admin/catalog/preview',{method:'POST',form});notice.value=syncPreview.value.already_applied?'This workbook was used before. Counts below show what is still pending now.':'Workbook checked. Nothing has been changed yet.'})
+ await run(async()=>{const form=new FormData();form.append('file',file);form.append('level',catalogLevel.value);syncPreview.value=await api('/admin/catalog/preview',{method:'POST',form});notice.value=syncPreview.value.already_applied?'This workbook was used before. Counts below show what is still pending now.':'Workbook checked. Nothing has been changed yet.'})
 }
 function chooseChanged(key,checked){selectedChanged.value=checked?[...new Set([...selectedChanged.value,key])]:selectedChanged.value.filter(x=>x!==key)}
 async function refreshSyncBatch(){
@@ -54,7 +54,7 @@ function pauseWebBatch(){webRunnerStop.value=true}
 async function applyWorkbook(){
  if(!syncFile.value||!syncPreview.value)return;
  await run(async()=>{
-  const form=new FormData();form.append('file',syncFile.value);form.append('workbook_hash',syncPreview.value.workbook_hash);
+  const form=new FormData();form.append('file',syncFile.value);form.append('level',catalogLevel.value);form.append('workbook_hash',syncPreview.value.workbook_hash);
   form.append('process_new',String(processNew.value));form.append('process_unprocessed',String(processUnprocessed.value));
   form.append('changed_keys',JSON.stringify(selectedChanged.value));form.append('batch_limit',String(batchLimit.value));
   const d=await api('/admin/catalog/apply',{method:'POST',form});
@@ -63,19 +63,20 @@ async function applyWorkbook(){
   syncPreview.value=null;syncFile.value=null;selectedChanged.value=[];invalidateCatalog();await refreshCatalog();await refresh();await refreshSyncBatch();if(syncBatch.value&&!syncBatch.value.done)await runWebBatch();
  })
 }
-async function loadCampaign(){campaign.value=await api('/admin/catalog/campaign')}
+async function loadCampaign(){campaign.value=await api('/admin/catalog/campaign?level='+encodeURIComponent(catalogLevel.value))}
 async function loadDriveStatus(){driveStatus.value=await api('/admin/google-drive/status')}
 function connectDrive(){window.location.href='/api/admin/google-drive/connect'}
 async function disconnectDrive(){if(!confirm('Disconnect Google Drive source access?'))return;await run(async()=>{await api('/admin/google-drive/disconnect',{method:'POST',body:{}});await loadDriveStatus();notice.value='Google Drive disconnected.'})}
 async function loadResetPreview(){resetPreview.value=await api('/admin/library-reset/preview')}
-function chooseMasterFile(e){masterFile.value=e.target.files?.[0]||null}
+function chooseMasterFile(e){masterFile.value=e.target.files?.[0]||null;masterPreview.value=null}
+async function previewMasterCatalog(){await run(async()=>{const form=new FormData();form.append('file',masterFile.value);form.append('level',catalogLevel.value);masterPreview.value=await api('/admin/catalog/preview',{method:'POST',form})})}
 async function refreshMasterCatalog(){
  if(!masterFile.value)throw Error('Choose the latest Excel workbook first.');
- await run(async()=>{const form=new FormData();form.append('file',masterFile.value);const d=await api('/admin/catalog/refresh',{method:'POST',form});notice.value=`Master catalog refreshed: ${d.new_papers} new papers, ${d.existing_papers} already known. Nothing was queued.`;masterFile.value=null;invalidateCatalog();await refreshCatalog();await loadCampaign();await loadResetPreview()})
+ await run(async()=>{const form=new FormData();form.append('file',masterFile.value);form.append('level',catalogLevel.value);const d=await api('/admin/catalog/refresh',{method:'POST',form});notice.value=`Master catalog refreshed: ${d.new_papers} new papers, ${d.existing_papers} already known. Nothing was queued.`;masterFile.value=null;masterPreview.value=null;invalidateCatalog();await refreshCatalog();await loadCampaign();await loadResetPreview()})
 }
 async function processCampaign(retry=false,selected=null){
  const target=selected||(retry?campaign.value?.retry_target:campaign.value?.current);if(!target)return;
- await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:target.stage,term_id:target.term_id,limit:20}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${target.label} · ${target.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value){await refreshSyncBatch();if(!syncBatch.value.done)await runWebBatch()}})
+ await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:target.stage,term_id:target.term_id,limit:20,level:catalogLevel.value}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${target.label} · ${target.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value){await refreshSyncBatch();if(!syncBatch.value.done)await runWebBatch()}})
 }
 async function resetLibrary(){
  if(resetPhrase.value!=='RESET PYQ LIBRARY')return;
@@ -145,8 +146,12 @@ async function toggleQuestion(q){await run(async()=>{const d=await api('/admin/q
 
 <section class="panel mb-4">
  <div class="section-row"><div><div class="eyebrow">MASTER EXCEL CATALOG</div><h2>Refresh source catalog</h2><p class="muted mb-0">Upload the student-maintained XLSX. Every valid linked paper becomes a catalog entry, but no PDF is processed until you start a campaign batch.</p></div></div>
+ <label class="mt-3">Course level<select class="form-select" v-model="catalogLevel" :disabled="busy" @change="masterPreview=null;syncPreview=null;loadCampaign()"><option>Degree</option><option>Diploma</option><option>Foundation</option></select></label>
+ <p class="muted">Choose the level, upload Excel, check the preview, then import. Course names come from Excel. Existing papers remain unchanged.</p>
  <input type="file" accept=".xlsx" class="form-control mt-3" @change="chooseMasterFile" :disabled="busy">
- <button class="btn btn-primary mt-3" :disabled="busy||!masterFile" @click="refreshMasterCatalog">Refresh master catalog</button>
+<button class="btn btn-outline-primary mt-3" :disabled="busy||!masterFile" @click="previewMasterCatalog">Preview Excel</button>
+ <div v-if="masterPreview" class="mt-3"><p>{{masterPreview.summary.total}} papers · {{masterPreview.summary.new}} new · {{masterPreview.summary.invalid}} issues</p><p>Courses: {{masterPreview.courses.map(c=>c.name).join(", ")}}</p><p v-for="issue in masterPreview.issues">{{issue.sheet}} {{issue.cell}}: {{issue.warning}}</p></div>
+ <button class="btn btn-primary mt-3" :disabled="busy||!masterFile||!masterPreview" @click="refreshMasterCatalog">Import catalog</button>
 </section>
 
 <section v-if="campaign" class="panel mb-4">
