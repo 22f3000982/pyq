@@ -73,8 +73,8 @@ async function refreshMasterCatalog(){
  if(!masterFile.value)throw Error('Choose the latest Excel workbook first.');
  await run(async()=>{const form=new FormData();form.append('file',masterFile.value);const d=await api('/admin/catalog/refresh',{method:'POST',form});notice.value=`Master catalog refreshed: ${d.new_papers} new papers, ${d.existing_papers} already known. Nothing was queued.`;masterFile.value=null;invalidateCatalog();await refreshCatalog();await loadCampaign();await loadResetPreview()})
 }
-async function processCampaign(retry=false){
- const target=retry?campaign.value?.retry_target:campaign.value?.current;if(!target)return;
+async function processCampaign(retry=false,selected=null){
+ const target=selected||(retry?campaign.value?.retry_target:campaign.value?.current);if(!target)return;
  await run(async()=>{const endpoint=retry?'/admin/catalog/campaign/retry-failed':'/admin/catalog/campaign/process';const d=await api(endpoint,{method:'POST',body:{stage:target.stage,term_id:target.term_id,limit:20}});notice.value=d.queued?`Batch #${d.batch_id}: ${d.queued} papers queued for ${target.label} · ${target.term}.`:(d.note||'Nothing to queue.');syncBatch.value=d.batch_id?{id:d.batch_id,total:d.queued,completed:0,failed:0,active:0,queued:d.queued,percent:0,done:false,items:[]}:null;await loadCampaign();if(syncBatch.value){await refreshSyncBatch();if(!syncBatch.value.done)await runWebBatch()}})
 }
 async function resetLibrary(){
@@ -117,7 +117,7 @@ async function toggleQuestion(q){await run(async()=>{const d=await api('/admin/q
   <li><strong>Optional clean start:</strong> use Library Reset once if the current catalog is mixed/test data.</li>
   <li><strong>Connect Google Drive:</strong> authorize the Google/IITM account that can open the source PDFs. This is required for private links.</li>
   <li><strong>Upload the latest Excel:</strong> this creates the full source catalog only; it does not start 700 downloads.</li>
-  <li><strong>Follow the highlighted target:</strong> Quiz 1 newest term first, then older terms; after Quiz 1 comes Quiz 2, End Term FN, End Term AN, then other assessments.</li>
+  <li><strong>Choose any term:</strong> use Process 20 on its card. Quiz 2 or End Term can be processed before Quiz 1; the highlighted target is only a suggestion.</li>
   <li><strong>Process 20 at a time:</strong> each batch stops automatically. Retry failed papers separately.</li>
   <li><strong>Future months:</strong> upload the newly updated Excel again; only new catalog entries are added.</li>
  </ol>
@@ -170,12 +170,12 @@ async function toggleQuestion(q){await run(async()=>{const d=await api('/admin/q
 </section>
 
 <section v-if="campaign?.groups?.length" class="panel mb-4">
- <h2>Campaign roadmap</h2><p class="muted">Terms are processed newest to oldest inside each stage. A missing paper in Excel is simply absent from the total.</p>
+ <h2>Campaign roadmap</h2><p class="muted">Choose any assessment and term to process first. The display order is only a suggestion. A missing paper in Excel is absent from the total.</p>
  <div class="campaign-roadmap">
   <div v-for="g in campaign.groups" class="campaign-row" :class="{current:campaign.current&&g.stage===campaign.current.stage&&g.term_id===campaign.current.term_id,complete:g.complete}">
    <div><strong>{{g.label}}</strong><span>{{g.term}}</span></div>
    <div class="campaign-row-progress"><div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:g.percent+'%'}"></div></div><small>{{g.available}}/{{g.total}} ready · {{g.pending}} pending<span v-if="g.failed"> · {{g.failed}} failed</span></small></div>
-   <strong>{{g.percent}}%</strong>
+   <div class="campaign-term-actions"><strong>{{g.percent}}%</strong><button class="btn btn-outline-primary btn-sm" :disabled="busy||webRunnerActive||g.pending===0||campaign.queued>0" @click="processCampaign(false,g)" :aria-label="'Process up to 20 papers: '+g.label+' · '+g.term">Process 20</button></div>
   </div>
  </div>
 </section>

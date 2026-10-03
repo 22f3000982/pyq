@@ -230,19 +230,19 @@ def catalog_campaign():
 def process_campaign_group():
     from .library_campaign import campaign,group_papers
     from .acquisition import queue_catalog
-    payload=body();current=campaign().get('current')
+    payload=body();overview=campaign();current=overview.get('current')
     if not current:abort(409,description='The catalog campaign is already complete.')
     stage=str(payload.get('stage') or current['stage'])
     try:term_id=int(payload.get('term_id') or current['term_id']);limit=int(payload.get('limit',20))
     except (TypeError,ValueError):abort(400,description='Invalid campaign batch request')
     if not 1<=limit<=20:abort(400,description='Campaign batches are limited to 1–20 papers')
-    if stage!=current['stage'] or term_id!=current['term_id']:
-        abort(409,description='Finish the current campaign target before processing another term.')
+    target=next((g for g in overview['groups'] if g['stage']==stage and g['term_id']==term_id),None)
+    if target is None:abort(400,description='Unknown campaign term or assessment.')
     papers=group_papers(stage,term_id,'pending')
     ids=[p.id for p in papers[:limit]]
-    if not ids:return jsonify(batch_id=None,queued=0,current=current,note='No pending papers in the current target.'),200
+    if not ids:return jsonify(batch_id=None,queued=0,current=target,note='No pending papers in the selected target.'),200
     batch,count=queue_catalog(g.user.id,retry=False,limit=limit,paper_ids=ids)
-    return jsonify(batch_id=batch,queued=count,current=current),202
+    return jsonify(batch_id=batch,queued=count,current=target),202
 
 @admin.post('/catalog/campaign/retry-failed')
 @require_user(True)

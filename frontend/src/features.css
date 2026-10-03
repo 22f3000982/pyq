@@ -34,3 +34,6 @@
 .scratch-pagebar button{display:inline-flex;align-items:center;gap:4px;padding:5px;border:1px solid #c7d2e2;border-radius:4px;background:white;color:#172943;min-height:30px}
 .scratch-pagebar button:disabled{opacity:.4}.shape-toggle{display:flex;align-items:center;gap:4px;font-size:.8rem;margin:0}.scratch-message{flex-shrink:0;padding:5px 9px;margin:0;font-size:.75rem;color:#425976;background:#f7f9fc}
 @media(max-width:600px){.scratch-notebook{left:8px!important;top:70px!important;width:calc(100vw - 16px);height:70dvh}.scratch-notebook .floating-tool-header>span{display:none}}
+
+.campaign-term-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.campaign-term-actions button{white-space:nowrap}
+@media(min-width:761px){.campaign-row{grid-template-columns:minmax(150px,.8fr) minmax(180px,2fr) minmax(130px,auto)}}

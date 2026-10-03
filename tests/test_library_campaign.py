@@ -153,3 +153,19 @@ def test_failed_term_does_not_block_next_and_remains_retryable(app,client):
     retried=client.post('/api/admin/catalog/campaign/retry-failed',headers=h,json={'limit':20})
     assert retried.status_code==202 and retried.json['queued']==1
     assert IngestionFile.query.filter_by(batch_id=retried.json['batch_id']).one().paper_id==p.id
+
+
+def test_admin_can_process_quiz2_before_quiz1(app,client):
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    overview=client.get('/api/admin/catalog/campaign',headers=h).json
+    target=next(g for g in overview['groups'] if g['stage']=='quiz2')
+    result=client.post('/api/admin/catalog/campaign/process',headers=h,json={'stage':target['stage'],'term_id':target['term_id'],'limit':20})
+    assert result.status_code==202 and result.json['queued']==1
+    jobs=IngestionFile.query.all()
+    assert len(jobs)==1
+    assert db.session.get(Paper,jobs[0].paper_id).exam_type.name=='Quiz 2'
+    assert result.json['current']['stage']=='quiz2'
+    invalid=client.post('/api/admin/catalog/campaign/process',headers=h,json={'stage':'unknown','term_id':target['term_id'],'limit':20})
+    assert invalid.status_code==400
+    too_many=client.post('/api/admin/catalog/campaign/process',headers=h,json={'stage':'quiz1','term_id':target['term_id'],'limit':21})
+    assert too_many.status_code==400
