@@ -37,3 +37,29 @@
 
 .campaign-term-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.campaign-term-actions button{white-space:nowrap}
 @media(min-width:761px){.campaign-row{grid-template-columns:minmax(150px,.8fr) minmax(180px,2fr) minmax(130px,auto)}}
+
+/* Keep the theme control reachable at the upper right, clear of header actions. */
+.theme-toggle{top:12px;right:12px;bottom:auto}
+.topbar{padding-right:110px}
+.exam-header{padding-right:110px}
+@media(max-width:760px){
+ .theme-toggle{top:8px;right:8px;min-height:34px;padding:6px 10px;font-size:12px}
+ .sidebar .brand{padding-right:80px}
+ .topbar{padding-right:12px}
+ .exam-header{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px 10px;padding:9px 12px;min-height:0}
+ .exam-header .exam-logo{grid-column:1 / -1;padding-right:85px;font-size:14px;min-height:32px}
+ .exam-header>div:nth-child(2){grid-column:1 / -1;order:0;width:auto;flex-basis:auto}
+ .exam-header .eyebrow{display:none}
+ .exam-header h1{font-size:12px;line-height:1.4;margin:0;overflow-wrap:anywhere}
+ .exam-header .mode-switch{margin:0;justify-self:start}
+ .exam-header .mobile-hide-tool{display:none}
+ .exam-header .timer{padding:0;font-size:14px}
+ .exam-header .btn{min-height:34px}
+ .cbt-section-bar{padding:7px 10px;font-size:11px;gap:6px;margin-bottom:7px}
+ .pyq-card.panel{padding:11px 12px;gap:5px;border-radius:10px}
+ .pyq-card h3{margin:0;font-size:1rem}
+ .pyq-card .btn{padding:6px 10px;min-height:36px}
+ .question-panel>.section-row{padding:8px 10px;gap:8px;margin-bottom:0}
+ .question-panel>.section-row .eyebrow{font-size:12px;margin-bottom:0}
+ .question-content{padding:12px}
+}
