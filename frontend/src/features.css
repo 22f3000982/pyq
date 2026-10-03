@@ -63,3 +63,54 @@
  .question-panel>.section-row .eyebrow{font-size:12px;margin-bottom:0}
  .question-content{padding:12px}
 }
+
+/* The question is the scrolling surface; navigation stays outside it. */
+.exam-shell{height:100dvh;min-height:0;overflow:hidden}
+.exam-shell .workspace{height:100%;min-height:0}
+.exam-shell .exam-main{height:100%;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.exam-main>.exam-header,.exam-main>.cbt-section-bar,.exam-main>.alert{flex-shrink:0}
+.exam-main>.exam-layout{flex:1;min-height:0;overflow:hidden}
+.exam-layout .question-panel{height:100%;min-height:0;overflow:hidden}
+.exam-layout .question-content{min-height:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+.exam-layout .question-actions{position:static;flex-shrink:0}
+.exam-layout .palette-panel{max-height:100%;overflow-y:auto}
+@media(max-width:760px){
+ .exam-header{grid-template-columns:minmax(0,1fr) auto auto;padding:5px 10px;gap:4px 8px}
+ .exam-header .exam-logo{display:none}
+ .exam-header>div:nth-child(2){padding-right:78px;min-height:32px;display:flex;align-items:center}
+ .exam-header h1{font-size:11px;line-height:1.3}
+ .exam-header .btn{min-height:32px;padding:4px 8px}
+ .cbt-section-bar{padding:5px 10px;margin-bottom:5px}
+ .exam-main>.exam-layout{position:relative;gap:5px}
+ .exam-layout .question-panel{flex:1;min-height:0;height:auto;width:100%}
+ .exam-layout .question-content{overflow-y:auto;padding:10px}
+ .question-panel>.section-row{padding:6px 8px;gap:5px}
+ .question-tools{gap:5px;flex-wrap:wrap}
+ .question-tools .btn{padding:5px 7px;min-height:32px}
+ .question-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:5px;gap:4px}
+ .question-actions .btn{font-size:11px;padding:6px 4px;min-height:34px;white-space:normal}
+ .question-actions .btn:last-child{grid-column:1 / -1}
+ .question-actions .spacer{display:none}
+ .exam-layout .palette-panel{flex:none;width:100%;padding:5px 8px;display:flex;align-items:center;gap:8px;max-height:55dvh}
+ .palette-panel>.btn{margin:0!important;width:auto!important;margin-left:auto!important;padding:6px 10px;min-height:34px}
+ .palette-panel>.palette-toggle{font-size:12px;min-height:34px}
+ .palette-panel>p{display:none}
+ .palette-panel.palette-open{position:absolute;bottom:0;left:0;right:0;z-index:5;display:block;overflow-y:auto;box-shadow:0 -6px 20px #0003}
+ .palette-panel.palette-open>.btn{margin-top:8px!important}
+ .save-status{font-size:10px!important;padding:3px 8px!important}
+}
+/* Shared dark surfaces and text, including Bootstrap utilities and exam controls. */
+[data-theme="dark"]{--bs-secondary-color:#bacce0;--bs-tertiary-bg:#26394b}
+[data-theme="dark"] .brand,[data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3,[data-theme="dark"] .stats-row strong,[data-theme="dark"] .detail-metrics strong,[data-theme="dark"] .result-score{color:#e4eaf2}
+[data-theme="dark"] .stats-row,[data-theme="dark"] .category,[data-theme="dark"] .notice,[data-theme="dark"] .settings-list,[data-theme="dark"] .floating-tool,[data-theme="dark"] .scratch-pagebar,[data-theme="dark"] .scratch-message,[data-theme="dark"] .calc-display{background:#1e2938;color:#e4eaf2;border-color:#435064}
+[data-theme="dark"] .btn-light,[data-theme="dark"] .question-actions .btn-light,[data-theme="dark"] .question-actions .btn-review,[data-theme="dark"] .scratch-pagebar button,[data-theme="dark"] .calc-keys button{background:#2b4057;color:#eef4fc;border-color:#57728f}
+[data-theme="dark"] .btn-light:hover,[data-theme="dark"] .question-actions .btn-review:hover{background:#395672;color:#fff}
+[data-theme="dark"] .btn-outline-primary{--bs-btn-color:#a7c9ff;--bs-btn-border-color:#759ace;--bs-btn-hover-color:#fff}
+[data-theme="dark"] .sidebar nav a.active,[data-theme="dark"] .sidebar nav a:hover,[data-theme="dark"] .category.selected{background:#294460;color:#fff}
+[data-theme="dark"] .question-content .option{background:#1e2938;color:#e4eaf2}
+[data-theme="dark"] .question-content .option.chosen{background:#214c65;border-color:#70b7dc}
+[data-theme="dark"] .question-content .option-key{background:#2b4057;color:#fff;border-color:#8ea6c2}
+[data-theme="dark"] .question-content .question-stem,[data-theme="dark"] .question-content .question-meta,[data-theme="dark"] .palette-legend>div,[data-theme="dark"] .text-muted{color:#d5e1ef!important}
+[data-theme="dark"] .exam-header{background:#182332}
+[data-theme="dark"] .cbt-section-bar,[data-theme="dark"] .palette-heading{background:#294f75}
+[data-theme="dark"] .review-correct,[data-theme="dark"] .review-incorrect,[data-theme="dark"] .review-skipped,[data-theme="dark"] .review-ungraded{background:#1e2938;color:#e4eaf2}
