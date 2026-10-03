@@ -1,0 +1,2 @@
+import {createApp,h,ref} from 'vue';import ScratchBoard from './ScratchBoard.vue';import './style.css';import './features.css';
+createApp({setup(){const open=ref(true);return()=>h('main',{style:'padding:24px'},[h('h1','Scratch board — local preview'),h('p','Test pages, auto shapes, Undo, PDF export and refresh recovery.'),h('button',{class:'btn btn-primary',onClick:()=>open.value=true},'Open scratch board'),open.value?h(ScratchBoard,{sessionId:'local-preview',onClose:()=>open.value=false}):null])}}).mount('#app');

@@ -1,72 +1,48 @@
 <script setup>
-import {onMounted,onUnmounted,ref} from 'vue';
-import {Download,Trash2,X,Undo2,Redo2,Eraser} from 'lucide-vue-next';
-const emit=defineEmits(['close']);
-const board=ref(null),root=ref(null),tool=ref('pen'),color=ref('#172943');
-let drawing=false,last=null,drag=null,history=[],future=[];
+import {onMounted,onUnmounted,ref,computed,nextTick} from 'vue';
+import {Download,Trash2,X,Undo2,Redo2,Eraser,Plus,ChevronLeft,ChevronRight,Maximize2,Minus} from 'lucide-vue-next';
+import {WIDTH,HEIGHT,recognize,drawStroke} from './scratchGeometry';import {makePdf} from './scratchPdf';
+const props=defineProps({sessionId:{type:[String,Number],default:'preview'}}),emit=defineEmits(['close']);
+const board=ref(null),root=ref(null),tool=ref('pen'),color=ref('#172943'),autoShape=ref(true),minimized=ref(false),expanded=ref(false),exporting=ref(false),message=ref('');
 const palette=['#172943','#d62828','#1f8f4e','#8e44ad'];
-
-function coords(e){
- const rect=board.value.getBoundingClientRect();
- return {x:(e.clientX-rect.left)*board.value.width/rect.width,y:(e.clientY-rect.top)*board.value.height/rect.height};
-}
-function snapshot(){return board.value.toDataURL('image/png')}
-function pushHistory(){
- history.push(snapshot());if(history.length>40)history.shift();future=[];
-}
-function restore(data){
- const img=new Image();img.onload=()=>{const ctx=board.value.getContext('2d');ctx.clearRect(0,0,board.value.width,board.value.height);ctx.drawImage(img,0,0,board.value.width,board.value.height)};img.src=data;
-}
-function down(e){if(e.button!==0&&e.pointerType==='mouse')return;pushHistory();drawing=true;last=coords(e);board.value.setPointerCapture?.(e.pointerId);e.preventDefault()}
-function move(e){
- if(!drawing)return;const p=coords(e),ctx=board.value.getContext('2d');ctx.save();ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.lineCap='round';
- if(tool.value==='eraser'){ctx.globalCompositeOperation='destination-out';ctx.lineWidth=28}else{ctx.globalCompositeOperation='source-over';ctx.strokeStyle=color.value;ctx.lineWidth=4}
- ctx.stroke();ctx.restore();last=p;e.preventDefault();
-}
-function up(){drawing=false;last=null}
-function clearBoard(record=true){if(record&&board.value)pushHistory();const ctx=board.value.getContext('2d');ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#fff';ctx.globalCompositeOperation='source-over';ctx.fillRect(0,0,board.value.width,board.value.height);ctx.restore()}
-function undo(){if(!history.length)return;future.push(snapshot());restore(history.pop())}
-function redo(){if(!future.length)return;history.push(snapshot());restore(future.pop())}
-function exportBoard(){const a=document.createElement('a');a.href=board.value.toDataURL('image/png');a.download='pyq-scratch-board.png';a.click()}
-function dragStart(e){
- if(e.target.closest('button'))return;
- const r=root.value.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top};
- window.addEventListener('pointermove',dragMove);window.addEventListener('pointerup',dragEnd,{once:true});
-}
-function dragMove(e){
- if(!drag)return;
- const w=root.value.offsetWidth,h=root.value.offsetHeight;
- root.value.style.left=Math.max(0,Math.min(window.innerWidth-w,e.clientX-drag.dx))+'px';
- root.value.style.top=Math.max(0,Math.min(window.innerHeight-h,e.clientY-drag.dy))+'px';
-}
+const fresh=()=>({strokes:[],history:[],future:[]});const pages=ref([fresh()]),index=ref(0),current=computed(()=>pages.value[index.value]);
+const key='pyq-scratch-v2-'+props.sessionId;let active=null,drag=null,pointer=null,raf=null,saveTimer;
+const clone=v=>JSON.parse(JSON.stringify(v));
+function checkpoint(){current.value.history.push(clone(current.value.strokes));if(current.value.history.length>40)current.value.history.shift();current.value.future=[]}
+function save(){try{sessionStorage.setItem(key,JSON.stringify({version:2,pages:pages.value,index:index.value,autoShape:autoShape.value,color:color.value}));message.value='Saved in this tab.'}catch{message.value='Tab storage full/unavailable. Export PDF to keep your work.'}}
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,300)}
+function paint(canvas,strokes){const ctx=canvas.getContext('2d');if(!ctx)return;ctx.fillStyle='#fff';ctx.fillRect(0,0,WIDTH,HEIGHT);for(const s of strokes)drawStroke(ctx,s)}
+function render(){if(board.value)paint(board.value,[...current.value.strokes,...(active?[active]:[])])}
+function requestRender(){if(raf!==null)return;raf=requestAnimationFrame(()=>{raf=null;render()})}
+function coords(e){const r=board.value.getBoundingClientRect();return {x:Math.max(0,Math.min(WIDTH,(e.clientX-r.left)*WIDTH/r.width)),y:Math.max(0,Math.min(HEIGHT,(e.clientY-r.top)*HEIGHT/r.height))}}
+function down(e){if(active||exporting.value||(e.pointerType==='mouse'&&e.button!==0))return;pointer=e.pointerId;active={tool:tool.value,color:color.value,points:[coords(e)]};board.value.setPointerCapture?.(pointer);requestRender();e.preventDefault()}
+function move(e){if(!active||e.pointerId!==pointer)return;for(const sample of e.getCoalescedEvents?.()||[e]){const p=coords(sample),last=active.points.at(-1);if(Math.hypot(p.x-last.x,p.y-last.y)>.8)active.points.push(p)}requestRender();e.preventDefault()}
+function up(e){if(!active||e&&e.pointerId!==pointer)return;const s=active;active=null;pointer=null;checkpoint();current.value.strokes.push(s);
+ if(autoShape.value&&s.tool==='pen'){const shape=recognize(s.points);if(shape){checkpoint();current.value.strokes[current.value.strokes.length-1]={...s,shape};message.value='Shape recognized. Undo restores your original stroke.'}}
+ render();scheduleSave()}
+function cancel(e){if(e.pointerId!==pointer)return;active=null;pointer=null;render()}
+function undo(){if(active||!current.value.history.length)return;current.value.future.push(clone(current.value.strokes));current.value.strokes=current.value.history.pop();render();scheduleSave()}
+function redo(){if(active||!current.value.future.length)return;current.value.history.push(clone(current.value.strokes));current.value.strokes=current.value.future.pop();render();scheduleSave()}
+async function select(n){if(active||exporting.value)return;index.value=n;await nextTick();render();scheduleSave()}
+async function addPage(){if(active||exporting.value)return;pages.value.push(fresh());await select(pages.value.length-1)}
+function clearPage(){if(active||!confirm('Clear this page? Other pages stay safe. You can Undo.'))return;checkpoint();current.value.strokes=[];render();scheduleSave()}
+async function deletePage(){if(active||!confirm('Delete this page? Other pages stay safe.'))return;pages.value.splice(index.value,1);if(!pages.value.length)pages.value.push(fresh());await select(Math.min(index.value,pages.value.length-1))}
+async function exportPdf(){if(exporting.value||active)return;exporting.value=true;message.value='Preparing PDF…';try{
+ const images=[];for(const page of pages.value){const canvas=document.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;paint(canvas,page.strokes);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.95));if(!blob)throw Error('Canvas export unavailable');images.push(new Uint8Array(await blob.arrayBuffer()))}
+ const url=URL.createObjectURL(makePdf(images)),a=document.createElement('a');a.href=url;a.download='pyq-scratch-pages.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);message.value='PDF exported. Your pages remain on the board.';
+ }catch(e){message.value='Export failed: '+e.message}finally{exporting.value=false}}
+function dragStart(e){if(expanded.value||e.target.closest('button'))return;const r=root.value.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top};window.addEventListener('pointermove',dragMove);window.addEventListener('pointerup',dragEnd,{once:true})}
+function dragMove(e){if(!drag)return;root.value.style.left=Math.max(0,Math.min(window.innerWidth-root.value.offsetWidth,e.clientX-drag.dx))+'px';root.value.style.top=Math.max(0,Math.min(window.innerHeight-40,e.clientY-drag.dy))+'px'}
 function dragEnd(){drag=null;window.removeEventListener('pointermove',dragMove)}
-function keyboard(e){
- if(!(e.ctrlKey||e.metaKey)||e.shiftKey)return;
- if(e.key.toLowerCase()==='z'){e.preventDefault();undo()}
- else if(e.key.toLowerCase()==='y'){e.preventDefault();redo()}
-}
-onMounted(()=>{clearBoard(false);window.addEventListener('keydown',keyboard)});
-onUnmounted(()=>window.removeEventListener('keydown',keyboard));
+async function resizeMode(){expanded.value=!expanded.value;minimized.value=false;await nextTick();render()}
+async function minimize(){minimized.value=!minimized.value;await nextTick();render()}
+function keyboard(e){e.stopPropagation();if(e.target.closest('input,textarea,select'))return;if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if(e.key.toLowerCase()==='y'){e.preventDefault();redo()}}}
+function close(){up();save();emit('close')}
+onMounted(()=>{try{const d=JSON.parse(sessionStorage.getItem(key));if(d?.version===2&&Array.isArray(d.pages)&&d.pages.length&&d.pages.every(p=>Array.isArray(p.strokes)&&Array.isArray(p.history)&&Array.isArray(p.future))){pages.value=d.pages;index.value=Math.min(Math.max(0,d.index||0),d.pages.length-1);autoShape.value=!!d.autoShape;if(palette.includes(d.color))color.value=d.color}}catch{message.value='Saved scratch data could not be restored.'}render();root.value.focus()});
+onUnmounted(()=>{clearTimeout(saveTimer);if(raf!==null)cancelAnimationFrame(raf);dragEnd();window.removeEventListener('pointerup',dragEnd);save()});
 </script>
-<template>
-<section ref="root" class="floating-tool scratch-tool" aria-label="Scratch board">
- <header class="floating-tool-header" @pointerdown="dragStart">
-   <strong>Scratch board</strong><span>Drag · resize · draw</span>
-   <div class="floating-tool-actions">
-    <button type="button" title="Undo (Ctrl+Z)" @click="undo"><Undo2 :size="16"/></button>
-    <button type="button" title="Redo (Ctrl+Y)" @click="redo"><Redo2 :size="16"/></button>
-    <button type="button" title="Clear board" @click="clearBoard"><Trash2 :size="16"/></button>
-    <button type="button" title="Export annotation" @click="exportBoard"><Download :size="16"/></button>
-    <button type="button" title="Close" @click="emit('close')"><X :size="17"/></button>
-   </div>
- </header>
- <div class="scratch-toolbar">
-  <button type="button" :class="{active:tool==='pen'}" @click="tool='pen'">Marker</button>
-  <button v-for="c in palette" :key="c" type="button" class="scratch-color" :class="{active:tool==='pen'&&color===c}" :style="{background:c}" :aria-label="'Marker '+c" @click="tool='pen';color=c"></button>
-  <button type="button" :class="{active:tool==='eraser'}" @click="tool='eraser'"><Eraser :size="15"/>Eraser</button>
- </div>
- <div class="scratch-canvas-wrap">
-  <canvas ref="board" width="1400" height="900" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up" @pointerleave="up"></canvas>
- </div>
-</section>
-</template>
+<template><section ref="root" class="floating-tool scratch-tool scratch-notebook" :class="{expanded,minimized}" role="dialog" aria-label="Scratch board" tabindex="-1" @keydown="keyboard">
+<header class="floating-tool-header" @pointerdown="dragStart"><strong>Scratch board</strong><span>Drag · resize · draw</span><div class="floating-tool-actions"><button title="Expand / restore" @click="resizeMode"><Maximize2 :size="16"/></button><button title="Minimize / restore" @click="minimize"><Minus :size="16"/></button><button title="Close" @click="close"><X :size="17"/></button></div></header>
+<template v-if="!minimized"><div class="scratch-toolbar"><button :class="{active:tool==='pen'}" @click="tool='pen'">Pen</button><button v-for="c in palette" :key="c" class="scratch-color" :class="{active:tool==='pen'&&color===c}" :style="{background:c}" :aria-label="'Pen '+c" @click="tool='pen';color=c;scheduleSave()"></button><button :class="{active:tool==='eraser'}" @click="tool='eraser'"><Eraser :size="15"/>Eraser</button><label class="shape-toggle"><input type="checkbox" v-model="autoShape" @change="scheduleSave">Auto shape</label></div>
+<div class="scratch-pagebar"><button title="Previous page" :disabled="index===0||exporting" @click="select(index-1)"><ChevronLeft :size="16"/></button><span>Page {{index+1}} / {{pages.length}}</span><button title="Next page" :disabled="index===pages.length-1||exporting" @click="select(index+1)"><ChevronRight :size="16"/></button><button :disabled="exporting" @click="addPage"><Plus :size="15"/>Page</button><button title="Undo (Ctrl+Z)" :disabled="!current.history.length" @click="undo"><Undo2 :size="16"/></button><button title="Redo (Ctrl+Y)" :disabled="!current.future.length" @click="redo"><Redo2 :size="16"/></button><button title="Clear current page" @click="clearPage"><Trash2 :size="15"/>Clear</button><button title="Delete current page" @click="deletePage">Delete page</button><button :disabled="exporting" @click="exportPdf"><Download :size="15"/>{{exporting?'Exporting…':'PDF'}}</button></div>
+<div class="scratch-canvas-wrap"><canvas ref="board" :width="WIDTH" :height="HEIGHT" aria-label="Drawing page" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="cancel"></canvas></div><p class="scratch-message" role="status">{{message||'Auto shape is optional. Work stays in this tab for this attempt.'}}</p></template></section></template>
