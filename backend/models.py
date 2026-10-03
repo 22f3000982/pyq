@@ -218,3 +218,8 @@ class ContentReport(db.Model):
     created_at = db.Column(db.Float, nullable=False, default=time.time)
     resolved_at = db.Column(db.Float)
     __table_args__ = (db.UniqueConstraint('question_id', 'guest_hash', name='uq_content_report_question_guest'),)
+
+class AboutPage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    details = db.Column(db.JSON, nullable=False, default=dict)
+    photo_path = db.Column(db.String(255))
