@@ -292,6 +292,32 @@ def latest_catalog_batch():
     if not batch:return jsonify(batch_id=None)
     return jsonify(batch_id=batch.id)
 
+@admin.post('/catalog/files/<int:id>/retry')
+@require_user(True)
+def retry_catalog_file(id):
+    from .acquisition import queue_catalog
+    item=db.get_or_404(IngestionFile,id)
+    if item.status not in ('PROCESSING_FAILED','EXTRACTION_FAILED'):
+        abort(409,description='Only failed papers can be retried.')
+    batch,count=queue_catalog(g.user.id,retry=True,limit=1,paper_ids=[item.paper_id])
+    return jsonify(batch_id=batch,queued=count),202
+
+@admin.post('/catalog/files/<int:id>/recover')
+@require_user(True)
+def recover_catalog_file(id):
+    from .ingestion import update_batch
+    item=db.get_or_404(IngestionFile,id)
+    if item.status not in ('FETCHING','PROCESSING'):
+        abort(409,description='This paper is no longer active. Refresh its status.')
+    if item.started_at and item.started_at>time.time()-1800:
+        abort(409,description='This paper may still be running. Recovery is available 30 minutes after it started; you can process another batch meanwhile.')
+    item.status='PROCESSING_FAILED';item.finished_at=time.time()
+    item.error='Interrupted processing recovered by admin. Retry this paper to download and extract again.'
+    paper=db.session.get(Paper,item.paper_id)
+    if not Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count():paper.status='PROCESSING_FAILED'
+    db.session.commit();update_batch(item.batch_id)
+    return jsonify(recovered=True,paper_id=item.paper_id)
+
 @admin.post('/catalog/batches/<int:id>/run-next')
 @require_user(True)
 def run_catalog_batch_next(id):
@@ -302,7 +328,7 @@ def run_catalog_batch_next(id):
     # Recover a request that died mid-paper (browser/network/server restart).
     stale_before=time.time()-1800
     for stale in IngestionFile.query.filter_by(batch_id=id).filter(
-        IngestionFile.status.in_(['FETCHING','PROCESSING']),IngestionFile.started_at<stale_before
+        IngestionFile.status.in_(['FETCHING','PROCESSING']),or_(IngestionFile.started_at.is_(None),IngestionFile.started_at<stale_before)
     ):
         stale.status='QUEUED' if stale.path else 'FETCH_QUEUED'
         stale.error='Previous on-demand processing request expired; safely resumed.'
@@ -323,7 +349,7 @@ def run_catalog_batch_next(id):
     finished=success+failed;percent=round((finished/total)*100,1) if total else 100
     return jsonify(id=id,status=batch.status,total=total,completed=success,failed=failed,active=active,queued=queued,
                    finished=finished,percent=percent,done=(total==0 or finished==total),
-                   items=[{'id':f.id,'paper_id':f.paper_id,'filename':f.filename,'status':f.status,'error':f.error,'extracted':f.extracted} for f in files])
+                   items=[{'id':f.id,'paper_id':f.paper_id,'filename':f.filename,'status':f.status,'error':f.error,'extracted':f.extracted,'elapsed_seconds':max(0,int(time.time()-f.started_at)) if f.started_at else None,'recoverable':f.status in ('FETCHING','PROCESSING') and (not f.started_at or f.started_at<time.time()-1800)} for f in files])
 
 @admin.get('/catalog/batches/<int:id>')
 @require_user(True)
@@ -338,7 +364,7 @@ def catalog_batch(id):
     percent=round((finished/total)*100,1) if total else 100
     return jsonify(id=id,status=batch.status,total=total,completed=success,failed=failed,active=active,queued=queued,
                    finished=finished,percent=percent,done=(total==0 or finished==total),
-                   items=[{'id':f.id,'paper_id':f.paper_id,'filename':f.filename,'status':f.status,'error':f.error,'extracted':f.extracted} for f in files])
+                   items=[{'id':f.id,'paper_id':f.paper_id,'filename':f.filename,'status':f.status,'error':f.error,'extracted':f.extracted,'elapsed_seconds':max(0,int(time.time()-f.started_at)) if f.started_at else None,'recoverable':f.status in ('FETCHING','PROCESSING') and (not f.started_at or f.started_at<time.time()-1800)} for f in files])
 
 @admin.get('/imports')
 @require_user(True)

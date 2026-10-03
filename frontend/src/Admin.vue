@@ -42,7 +42,7 @@ async function runWebBatch(){
     break
    }
    if(syncBatch.value.active>0&&syncBatch.value.queued===0&&!syncBatch.value.done){
-    notice.value='Another processing request is still active. This tab paused to avoid duplicate work.';break
+    notice.value='A paper is still marked active. You can start another term batch; use Recover interrupted paper once recovery becomes available.';break
    }
   }
   if(syncBatch.value?.done)notice.value=syncBatch.value.completed?`Batch finished: ${syncBatch.value.completed} successful, ${syncBatch.value.failed} failed.`:`Batch finished with 0 successful and ${syncBatch.value.failed} failed. Read the failure reasons below before retrying.`;
@@ -50,6 +50,8 @@ async function runWebBatch(){
  }catch(e){error.value=e.message}
  finally{webRunnerActive.value=false}
 }
+async function retryPaper(item){await run(async()=>{const d=await api('/admin/catalog/files/'+item.id+'/retry',{method:'POST',body:{}});if(!d.queued)throw Error('Paper is already queued or available. Refresh status.');syncBatch.value={id:d.batch_id};await refreshSyncBatch();await loadCampaign();await runWebBatch()})}
+async function recoverPaper(item){await run(async()=>{await api('/admin/catalog/files/'+item.id+'/recover',{method:'POST',body:{}});notice.value='Interrupted paper recovered. Use Retry failed to process it again; successful papers were preserved.';await refreshSyncBatch();await loadCampaign()})}
 function pauseWebBatch(){webRunnerStop.value=true}
 async function applyWorkbook(){
  if(!syncFile.value||!syncPreview.value)return;
@@ -165,12 +167,12 @@ async function toggleQuestion(q){await run(async()=>{const d=await api('/admin/q
  </div>
  <div v-if="campaign.current" class="campaign-current mt-3">
   <div><span class="eyebrow">CURRENT TARGET</span><h3>{{campaign.current.label}} · {{campaign.current.term}}</h3><p class="muted">{{campaign.current.available}} / {{campaign.current.total}} ready · {{campaign.current.pending}} pending · {{campaign.current.failed}} failed · {{campaign.current.queued}} queued</p></div>
-  <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" :disabled="busy||campaign.current.pending===0||campaign.current.queued>0" @click="processCampaign(false)">Process next 20</button></div>
+  <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" :disabled="busy||campaign.current.pending===0" @click="processCampaign(false)">Process next 20</button></div>
  </div>
  <p v-else class="alert mt-3 mb-0" :class="campaign.failed?'alert-warning':'alert-success'">{{campaign.failed?'All pending papers processed. Failed papers remain available for retry below.':'All catalog papers are complete.'}}</p>
  <div v-if="campaign.retry_target" class="mt-3">
   <p class="muted">{{campaign.retry_target.failed}} failed paper(s) in {{campaign.retry_target.label}} · {{campaign.retry_target.term}}. Failures do not block the next term.</p>
-  <button class="btn btn-outline-primary" :disabled="busy||webRunnerActive||campaign.queued>0" @click="processCampaign(true)">Retry failed (max 20)</button>
+  <button class="btn btn-outline-primary" :disabled="busy||webRunnerActive" @click="processCampaign(true)">Retry failed (max 20)</button>
  </div>
 </section>
 
@@ -180,7 +182,7 @@ async function toggleQuestion(q){await run(async()=>{const d=await api('/admin/q
   <div v-for="g in campaign.groups" class="campaign-row" :class="{current:campaign.current&&g.stage===campaign.current.stage&&g.term_id===campaign.current.term_id,complete:g.complete}">
    <div><strong>{{g.label}}</strong><span>{{g.term}}</span></div>
    <div class="campaign-row-progress"><div class="batch-progress-track"><div class="batch-progress-fill" :style="{width:g.percent+'%'}"></div></div><small>{{g.available}}/{{g.total}} ready · {{g.pending}} pending<span v-if="g.failed"> · {{g.failed}} failed</span></small></div>
-   <div class="campaign-term-actions"><strong>{{g.percent}}%</strong><button class="btn btn-outline-primary btn-sm" :disabled="busy||webRunnerActive||g.pending===0||campaign.queued>0" @click="processCampaign(false,g)" :aria-label="'Process up to 20 papers: '+g.label+' · '+g.term">Process 20</button></div>
+   <div class="campaign-term-actions"><strong>{{g.percent}}%</strong><button class="btn btn-outline-primary btn-sm" :disabled="busy||webRunnerActive||g.pending===0" @click="processCampaign(false,g)" :aria-label="'Process up to 20 papers: '+g.label+' · '+g.term">Process 20</button></div>
   </div>
  </div>
 </section>
@@ -191,7 +193,7 @@ async function toggleQuestion(q){await run(async()=>{const d=await api('/admin/q
  <div class="admin-stat-grid mt-3"><div class="panel"><span class="eyebrow">successful</span><strong>{{syncBatch.completed??0}}</strong></div><div class="panel"><span class="eyebrow">failed</span><strong>{{syncBatch.failed??0}}</strong></div><div class="panel"><span class="eyebrow">active</span><strong>{{syncBatch.active??0}}</strong></div><div class="panel"><span class="eyebrow">waiting</span><strong>{{syncBatch.queued??0}}</strong></div></div>
  <div v-if="syncBatch.done&&syncBatch.failed" class="alert alert-warning mt-3 mb-0"><strong>{{syncBatch.failed}} paper(s) reached a failure state.</strong> 100% here means the batch finished, not that it succeeded. The exact reason for each paper is shown below. Fix the common cause before retrying.</div>
  <div v-if="!syncBatch.done" class="d-flex gap-2 flex-wrap mt-3"><button v-if="!webRunnerActive" class="btn btn-primary" @click="runWebBatch">Resume processing</button><button v-else class="btn btn-outline-primary" @click="pauseWebBatch">Pause after current paper</button><button class="btn btn-light" :disabled="webRunnerActive" @click="refreshSyncBatch">Refresh status</button></div>
- <div class="sync-list mt-3"><div v-for="i in syncBatch.items||[]" class="sync-row sync-row-detail"><div><span>#{{i.paper_id}} · {{i.status}}</span><small v-if="i.error" class="batch-error">{{i.error}}</small></div><strong>{{i.filename}}</strong></div></div>
+ <div class="sync-list mt-3"><div v-for="i in syncBatch.items||[]" class="sync-row sync-row-detail"><div><span>#{{i.paper_id}} · {{i.status}}</span><small v-if="['PROCESSING','FETCHING'].includes(i.status)">Started {{Math.floor((i.elapsed_seconds||0)/60)}} minutes ago. Recovery available after 30 minutes; other batches can proceed.</small><button v-if="['PROCESSING','FETCHING'].includes(i.status)" class="btn btn-outline-primary btn-sm" :disabled="busy||webRunnerActive||!i.recoverable" @click="recoverPaper(i)">Recover interrupted paper</button><small v-if="i.error" class="batch-error">{{i.error}}</small></div><strong>{{i.filename}}</strong><button v-if="['PROCESSING_FAILED','EXTRACTION_FAILED'].includes(i.status)" class="btn btn-outline-primary btn-sm" :disabled="busy||webRunnerActive" @click="retryPaper(i)">Retry this paper</button></div></div>
 </section>
 
 <details v-if="resetPreview" class="panel danger-zone mb-4">

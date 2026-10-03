@@ -169,3 +169,24 @@ def test_admin_can_process_quiz2_before_quiz1(app,client):
     assert invalid.status_code==400
     too_many=client.post('/api/admin/catalog/campaign/process',headers=h,json={'stage':'quiz1','term_id':target['term_id'],'limit':21})
     assert too_many.status_code==400
+
+
+def test_recover_interrupted_file_preserves_completed_papers(app,client):
+    import time
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    target=client.get('/api/admin/catalog/campaign',headers=h).json['current']
+    queued=client.post('/api/admin/catalog/campaign/process',headers=h,json={'stage':target['stage'],'term_id':target['term_id'],'limit':1})
+    item=IngestionFile.query.filter_by(batch_id=queued.json['batch_id']).one()
+    item.status='PROCESSING';item.started_at=time.time();db.session.commit()
+    url=f'/api/admin/catalog/files/{item.id}/recover'
+    assert client.post(url,headers=h,json={}).status_code==409
+    item.started_at=time.time()-1900;db.session.commit()
+    snapshot=client.get(f'/api/admin/catalog/batches/{item.batch_id}',headers=h).json
+    assert snapshot['items'][0]['recoverable'] is True
+    assert client.post(url,headers=h,json={}).status_code==200
+    db.session.refresh(item);assert item.status=='PROCESSING_FAILED'
+    assert client.post(url,headers=h,json={}).status_code==409
+    assert Paper.query.count()>0
+    retry=client.post(f'/api/admin/catalog/files/{item.id}/retry',headers=h,json={})
+    assert retry.status_code==202 and retry.json['queued']==1
+    assert client.post(f'/api/admin/catalog/files/{item.id}/retry',headers=h,json={}).json['queued']==0
