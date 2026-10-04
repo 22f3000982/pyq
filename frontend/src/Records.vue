@@ -2,11 +2,11 @@
 import PaperProgress from './PaperProgress.vue';
 import {ref,onMounted} from 'vue';import {api,session,go} from './api';import {answerText,clock} from './utils';import MathText from './MathText.vue';import QuestionContent from './QuestionContent.vue';import AnswerValue from './AnswerValue.vue';
 const props=defineProps({route:String});const items=ref([]),total=ref(0),page=ref(1),error=ref(''),dashboard=ref(null),attempt=ref(null),showReview=ref(false),review=ref([]),reviewTotal=ref(0),reviewPage=ref(1);
-const result=props.route.startsWith('/result/'),collection=props.route==='/bookmarks';const active=ref([]);
+const result=props.route.startsWith('/result/'),collection=props.route==='/bookmarks';
 async function load(){try{
  if(result){attempt.value=await api('/attempts/'+props.route.split('/')[2]);if(attempt.value.status==='ACTIVE')go('/attempt/'+attempt.value.id)}
  else if(collection){const d=await api('/bookmarks?page='+page.value);items.value=d.items;total.value=d.total}
- else{const d=await api('/progress?page='+page.value);items.value=d.items;total.value=d.total;active.value=(await api('/attempts?limit=100')).items}
+ else{const d=await api('/progress?page='+page.value);items.value=d.items;total.value=d.total}
 }catch(e){error.value=e.message}}
 onMounted(load);
 async function practice(paper_id){try{const a=await api('/attempts',{method:'POST',body:collection?{collection:props.route.slice(1),mode:'practice'}:{paper_id,mode:'practice'}});go('/attempt/'+a.id)}catch(e){error.value=e.message}}
@@ -21,7 +21,6 @@ async function remove(id){await api('/questions/'+id+'/bookmark',{method:'DELETE
 <div class="eyebrow">YOUR PRACTICE WORKSPACE</div>
 <div class="section-row"><h1>{{collection?'My bookmarks':'My progress'}}</h1><button v-if="collection&&items.length" class="btn btn-primary" @click="practice()">Practice bookmarks</button></div>
 <p v-if="!collection" class="muted">One latest score per paper. Retaking a paper replaces its previous score; scores and bookmarks stay on this browser only. Clearing site data removes them.</p>
-<section v-if="!collection&&active.length" class="panel mb-4"><h2>Continue an active session</h2><div v-for="a in active" :key="a.id" class="section-row"><span>{{a.title}} · {{a.mode}}</span><a class="btn btn-light" :href="'#/attempt/'+a.id">Resume</a></div></section>
 <div v-if="!items.length" class="empty panel"><h3>{{collection?'No bookmarks yet.':'No completed papers yet.'}}</h3><a href="#/" class="btn btn-primary">Explore courses</a></div>
 <template v-else-if="collection"><article class="panel review-card" v-for="q in items" :key="q.id"><span class="eyebrow">{{q.kind}} · {{q.topic||'Topic not specified'}}</span><QuestionContent :text="q.text" :images="(q.images||[]).filter(x=>!x.option_key)"/><div class="d-flex gap-2 mt-3"><a :href="'#/paper/'+q.paper_id" class="btn btn-light">Open paper</a><button class="text-btn" @click="remove(q.id)">Remove bookmark</button></div></article></template>
 <template v-else><article v-for="p in items" :key="p.paper_id" class="paper-row panel"><div class="paper-info"><span class="eyebrow">{{p.course}} · {{p.exam}} · {{p.term}}</span><h3>{{p.name}}</h3><PaperProgress :progress="p"/></div><a class="btn btn-primary" :href="'#/paper/'+p.paper_id">Retake Test</a></article></template>

@@ -72,7 +72,27 @@ def test_guest_timer_expiry_and_active_cap(app,client):
     assert client.get(f"/api/attempts/{a['id']}/status").json['status']=='SUBMITTED'
     assert PaperProgress.query.count()==0
     for _ in range(5):assert client.post('/api/attempts',headers=h,json={'paper_id':p.id,'mode':'practice'}).status_code==201
-    assert client.post('/api/attempts',headers=h,json={'paper_id':p.id,'mode':'practice'}).status_code==429
+    assert client.post('/api/attempts',headers=h,json={'paper_id':p.id,'mode':'practice'}).status_code==201
+    assert Attempt.query.filter_by(status='ACTIVE').count()==1
+
+
+def test_new_start_discards_old_answers_and_keeps_other_visitors(app,client):
+    p=seed();h=visitor(client)
+    other=app.test_client();oh=visitor(other)
+    other_id=other.post('/api/attempts',headers=oh,json={'paper_id':p.id}).json['id']
+    first=client.post('/api/attempts',headers=h,json={'paper_id':p.id}).json
+    qid=first['palette'][0]['question_id']
+    client.post(f"/api/attempts/{first['id']}/answers",headers=h,json={'question_id':qid,'answer':['A'],'marked':True})
+    fresh=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':p.id}).json
+    assert fresh['id']!=first['id']
+    assert all(i['answer'] is None and not i['marked'] and not i['visited'] for i in fresh['items'])
+    assert db.session.get(Attempt,first['id']) is None
+    assert db.session.get(Attempt,other_id).status=='ACTIVE'
+    assert other.delete(f"/api/attempts/{fresh['id']}",headers=oh).status_code==200
+    assert db.session.get(Attempt,fresh['id']) is not None
+    assert client.delete(f"/api/attempts/{fresh['id']}",headers=h).status_code==200
+    assert db.session.get(Attempt,fresh['id']) is None
+    assert client.delete(f"/api/attempts/{fresh['id']}",headers=h).status_code==200
 
 
 def test_mode_toggle_keeps_attempt_and_never_rebuilds_images(app,client,monkeypatch):

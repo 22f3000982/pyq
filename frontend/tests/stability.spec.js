@@ -45,11 +45,10 @@ describe('nonblocking exam navigation',()=>{
   await vi.advanceTimersByTimeAsync(1000);await flushPromises();expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/status')).toHaveLength(1);
   expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/questions')).toHaveLength(1);w.unmount();
  });
- it('keeps offline responses across navigation and restores them after remount',async()=>{
+ it('keeps offline responses inside the test and discards them on leaving',async()=>{
   let w=mount(Exam,{props:{id:4}});await flushPromises();const base=mocks.api.getMockImplementation();mocks.api.mockImplementation((path,o)=>path.endsWith('/answers')?Promise.reject(new Error('Offline')):base(path,o));
-  await w.get('input.numeric-answer').setValue('-2.5');await vi.advanceTimersByTimeAsync(400);await button(w,'Save & next').trigger('click');await w.get('input.numeric-answer').setValue('7');w.unmount();
-  w=mount(Exam,{props:{id:4}});await flushPromises();expect(w.get('input.numeric-answer').element.value).toBe('7');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('-2.5');
-  mocks.api.mockImplementation(base);await button(w,'Retry save').trigger('click');await flushPromises();expect(sessionStorage.getItem('pyq-pending-4')).toBeNull();w.unmount();
+  await w.get('input.numeric-answer').setValue('-2.5');await vi.advanceTimersByTimeAsync(400);await button(w,'Save & next').trigger('click');await w.get('input.numeric-answer').setValue('7');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('-2.5');
+  await vi.advanceTimersByTimeAsync(600);await flushPromises();mocks.api.mockImplementation(base);await button(w,'Retry save').trigger('click');await flushPromises();expect(sessionStorage.getItem('pyq-pending-4')).toBeNull();w.unmount();expect(mocks.api).toHaveBeenCalledWith('/attempts/4',{method:'DELETE'});expect(sessionStorage.getItem('pyq-draft-4')).toBeNull();
  });
  it('submits only once when the timer expires while the response is pending',async()=>{
   attempt.deadline=Date.now()/1000+1;const base=mocks.api.getMockImplementation();let release;

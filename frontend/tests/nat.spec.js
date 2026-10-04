@@ -16,9 +16,9 @@ describe('NAT drafts in timed exams',()=>{
   await w.findAll('button').find(b=>b.text().includes('Previous')).trigger('click');await flushPromises();expect(w.get('input.numeric-answer').element.value).toBe('3/4');
   await w.get('input.numeric-answer').setValue('0');await vi.advanceTimersByTimeAsync(600);await flushPromises();expect(stored[1]).toBe('0');w.unmount();
  });
- it('recovers an unsaved draft on refresh and flushes before submit',async()=>{
+ it('discards drafts on leaving and flushes fresh answers before submit',async()=>{
   let w=mount(Exam,{props:{id:1}});await flushPromises();await w.get('input.numeric-answer').setValue('42');w.unmount();
-  w=mount(Exam,{props:{id:1}});await flushPromises();expect(w.get('input.numeric-answer').element.value).toBe('42');
+  w=mount(Exam,{props:{id:1}});await flushPromises();expect(w.get('input.numeric-answer').element.value).toBe('');expect(mocks.api).toHaveBeenCalledWith('/attempts/1',{method:'DELETE'});await w.get('input.numeric-answer').setValue('42');
   await w.findAll('button').find(b=>b.text()==='Submit exam').trigger('click');await w.findAll('button').find(b=>b.text()==='Submit attempt').trigger('click');await flushPromises();expect(stored[1]).toBe('42');expect(mocks.go).toHaveBeenCalledWith('/result/1');w.unmount();
  });
 });

@@ -80,7 +80,9 @@ def test_late_timeout_does_not_overwrite_newer_completion(client):
     p=paper();h=login(client)
     old=client.post('/api/attempts',json={'paper_id':p.id,'mode':'exam'},headers=h).json
     newer=take(client,h,p,9)
-    row=db.session.get(Attempt,old['id']);row.deadline=newer['submitted_at']-10;db.session.commit()
+    assert db.session.get(Attempt,old['id']) is None
+    assert client.get(f"/api/attempts/{old['id']}").status_code==404
+    assert db.session.get(Attempt,newer['id']).status=='SUBMITTED'
     expire_all();assert PaperProgress.query.count()==0
 
 def test_practice_mode_switch_and_unknown_percentage(client):

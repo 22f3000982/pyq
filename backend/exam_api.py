@@ -1,7 +1,7 @@
 from .storage import send_asset,image_url,StorageError
 import time
 from flask import Blueprint,jsonify,request,g,abort,current_app,send_from_directory,redirect
-from sqlalchemy import or_,insert
+from sqlalchemy import insert
 from sqlalchemy.orm import selectinload,joinedload
 from .models import *
 from . import limiter
@@ -96,6 +96,10 @@ def start_payload(a,snapshots,images_prepared=False):
 
 def finish_new_attempt(a,snapshots):
     """Persist all answer rows in one batch and return the already-built bootstrap."""
+    # A new start replaces this visitor's unfinished tests, even with answers.
+    old_ids=db.session.query(Attempt.id).filter_by(guest_hash=g.guest_hash,status='ACTIVE')
+    db.session.query(AttemptAnswer).filter(AttemptAnswer.attempt_id.in_(old_ids)).delete(synchronize_session=False)
+    Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').delete(synchronize_session=False)
     with span('attempt_insert'):
         db.session.add(a);db.session.flush()
     with span('answer_insert'):
@@ -138,17 +142,6 @@ def collection_query(kind):
 @require_visitor
 def start():
     maintain_temporary_sessions()
-    # One lightweight read replaces separate expiry, cleanup and count scans.
-    now=time.time()
-    rows=db.session.query(Attempt.id,Attempt.status,Attempt.deadline,Attempt.expires_at).filter(
-        Attempt.guest_hash==g.guest_hash,
-        or_(Attempt.status=='ACTIVE',Attempt.expires_at<=now)).all()
-    if any(row.expires_at<=now or (row.status=='ACTIVE' and row.deadline and row.deadline<=now) for row in rows):
-        expire_all(guest_hash=g.guest_hash)
-        active=Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').count()
-    else:
-        active=sum(row.status=='ACTIVE' for row in rows)
-    if active>=5:abort(429,description='Finish one of your active sessions before starting another paper.')
     b=body();mode=b.get('mode','practice')
     if mode not in ('practice','exam'):abort(400,description='Choose practice or exam')
     if b.get('collection')=='mistakes' and b.get('attempt_id'):
@@ -198,6 +191,15 @@ def start():
 def history():
     expire_all(guest_hash=g.guest_hash)
     return jsonify(paginate(Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').order_by(Attempt.started_at.desc()),attempt_json))
+
+
+@exams.delete('/attempts/<int:id>')
+@require_visitor
+def abandon(id):
+    a=Attempt.query.filter_by(id=id,guest_hash=g.guest_hash).first()
+    if a and a.status=='ACTIVE':
+        db.session.delete(a);db.session.commit()
+    return jsonify({'ok':True})
 
 @exams.get('/attempts/<int:id>')
 @require_visitor
