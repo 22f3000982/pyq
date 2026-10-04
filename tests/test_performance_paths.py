@@ -207,9 +207,21 @@ def test_home_bundle_is_public_cached_and_tracks_content_changes(app,client):
     pid=seed(1)[0]
     r=client.get('/api/home')
     assert r.status_code==200 and r.json['courses'] and r.json['meta']['terms']
+    import re
+    assert int(re.search(r'queries;desc="(\d+)"',r.headers['Server-Timing'])[1])<=8
     assert r.json['stats']['papers']==1
     assert not any(key in r.json for key in ('csrf','user','answers','result'))
     assert 'queries;desc="0"' in client.get('/api/home').headers['Server-Timing']
     from backend.models import Paper
     db.session.get(Paper,pid).status='ARCHIVED';db.session.commit()
     assert client.get('/api/home').json['stats']['papers']==0
+
+
+def test_worker_warmup_reads_public_content_without_attempts_or_storage_writes(app,client):
+    from backend.warmup import warm_public_content
+    seed(1)
+    before=Attempt.query.count()
+    assert warm_public_content(app)>=0
+    r=client.get('/api/home')
+    assert 'queries;desc="0"' in r.headers['Server-Timing']
+    assert Attempt.query.count()==before

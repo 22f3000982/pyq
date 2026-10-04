@@ -33,7 +33,12 @@ def install(app, db):
             g.perf['sql'] += (time.perf_counter() - context._pyq_started) * 1000
             g.perf['queries'] += 1
 
+    def connect(dialect, record, args, params):
+        with span('db_connect'):
+            return dialect.connect(*args,**params)
+
     with app.app_context():
+        event.listen(db.engine,'do_connect',connect,retval=True)
         event.listen(db.engine, 'before_cursor_execute', before)
         event.listen(db.engine, 'after_cursor_execute', after)
 
@@ -45,7 +50,7 @@ def install(app, db):
         elapsed = (time.perf_counter() - metrics['start']) * 1000
         values = [f'app;dur={elapsed:.2f}', f'sql;dur={metrics["sql"]:.2f}',
                   f'queries;desc="{metrics["queries"]}"']
-        for name in ('ensure_local', 'r2_download', 'disk_write', 'send_asset'):
+        for name in ('ensure_local', 'r2_download', 'disk_write', 'send_asset', 'attempt_insert', 'answer_insert', 'commit', 'bootstrap', 'db_connect', 'image_metadata'):
             if name in metrics:
                 values.append(f'{name};dur={metrics[name]:.2f}')
         for name in ('asset_hit', 'asset_miss', 'cache_hit', 'cache_miss', 'cache_error'):

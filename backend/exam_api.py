@@ -7,6 +7,7 @@ from .models import *
 from . import limiter
 from .api import integer_argument,require_visitor,body,paginate,visible_papers
 from .engine import *
+from .performance import span
 exams=Blueprint('exams',__name__,url_prefix='/api')
 
 def owned(id):
@@ -95,23 +96,29 @@ def start_payload(a,snapshots,images_prepared=False):
 
 def finish_new_attempt(a,snapshots):
     """Persist all answer rows in one batch and return the already-built bootstrap."""
-    db.session.add(a);db.session.flush()
-    db.session.execute(insert(AttemptAnswer),[
-        {'attempt_id':a.id,'question_id':s['id'],'position':n,'snapshot':s,
-         'visited':False,'response_touched':False,'marked':False}
-        for n,s in enumerate(snapshots)
-    ])
+    with span('attempt_insert'):
+        db.session.add(a);db.session.flush()
+    with span('answer_insert'):
+        db.session.execute(insert(AttemptAnswer),[
+            {'attempt_id':a.id,'question_id':s['id'],'position':n,'snapshot':s,
+             'visited':False,'response_touched':False,'marked':False}
+            for n,s in enumerate(snapshots)
+        ])
     # Resolve DB-backed delivery metadata before releasing the transaction.
     if request.args.get('bootstrap')=='1':
-        use_paper_image_delivery(a.paper_id)
-        prepare_image_paths(snapshots,attempt_image_ttl(a))
+        with span('image_metadata'):
+            use_paper_image_delivery(a.paper_id)
+            prepare_image_paths(snapshots,attempt_image_ttl(a))
     from types import SimpleNamespace
     state=SimpleNamespace(**{name:getattr(a,name) for name in (
         'id','paper_id','title','mode','status','started_at','deadline',
         'submitted_at','result','expires_at','records_progress')})
-    db.session.commit()
+    with span('commit'):
+        db.session.commit()
     # Signing/serializing all images must not occupy a pooled DB connection.
-    return jsonify(start_payload(state,snapshots,images_prepared=True)),201
+    with span('bootstrap'):
+        response=jsonify(start_payload(state,snapshots,images_prepared=True))
+    return response,201
 
 def item_json(a,i,bookmarks):
     result={'question':question_with_image_urls(i.snapshot),'answer':i.answer,'marked':i.marked,'visited':i.visited,'status':a.status,'bookmarked':i.question_id in bookmarks}

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from functools import wraps
 from flask import Blueprint,jsonify,request,session,g,abort
 from werkzeug.security import generate_password_hash,check_password_hash
-from sqlalchemy import or_,and_,func,case
+from sqlalchemy import or_,and_,func,case,select
 from sqlalchemy.orm import joinedload
 from .models import *
 from . import limiter
@@ -85,8 +85,9 @@ def paper_json(p):return paper_rows([p])[0]
 def course_rows(courses):
     if not courses:return []
     ids=[c.id for c in courses];groups={id:{} for id in ids};years={id:[] for id in ids}
-    for cid,name,count in db.session.query(Paper.course_id,ExamType.name,func.count(Paper.id)).join(ExamType,Paper.exam_type_id==ExamType.id).filter(Paper.course_id.in_(ids),Paper.status!='ARCHIVED').group_by(Paper.course_id,ExamType.name):groups[cid][name]=count
-    for cid,year in db.session.query(Paper.course_id,Term.year).join(Term,Paper.term_id==Term.id).filter(Paper.course_id.in_(ids),Paper.status!='ARCHIVED').distinct().order_by(Term.year.desc()):years[cid].append(year)
+    for cid,name,year,count in db.session.query(Paper.course_id,ExamType.name,Term.year,func.count(Paper.id)).join(ExamType,Paper.exam_type_id==ExamType.id).join(Term,Paper.term_id==Term.id).filter(Paper.course_id.in_(ids),Paper.status!='ARCHIVED').group_by(Paper.course_id,ExamType.name,Term.year).order_by(Term.year.desc()):
+        groups[cid][name]=groups[cid].get(name,0)+count
+        if year not in years[cid]:years[cid].append(year)
     counts=dict(db.session.query(Paper.course_id,func.count(Question.id)).join(Question,Question.paper_id==Paper.id).filter(Paper.course_id.in_(ids),Paper.status!='ARCHIVED',Question.status=='AVAILABLE').group_by(Paper.course_id).all())
     return [{'id':c.id,'name':c.name,'code':c.code,'level':c.level,'course_type':c.course_type,'exams':groups[c.id],'years':years[c.id],'paper_count':sum(groups[c.id].values()),'question_count':counts.get(c.id,0)} for c in courses]
 
@@ -132,9 +133,12 @@ def stats():
             .join(Paper,Paper.exam_type_id==ExamType.id)
             .filter(Paper.status!='ARCHIVED',or_(Paper.id.in_(ready),Paper.canonical_paper_id.in_(ready)))
             .group_by(ExamType.name).all())
-        return dict(courses=Course.query.count(),papers=Paper.query.filter(Paper.status!='ARCHIVED').count(),
-                    questions=Question.query.filter(Question.status=='AVAILABLE',Question.paper_id.in_(visible_effective)).count(),
-                    exam_papers={name:count for name,count in available})
+        counts=db.session.execute(select(
+            select(func.count(Course.id)).scalar_subquery(),
+            select(func.count(Paper.id)).where(Paper.status!='ARCHIVED').scalar_subquery(),
+            select(func.count(Question.id)).where(Question.status=='AVAILABLE',Question.paper_id.in_(select(visible_effective.c.paper_id))).scalar_subquery()
+        )).one()
+        return dict(courses=counts[0],papers=counts[1],questions=counts[2],exam_papers={name:count for name,count in available})
     return jsonify(cached('public-stats',load))
 
 @api.get('/courses')
