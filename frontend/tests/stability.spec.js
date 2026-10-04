@@ -65,3 +65,16 @@ describe('visible source fidelity',()=>{
   const w=mount(MathText,{props:{text:String.raw`Inline \(\frac{\alpha_1^2}{2}\) display \[\begin{pmatrix}1&2\\3&4\end{pmatrix}\] <img src=x onerror=alert(1)>`}});await flushPromises();expect(w.findAll('.katex')).toHaveLength(2);expect(w.find('img').exists()).toBe(false);expect(w.text()).toContain('<img src=x');w.unmount();
  });
 });
+
+it('switches with one click and saves pending answers first',async()=>{
+ const w=mount(Exam,{props:{id:4}});await flushPromises();let release;
+ const base=mocks.api.getMockImplementation();
+ mocks.api.mockImplementation((path,o)=>path.endsWith('/switch-mode')?new Promise(r=>release=r):base(path,o));
+ await w.get('input.numeric-answer').setValue('7');
+ await button(w,'Switch to practice').trigger('click');await flushPromises();
+ expect(w.find('[aria-labelledby="switch-title"]').exists()).toBe(false);
+ expect(mocks.api.mock.calls.filter(c=>c[0].endsWith('/switch-mode'))).toHaveLength(1);
+ expect(button(w,'Switching…').attributes('disabled')).toBeDefined();
+ const paths=mocks.api.mock.calls.map(c=>c[0]);expect(paths.indexOf('/attempts/4/answers')).toBeLessThan(paths.indexOf('/attempts/4/switch-mode'));
+ release({id:5});await flushPromises();expect(mocks.go).toHaveBeenCalledWith('/attempt/5');w.unmount();
+});
