@@ -41,7 +41,7 @@ async function requestApi(path,options={}){
  const initial=path.match(/^\/attempts\/(\d+)\?bootstrap=1$/);
  if(method==='GET'&&initial){const cached=bootstraps.get(initial[1]);bootstraps.delete(initial[1]);if(cached&&cached.user===session.user?.id&&Date.now()-cached.time<10000)return browserData({...cached.data,server_time:cached.data.server_time+(Date.now()-cached.time)/1000})}
  if(path.startsWith('/auth/'))bootstraps.clear();
- const createsAttempt=method==='POST'&&(path==='/attempts'||/^\/attempts\/\d+\/switch-mode$/.test(path));
+ const createsAttempt=method==='POST'&&path==='/attempts';
  const target=createsAttempt?path+'?bootstrap=1':path;
  const r=await fetch('/api'+target,{method,credentials:'same-origin',headers:{...(body?{'Content-Type':'application/json'}:{}),...(method!=='GET'?{'X-CSRF-Token':session.csrf}:{})},body:form|| (body?JSON.stringify(body):undefined)});
  let data;try{data=await r.json()}catch{const error=new Error('The server is temporarily unavailable. Please retry.');error.status=r.status;throw error;}

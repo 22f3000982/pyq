@@ -378,17 +378,22 @@ def switch_mode(id):
         except (TypeError,ValueError):abort(400,description='Choose a duration in minutes')
         if not 60<=duration<=28800:abort(400,description='Duration must be 1–480 minutes')
         deadline=time.time()+duration
-    # Freeze the old timed score before any answers are revealed. A new continuation
-    # uses the same snapshots/responses; a practice-to-exam continuation is assisted.
-    records_progress=source.records_progress
-    source.records_progress=False
-    submit_attempt(source,record_progress=False)
-    title=('Assisted timed continuation · ' if mode=='exam' else 'Practice continuation · ')+source.title
-    a=Attempt(user_id=None,guest_hash=g.guest_hash,paper_id=source.paper_id,mode=mode,title=title[:300],deadline=deadline,records_progress=records_progress,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
-    db.session.add(a);db.session.flush()
-    for i in source.items:
-        db.session.add(AttemptAnswer(attempt_id=a.id,question_id=i.question_id,position=i.position,snapshot=i.snapshot,answer=i.answer,visited=i.visited,marked=i.marked,response_touched=i.response_touched))
-    db.session.commit();return start_response(a)
+    # Change the existing session in place. No new snapshots or image URLs.
+    source.mode=mode
+    source.deadline=deadline
+    source.expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS
+    if mode=='exam' and not source.title.startswith('Assisted timed session · '):
+        source.title=('Assisted timed session · '+source.title)[:300]
+    feedback=[]
+    if mode=='practice':
+        feedback=[{'question_id':i.question_id,'feedback':{
+            **grade(i.snapshot,i.answer),'answers':i.snapshot['answers'],
+            'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}}
+            for i in source.items if i.answer is not None]
+    payload={**attempt_status_json(source),'mode':source.mode,'title':source.title,'feedback':feedback}
+    db.session.commit()
+    return jsonify(payload),200
+
 
 
 @exams.post('/questions/<int:id>/report-format')

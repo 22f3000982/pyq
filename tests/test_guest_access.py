@@ -52,8 +52,9 @@ def test_guest_mode_switch_wrong_practice_and_browser_bookmark_ids(app,client):
     qid=a['palette'][2]['question_id']
     assert client.post(f"/api/attempts/{a['id']}/answers",headers=h,json={'question_id':qid,'answer':'7'}).status_code==200
     nxt=client.post(f"/api/attempts/{a['id']}/switch-mode?bootstrap=1",headers=h,json={'mode':'exam','duration_seconds':60})
-    assert nxt.status_code==201,nxt.json
-    n=nxt.json;answer=next(i for i in n['items'] if i['question']['id']==qid)
+    assert nxt.status_code==200,nxt.json
+    n=nxt.json;assert n['id']==a['id'];assert 'items' not in n
+    bundle=client.get(f"/api/attempts/{n['id']}?bootstrap=1").json;answer=next(i for i in bundle['items'] if i['question']['id']==qid)
     assert answer['answer']=='7' and 'feedback' not in answer
     client.post(f"/api/attempts/{n['id']}/submit",headers=h,json={})
     wrong=client.post('/api/attempts',headers=h,json={'collection':'mistakes','attempt_id':n['id'],'mode':'practice'})
@@ -72,3 +73,17 @@ def test_guest_timer_expiry_and_active_cap(app,client):
     assert PaperProgress.query.count()==0
     for _ in range(5):assert client.post('/api/attempts',headers=h,json={'paper_id':p.id,'mode':'practice'}).status_code==201
     assert client.post('/api/attempts',headers=h,json={'paper_id':p.id,'mode':'practice'}).status_code==429
+
+
+def test_mode_toggle_keeps_attempt_and_never_rebuilds_images(app,client,monkeypatch):
+    p=seed();h=visitor(client)
+    a=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':p.id,'mode':'exam','duration_seconds':5400}).json
+    qid=a['palette'][0]['question_id']
+    client.post(f"/api/attempts/{a['id']}/answers",headers=h,json={'question_id':qid,'answer':['A']})
+    monkeypatch.setattr('backend.exam_api.question_with_image_urls',lambda *a:(_ for _ in ()).throw(AssertionError('No image rebuild during switch')))
+    before=Attempt.query.count()
+    r=client.post(f"/api/attempts/{a['id']}/switch-mode",headers=h,json={'mode':'practice'})
+    assert r.status_code==200 and r.json['id']==a['id'] and r.json['feedback']
+    assert Attempt.query.count()==before and 'items' not in r.json
+    r=client.post(f"/api/attempts/{a['id']}/switch-mode",headers=h,json={'mode':'exam','duration_seconds':5400})
+    assert r.status_code==200 and r.json['feedback']==[] and r.json['deadline']>time.time()

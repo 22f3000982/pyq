@@ -76,5 +76,5 @@ it('switches with one click and saves pending answers first',async()=>{
  expect(mocks.api.mock.calls.filter(c=>c[0].endsWith('/switch-mode'))).toHaveLength(1);
  expect(button(w,'Switching…').attributes('disabled')).toBeDefined();
  const paths=mocks.api.mock.calls.map(c=>c[0]);expect(paths.indexOf('/attempts/4/answers')).toBeLessThan(paths.indexOf('/attempts/4/switch-mode'));
- release({id:5});await flushPromises();expect(mocks.go).toHaveBeenCalledWith('/attempt/5');w.unmount();
+ release({id:4,mode:'practice',title:'Source paper',deadline:null,server_time:Date.now()/1000,feedback:[]});await flushPromises();expect(mocks.go).not.toHaveBeenCalled();expect(button(w,'Switch to exam')).toBeDefined();expect(mocks.api.mock.calls.filter(c=>c[0]==='/attempts/4/questions')).toHaveLength(1);w.unmount();
 });
