@@ -223,3 +223,34 @@ class AboutPage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     details = db.Column(db.JSON, nullable=False, default=dict)
     photo_path = db.Column(db.String(255))
+
+class AISolution(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    question_id=db.Column(db.ForeignKey('question.id',ondelete='CASCADE'),nullable=False,unique=True)
+    version=db.Column(db.String(64),nullable=False)
+    text=db.Column(db.Text,nullable=False,default='')
+    final_answer=db.Column(db.JSON)
+    status=db.Column(db.String(24),nullable=False,default='DRAFT',index=True)
+    provider=db.Column(db.String(30),default='gemini')
+    model=db.Column(db.String(100))
+    prompt_version=db.Column(db.String(30),default='v1')
+    checks=db.Column(db.JSON,default=list)
+    updated_at=db.Column(db.Float,default=time.time)
+
+class SolutionBatch(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    status=db.Column(db.String(24),nullable=False,default='RUNNING')
+    created_at=db.Column(db.Float,default=time.time)
+    worker_seen=db.Column(db.Float)
+
+class SolutionJob(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    batch_id=db.Column(db.ForeignKey('solution_batch.id',ondelete='CASCADE'),nullable=False,index=True)
+    question_id=db.Column(db.ForeignKey('question.id',ondelete='CASCADE'),nullable=False,unique=True)
+    version=db.Column(db.String(64),nullable=False)
+    status=db.Column(db.String(24),nullable=False,default='QUEUED',index=True)
+    attempts=db.Column(db.Integer,nullable=False,default=0)
+    lease_token=db.Column(db.String(64))
+    lease_until=db.Column(db.Float)
+    retry_at=db.Column(db.Float,nullable=False,default=0)
+    error=db.Column(db.String(240))

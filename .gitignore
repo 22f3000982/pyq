@@ -19,3 +19,5 @@ local-source.json
 storage-reports/
 r2-ready.json
 frontend/.installed-lock-sha256
+
+tools/ai-worker/local.env

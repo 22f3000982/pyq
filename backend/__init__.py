@@ -132,6 +132,8 @@ def create_app(config=None):
     @app.errorhandler(ValueError)
     def invalid(e):
         db.session.rollback(); return jsonify(error=str(e)),400
+    from .ai_solutions import bp as ai_solutions
+    app.register_blueprint(ai_solutions)
     from .about_api import about
     app.register_blueprint(about)
     from .api import api

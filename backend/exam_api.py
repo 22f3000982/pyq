@@ -292,7 +292,10 @@ def review(id):
     a=owned(id)
     if a.status=='ACTIVE':abort(409,description='Submit the attempt before reviewing solutions')
     q=AttemptAnswer.query.filter_by(attempt_id=id).order_by(AttemptAnswer.position)
-    return jsonify(paginate(q,lambda i:{'question':i.snapshot,'answer':i.answer,'outcome':i.outcome,'awarded':i.awarded,'manual_note':i.manual_note}))
+    from .ai_solutions import review_solutions
+    result=paginate(q,lambda i:{'question':i.snapshot,'answer':i.answer,'outcome':i.outcome,'awarded':i.awarded,'manual_note':i.manual_note})
+    result['items']=review_solutions(result['items'])
+    return jsonify(result)
 
 @exams.route('/questions/<int:id>/bookmark',methods=['POST','DELETE'])
 @require_visitor

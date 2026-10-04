@@ -199,3 +199,7 @@ uses text nodes and `<strong>` only, never raw HTML, and leaves math/image marke
 Loaders reflect actual library, start-session, admin save/upload/process/retry, report and
 submit requests. Failures retain visible errors and restore controls. Reduced-motion
 preferences disable spinner animation. Exam options and navigation have no new animation.
+
+## AI solutions: local PC generation
+
+Admin → AI Solutions queues small batches; a single local Windows worker generates Gemini text solutions, and administrators review/edit/publish them. Published explanations load only after practice Check answer or exam submission. Start Exam does not invoke AI or include solution text. Setup instructions: [tools/ai-worker/README.md](tools/ai-worker/README.md). Normal deployment migrations add the queue/solution tables; no source answer keys or scoring rules are changed.

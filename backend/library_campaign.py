@@ -19,6 +19,7 @@ def library_inventory(include_storage=True):
         'images':QuestionImage.query.count(),'options':QuestionOption.query.count(),'source_entries':SourceEntry.query.count(),
         'ingestion_files':IngestionFile.query.count(),'ingestion_batches':IngestionBatch.query.count(),'imports':ImportRun.query.count(),
         'attempts':Attempt.query.count(),'progress':PaperProgress.query.count(),'bookmarks':Bookmark.query.count(),
+        'ai_solutions':AISolution.query.count(),'solution_jobs':SolutionJob.query.count(),'solution_batches':SolutionBatch.query.count(),
         'reviews':QuestionReview.query.count(),'content_reports':ContentReport.query.count(),
     }
     counts['ready_papers']=db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE').distinct().count()
@@ -48,6 +49,9 @@ def reset_library(user_id,cleanup_storage=True,cancel_active=False):
             f.events=(f.events or [])+[{'time':now,'stage':'RESET_CANCELLED','message':'Cancelled by administrator during full PYQ library reset.'}]
         db.session.commit()
     # Delete dependent content explicitly so PostgreSQL and SQLite behave the same.
+    SolutionJob.query.delete(synchronize_session=False)
+    AISolution.query.delete(synchronize_session=False)
+    SolutionBatch.query.delete(synchronize_session=False)
     Bookmark.query.delete(synchronize_session=False)
     ContentReport.query.delete(synchronize_session=False)
     QuestionReview.query.delete(synchronize_session=False)

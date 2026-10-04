@@ -136,3 +136,5 @@
 [data-theme="dark"] .compact-feedback.feedback-ungraded,[data-theme="dark"] .compact-feedback.feedback-skipped{background:#26394b;border-color:#718298;color:#edf3fa}
 
 .check-answer-row{display:flex;justify-content:center;margin-top:16px}.feedback-marks{font-size:.85rem;font-weight:650}.compact-feedback.feedback-partial{background:#fff7df;border-color:#d8ad49;color:#795510}.review-partial{border-left:4px solid #d8ad49}[data-theme="dark"] .compact-feedback.feedback-partial{background:#40361d;border-color:#e0bc66;color:#ffe3a1}
+
+.ai-solution-editor{width:min(900px,95vw);max-height:85dvh;overflow:auto}.ai-solution{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
