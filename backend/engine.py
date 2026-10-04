@@ -11,7 +11,7 @@ def question_snapshot(q):
     passage=evidence.get('shared_passage_text')
     subquestion=evidence.get('subquestion_text')
     if passage and subquestion:text=subquestion
-    return {'id':q.id,'paper_id':q.paper_id,'number':q.number,'kind':q.kind,'text':text,'passage':passage,'shared_passage':bool(passage or evidence.get('shared_passage')),'options':[{'key':o.key,'text':o.text} for o in q.options], 'answers':q.answers,'answer_status':q.answer_status,'explanation':q.explanation,'marks':q.marks,'negative_marks':q.negative_marks,'tolerance':q.tolerance or 0,'topic':q.topic,'difficulty':q.difficulty,'source_page':q.source_page,'images':[{'id':i.id,'_asset_path':i.path,'alt':i.alt,'option_key':i.option_key,'token':Path(i.path).stem,**evidence.get('layout_assets',{}).get(Path(i.path).stem,{})} for i in q.images if evidence.get('_active_image_ids') is None or i.id in evidence['_active_image_ids']], 'source_pages':q.source_pages}
+    return {'id':q.id,'paper_id':q.paper_id,'number':q.number,'kind':q.kind,'text':text,'passage':passage,'shared_passage':bool(passage or evidence.get('shared_passage')),'options':[{'key':o.key,'text':o.text} for o in q.options], 'answers':q.answers,'answer_status':q.answer_status,'explanation':q.explanation,'marks':q.marks,'negative_marks':0 if q.kind=='MSQ' else q.negative_marks,'msq_scoring':'proportional-v1' if q.kind=='MSQ' else None,'tolerance':q.tolerance or 0,'topic':q.topic,'difficulty':q.difficulty,'source_page':q.source_page,'images':[{'id':i.id,'_asset_path':i.path,'alt':i.alt,'option_key':i.option_key,'token':Path(i.path).stem,**evidence.get('layout_assets',{}).get(Path(i.path).stem,{})} for i in q.images if evidence.get('_active_image_ids') is None or i.id in evidence['_active_image_ids']], 'source_pages':q.source_pages}
 
 def question_order(number):
     return tuple((0,int(part)) if part.isdigit() else (1,part.lower()) for part in re.split(r'(\d+)',str(number)))
@@ -61,6 +61,11 @@ def grade(s,a):
     if a in (None,'',[]):return {'outcome':'SKIPPED','awarded':0}
     if s['kind'] not in AUTO_TYPES or s.get('answer_status')!='ANSWER_AVAILABLE' or s.get('marks') is None or s.get('negative_marks') is None:
         return {'outcome':'UNGRADED','awarded':None}
+    if s['kind']=='MSQ' and s.get('msq_scoring')=='proportional-v1':
+        selected=set(a);correct=set(s['answers'] or [])
+        if not correct:return {'outcome':'UNGRADED','awarded':None}
+        if not selected<=correct:return {'outcome':'INCORRECT','awarded':0}
+        return {'outcome':'CORRECT' if selected==correct else 'PARTIAL','awarded':s['marks']*len(selected)/len(correct)}
     from .numeric import numeric_correct
     if s['kind']=='SHORT_TEXT':
         key=s['answers'];norm=(lambda v:str(v).strip()) if key.get('case_sensitive',True) else (lambda v:str(v).strip().casefold())
@@ -69,11 +74,11 @@ def grade(s,a):
     return {'outcome':'CORRECT' if correct else 'INCORRECT','awarded':s['marks'] if correct else -s['negative_marks']}
 
 def aggregate(a):
-    items=a.items;counts={key:sum(i.outcome==key for i in items) for key in ('CORRECT','INCORRECT','SKIPPED','UNGRADED')}
+    items=a.items;counts={key:sum(i.outcome==key for i in items) for key in ('CORRECT','PARTIAL','INCORRECT','SKIPPED','UNGRADED')}
     score=sum(i.awarded or 0 for i in items);total=sum(i.snapshot.get('marks') or 0 for i in items)
     known_total=all(i.snapshot.get('marks') is not None for i in items)
-    graded=counts['CORRECT']+counts['INCORRECT']
-    return {'score':round(score,6),'total_marks':total if known_total else None,'percentage':round(score/total*100,2) if total and known_total and not counts['UNGRADED'] else None,'accuracy':round(counts['CORRECT']/graded*100,2) if graded else None,'correct':counts['CORRECT'],'incorrect':counts['INCORRECT'],'skipped':counts['SKIPPED'],'ungraded':counts['UNGRADED'],'attempted':len(items)-counts['SKIPPED'],'negative_marks':sum(-i.awarded for i in items if i.awarded is not None and i.awarded<0),'time_taken':round(max(0,a.submitted_at-a.started_at)),'pending_manual':counts['UNGRADED']>0}
+    graded=counts['CORRECT']+counts['PARTIAL']+counts['INCORRECT']
+    return {'score':round(score,6),'total_marks':total if known_total else None,'percentage':round(score/total*100,2) if total and known_total and not counts['UNGRADED'] else None,'accuracy':round(counts['CORRECT']/graded*100,2) if graded else None,'correct':counts['CORRECT'],'incorrect':counts['INCORRECT'],'partial':counts['PARTIAL'],'skipped':counts['SKIPPED'],'ungraded':counts['UNGRADED'],'attempted':len(items)-counts['SKIPPED'],'negative_marks':sum(-i.awarded for i in items if i.awarded is not None and i.awarded<0),'time_taken':round(max(0,a.submitted_at-a.started_at)),'pending_manual':counts['UNGRADED']>0}
 
 RESULT_TTL_SECONDS = 3600
 ACTIVE_TTL_SECONDS = 86400

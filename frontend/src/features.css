@@ -134,3 +134,5 @@
 [data-theme="dark"] .compact-feedback.feedback-correct{background:#183c2b;border-color:#6fcf97;color:#b8f2cd}
 [data-theme="dark"] .compact-feedback.feedback-incorrect{background:#45262b;border-color:#ef8990;color:#ffc7cb}
 [data-theme="dark"] .compact-feedback.feedback-ungraded,[data-theme="dark"] .compact-feedback.feedback-skipped{background:#26394b;border-color:#718298;color:#edf3fa}
+
+.check-answer-row{display:flex;justify-content:center;margin-top:16px}.feedback-marks{font-size:.85rem;font-weight:650}.compact-feedback.feedback-partial{background:#fff7df;border-color:#d8ad49;color:#795510}.review-partial{border-left:4px solid #d8ad49}[data-theme="dark"] .compact-feedback.feedback-partial{background:#40361d;border-color:#e0bc66;color:#ffe3a1}

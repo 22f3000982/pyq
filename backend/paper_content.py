@@ -43,4 +43,4 @@ def snapshots(paper_id):
                             item['text']=item['text'][len(passage):].lstrip()
             i=j
         return result
-    return cached('paper:'+str(paper_id)+':snapshots',load)
+    return cached('paper:'+str(paper_id)+':snapshots:msq-proportional-v1',load)

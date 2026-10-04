@@ -147,7 +147,7 @@ def start():
     if b.get('collection')=='mistakes' and b.get('attempt_id'):
         source=owned(b['attempt_id'])
         if source.status!='SUBMITTED' or mode!='practice':abort(409,description='Submit this attempt before practising its wrong answers')
-        wrong=[i for i in source.items if i.outcome=='INCORRECT']
+        wrong=[i for i in source.items if i.outcome in ('INCORRECT','PARTIAL')]
         if not wrong:abort(409,description='No incorrect answers in this attempt')
         a=Attempt(user_id=None,guest_hash=g.guest_hash,paper_id=source.paper_id,mode='practice',title=('Wrong-answer practice · '+source.title)[:300],records_progress=False)
         return finish_new_attempt(a,[i.snapshot for i in wrong])
