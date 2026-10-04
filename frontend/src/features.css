@@ -114,3 +114,23 @@
 [data-theme="dark"] .exam-header{background:#182332}
 [data-theme="dark"] .cbt-section-bar,[data-theme="dark"] .palette-heading{background:#294f75}
 [data-theme="dark"] .review-correct,[data-theme="dark"] .review-incorrect,[data-theme="dark"] .review-skipped,[data-theme="dark"] .review-ungraded{background:#1e2938;color:#e4eaf2}
+
+/* Choice shapes and practice-only answer feedback. */
+.question-content .option-key.option-key-square{border-radius:4px}
+.question-content .option.option-correct{background:#edf8f0;border-color:#238348;color:#165e31}
+.question-content .option.option-incorrect{background:#fff0f0;border-color:#c73d45;color:#98232b}
+.question-content .option.option-correct .option-key{background:#238348;border-color:#238348;color:#fff}
+.question-content .option.option-incorrect .option-key{background:#c73d45;border-color:#c73d45;color:#fff}
+.compact-feedback{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.feedback-outcome{font-size:.72rem;font-weight:750;letter-spacing:.05em}
+.feedback-summary{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;overflow-wrap:anywhere}
+.compact-feedback.feedback-incorrect{background:#fff0f0;border-color:#e5a1a5;color:#98232b}
+.compact-feedback.feedback-correct{background:#edf8f0;border-color:#8ccea3;color:#165e31}
+.compact-feedback.feedback-ungraded,.compact-feedback.feedback-skipped{background:#f4f6fa;border-color:#c9d2df;color:#48566c}
+[data-theme="dark"] .question-content .option.option-correct{background:#183c2b;border-color:#6fcf97;color:#b8f2cd}
+[data-theme="dark"] .question-content .option.option-incorrect{background:#45262b;border-color:#ef8990;color:#ffc7cb}
+[data-theme="dark"] .question-content .option.option-correct .option-key{background:#24653e;border-color:#6fcf97;color:#fff}
+[data-theme="dark"] .question-content .option.option-incorrect .option-key{background:#9e3541;border-color:#ef8990;color:#fff}
+[data-theme="dark"] .compact-feedback.feedback-correct{background:#183c2b;border-color:#6fcf97;color:#b8f2cd}
+[data-theme="dark"] .compact-feedback.feedback-incorrect{background:#45262b;border-color:#ef8990;color:#ffc7cb}
+[data-theme="dark"] .compact-feedback.feedback-ungraded,[data-theme="dark"] .compact-feedback.feedback-skipped{background:#26394b;border-color:#718298;color:#edf3fa}
