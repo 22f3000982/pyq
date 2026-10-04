@@ -1,9 +1,9 @@
 <script setup>
 import {displayExamTitle} from './displayTitle';
 import BusyFeedback from './BusyFeedback.vue';
-import {ref,reactive,onMounted,onUnmounted,computed,nextTick} from 'vue';import {Clock,Bookmark,ChevronLeft,ChevronRight,Flag,Check,WifiOff,BookOpen,NotebookPen,Calculator} from 'lucide-vue-next';
+import {ref,reactive,onMounted,onUnmounted,computed,nextTick,defineAsyncComponent} from 'vue';import {Clock,Bookmark,ChevronLeft,ChevronRight,Flag,Check,WifiOff,BookOpen,NotebookPen,Calculator} from 'lucide-vue-next';
 import ReportFormat from './ReportFormat.vue';import LoadingState from './LoadingState.vue';
-import {api,go,session} from './api';import {clock,paletteLabel} from './utils';import MathText from './MathText.vue';import QuestionContent from './QuestionContent.vue';import AnswerValue from './AnswerValue.vue';import ScratchBoard from './ScratchBoard.vue';import TcsCalculator from './TcsCalculator.vue';
+import {api,go,session} from './api';import {clock,paletteLabel} from './utils';import MathText from './MathText.vue';import QuestionContent from './QuestionContent.vue';import AnswerValue from './AnswerValue.vue';const ScratchBoard=defineAsyncComponent(()=>import('./ScratchBoard.vue'));const TcsCalculator=defineAsyncComponent(()=>import('./TcsCalculator.vue'));
 const props=defineProps({id:Number});const attempt=ref(null),item=ref(null),index=ref(0),value=ref(null),error=ref(''),saving=ref(false),feedback=ref(null),confirm=ref(false),showPalette=ref(false),seconds=ref(null),saved=ref('All responses saved'),pending=ref(null);
 const navigating=ref(false),switching=ref(false),instructions=ref(false),submitting=ref(false),scratchOpen=ref(false),calculatorOpen=ref(false),natInput=ref(null);
 const reportQuestion=ref(null),reportNotice=ref('');

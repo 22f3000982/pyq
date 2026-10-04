@@ -6,7 +6,7 @@ const bootstraps=new Map();
 const publicReads=new Map();
 let publicGeneration=0;
 const clone=value=>JSON.parse(JSON.stringify(value));
-const publicPath=path=>/^\/(?:catalog|metadata|papers(?:\/\d+)?)$/.test(path.split('?')[0]);
+const publicPath=path=>/^\/(?:home|catalog|stats|metadata|papers(?:\/\d+)?)$/.test(path.split('?')[0]);
 function clearPublicReads(){publicGeneration++;publicReads.clear();catalogPromise=null}
 
 export async function api(path,options={}){
@@ -20,6 +20,10 @@ export async function api(path,options={}){
  entry.promise=requestApi(path,options).then(data=>{
    if(generation===publicGeneration){
      entry.expires=Date.now()+15000;
+     if(path==='/home'){
+       const parts={'/catalog':{courses:data.courses,meta:data.meta},'/metadata':data.meta,'/stats':data.stats};
+       for(const [part,value] of Object.entries(parts))publicReads.set(part,{expires:entry.expires,promise:Promise.resolve(clone(value))});
+     }
      // List rows already contain the complete detail response. Reuse briefly.
      if(path.split('?')[0]==='/papers')for(const row of data.items||[]){
        publicReads.set('/papers/'+row.id,{expires:entry.expires,promise:Promise.resolve(clone(row))});
@@ -63,3 +67,5 @@ export function loadCatalog(){
 export function invalidateCatalog(){clearPublicReads()}
 export async function loadSession(){const d=await api('/session');session.user=d.user||{id:'browser',name:'Guest',role:'GUEST'};return d;}
 export function go(path){window.location.hash=path;}
+
+export function loadHome(){return api('/home')}

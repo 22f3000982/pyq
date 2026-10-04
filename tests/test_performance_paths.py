@@ -201,3 +201,15 @@ def test_local_invalidation_during_load_does_not_reinsert_stale(app):
         return 'old'
     assert _local_cached('race',loader)=='old'
     assert _local_cached('race',lambda:'new')=='new'
+
+
+def test_home_bundle_is_public_cached_and_tracks_content_changes(app,client):
+    pid=seed(1)[0]
+    r=client.get('/api/home')
+    assert r.status_code==200 and r.json['courses'] and r.json['meta']['terms']
+    assert r.json['stats']['papers']==1
+    assert not any(key in r.json for key in ('csrf','user','answers','result'))
+    assert 'queries;desc="0"' in client.get('/api/home').headers['Server-Timing']
+    from backend.models import Paper
+    db.session.get(Paper,pid).status='ARCHIVED';db.session.commit()
+    assert client.get('/api/home').json['stats']['papers']==0

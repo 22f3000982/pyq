@@ -94,7 +94,7 @@ def create_app(config=None):
             response.headers['Content-Security-Policy']=response.headers['Content-Security-Policy'].replace("img-src 'self' data:","img-src 'self' data: "+app.extensions['image_origin'])
         if request.path.startswith('/api/') and not request.path.startswith('/api/images/'): response.headers['Cache-Control']='no-store'
         # Compress shared public content only; session/CSRF and answer APIs are excluded.
-        shared=request.path in ('/api/catalog','/api/metadata','/api/courses','/api/papers','/api/demo-papers') or bool(re.fullmatch(r'/api/papers/\d+/questions',request.path))
+        shared=request.path in ('/api/home','/api/stats','/api/catalog','/api/metadata','/api/courses','/api/papers','/api/demo-papers') or bool(re.fullmatch(r'/api/papers/\d+/questions',request.path))
         if shared:
             response.vary.add('Accept-Encoding')
             if request.method=='GET' and response.status_code==200 and request.accept_encodings['gzip']>0 and not response.headers.get('Content-Encoding') and not response.direct_passthrough:

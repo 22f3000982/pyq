@@ -1,10 +1,11 @@
 import {beforeEach,afterEach,it,expect,vi} from 'vitest';
-import {api} from '../src/api';
-beforeEach(()=>{localStorage.clear()});
+import {api,invalidateCatalog} from '../src/api';
+beforeEach(()=>{localStorage.clear();invalidateCatalog()});
 afterEach(()=>vi.unstubAllGlobals());
 function response(data){vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>data})));}
 it('preserves numeric paper counts in public and admin stats',async()=>{
  for(const papers of [0,722]){
+  invalidateCatalog();
   const stats={papers,courses:39,questions:400,exam_papers:{'Quiz 1':22}};response(stats);
   expect(await api('/stats')).toEqual(stats);
  }

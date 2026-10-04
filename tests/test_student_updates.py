@@ -2,24 +2,26 @@ from backend.models import *
 from conftest import login
 from test_engine import seed
 
-def test_mode_switch_preserves_responses_and_freezes_old_score(app,client):
+def test_mode_switch_preserves_same_session_responses_and_grades_on_submit(app,client):
     p=seed();h=login(client)
     a=client.post('/api/attempts',json={'paper_id':p.id,'mode':'exam'},headers=h).json
     qid=a['palette'][0]['question_id']
     client.post(f"/api/attempts/{a['id']}/answers",json={'question_id':qid,'answer':['B'],'marked':True},headers=h)
     r=client.post(f"/api/attempts/{a['id']}/switch-mode",json={'mode':'practice'},headers=h)
-    assert r.status_code==201
+    assert r.status_code==200
     practice=r.json;assert practice['deadline'] is None
     old=client.get(f"/api/attempts/{a['id']}").json
-    assert old['status']=='SUBMITTED' and old['result']['score']==-1
+    assert old['status']=='ACTIVE' and old['id']==practice['id']==a['id'] and old['result'] is None
     question=client.get(f"/api/attempts/{practice['id']}/questions/{qid}").json
     assert question['answer']==['B'] and question['marked'] and question['feedback']['answers']==['A']
     switched=client.post(f"/api/attempts/{practice['id']}/switch-mode",json={'mode':'exam','duration_seconds':120},headers=h)
-    assert switched.status_code==201
-    exam=switched.json;assert 'Assisted timed continuation' in exam['title']
+    assert switched.status_code==200
+    exam=switched.json;assert 'Assisted timed session' in exam['title']
     assert 110<exam['deadline']-exam['server_time']<=120
     question=client.get(f"/api/attempts/{exam['id']}/questions/{qid}").json
     assert question['answer']==['B'] and 'feedback' not in question and 'answers' not in question['question']
+    result=client.post(f"/api/attempts/{a['id']}/submit",headers=h).json
+    assert result['result']['score']==-1
     assert client.post(f"/api/attempts/{a['id']}/switch-mode",json={'mode':'practice'},headers=h).status_code==409
 
 def test_wrong_answer_practice_only_uses_this_attempt(app,client):

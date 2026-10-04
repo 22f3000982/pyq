@@ -20,3 +20,13 @@ it('does not cache failed requests',async()=>{
  fetch.mockRejectedValueOnce(new Error('offline'));await expect(api('/papers/9')).rejects.toThrow('offline');
  await api('/papers/9');expect(fetch).toHaveBeenCalledTimes(2);
 });
+
+it('home response primes catalog, metadata and stats without extra requests',async()=>{
+ const home={courses:[{id:1,name:'Course'}],meta:{terms:[{id:2,name:'May'}]},stats:{papers:7}};
+ fetch.mockResolvedValueOnce({ok:true,json:async()=>home});
+ expect(await api('/home')).toEqual(home);
+ expect((await api('/catalog')).courses).toEqual(home.courses);
+ expect(await api('/metadata')).toEqual(home.meta);
+ expect(await api('/stats')).toEqual(home.stats);
+ expect(fetch).toHaveBeenCalledTimes(1);
+});

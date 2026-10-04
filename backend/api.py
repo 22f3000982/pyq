@@ -219,3 +219,10 @@ def catalog_options():
     # Complete lightweight dropdown catalog, with no pagination truncation.
     from .content_cache import cached
     return jsonify(cached('catalog',lambda:dict(courses=course_rows(Course.query.order_by(Course.name).all()),meta=metadata().get_json())))
+
+
+@api.get('/home')
+def home():
+    # Public content only: session/CSRF and student state stay separate.
+    return cached_public_response('home',lambda:dict(
+        stats=stats().get_json(),**catalog_options().get_json()))

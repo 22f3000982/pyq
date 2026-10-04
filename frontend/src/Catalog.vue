@@ -3,7 +3,7 @@ import {readBrowse,saveBrowse,rememberPaper,paperReturn} from './browseState';
 import BusyFeedback from './BusyFeedback.vue';
 import PaperProgress from './PaperProgress.vue';import LoadingState from './LoadingState.vue';
 import {ref,onMounted,nextTick} from 'vue';import {ArrowUpRight,Search,FileText,BookOpen,CheckCircle2,ChevronRight,Filter} from 'lucide-vue-next';
-import {api,session,go} from './api';
+import {api,session,go,loadHome} from './api';
 const props=defineProps({route:String});const stats=ref({}),courses=ref([]),course=ref(null),paper=ref(null),papers=ref([]),meta=ref({levels:[]}),q=ref(''),level=ref(''),sort=ref('name'),exam=ref(''),year=ref(''),term=ref(''),page=ref(1),total=ref(0),error=ref(''),loading=ref(true),topics=ref([]),timedMinutes=ref(90);
 const starting=ref('');
 const isCourse=props.route.startsWith('/course/'),isPaper=props.route.startsWith('/paper/');
@@ -11,9 +11,9 @@ const restored=readBrowse(props.route);if(isCourse){exam.value=restored.exam||''
 async function load(){if(isCourse)saveBrowse(props.route,{exam:exam.value,term:term.value,year:year.value,page:page.value});loading.value=true;try{if(isCourse){const d=await api('/papers?'+new URLSearchParams({course_id:course.value.id,exam:exam.value,year:year.value,term_id:term.value,page:page.value,limit:16}));papers.value=d.items;total.value=d.total}else if(!isPaper){const d=await api('/courses?'+new URLSearchParams({q:q.value,level:level.value,sort:sort.value,page:page.value,limit:12}));courses.value=d.items;total.value=d.total}}catch(e){error.value=e.message}finally{loading.value=false}}
 async function filter(){page.value=1;await load()}
 onMounted(async()=>{try{
- if(isPaper){const id=props.route.split('/')[2];paper.value=await api('/papers/'+id);loading.value=false;if(paper.value.practice_available)void api('/papers/'+id+'/questions?page=1&limit=1').catch(()=>{});return}
+ if(isPaper){const id=props.route.split('/')[2];paper.value=await api('/papers/'+id);loading.value=false;void import('./Exam.vue').catch(()=>{});if(paper.value.practice_available)void api('/papers/'+id+'/questions?page=1&limit=1').catch(()=>{});return}
  if(isCourse){[course.value,meta.value]=await Promise.all([api('/courses/'+props.route.split('/')[2]),api('/metadata')]);await Promise.all([load(),api('/courses/'+course.value.id+'/topics').then(d=>topics.value=d)]);return}
- await Promise.all([api('/stats').then(d=>stats.value=d),api('/metadata').then(d=>meta.value=d)]);loading.value=false;
+ const home=await loadHome();stats.value=home.stats;meta.value=home.meta;loading.value=false;
 }catch(e){error.value=e.message;loading.value=false}});
 async function start(mode){if(starting.value)return;starting.value=mode;error.value='';await nextTick();try{const a=await api('/attempts',{method:'POST',body:{paper_id:paper.value.id,mode,duration_seconds:Number(timedMinutes.value)*60}});go('/attempt/'+a.id)}catch(e){error.value=e.message}finally{starting.value=''}}
 async function topicStart(topic){if(starting.value)return;starting.value='topic';error.value='';try{const a=await api('/attempts',{method:'POST',body:{collection:'topic',course_id:course.value.id,topic,mode:'practice'}});go('/attempt/'+a.id)}catch(e){error.value=e.message}finally{starting.value=''}}

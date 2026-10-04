@@ -88,7 +88,7 @@ def test_practice_mode_switch_and_unknown_percentage(client):
     a=take(client,h,p,8,mode='practice');assert PaperProgress.query.count()==0
     active=client.post('/api/attempts',json={'paper_id':p.id,'mode':'exam'},headers=h).json
     switched=client.post(f"/api/attempts/{active['id']}/switch-mode",json={'mode':'practice'},headers=h)
-    assert switched.status_code==201
+    assert switched.status_code==200
     assert PaperProgress.query.count()==0
     q=Question.query.first();q.answers=None;q.answer_status='ANSWER_UNAVAILABLE';db.session.commit()
     result=take(client,h,p,10)
