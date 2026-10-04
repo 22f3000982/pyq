@@ -3,7 +3,35 @@ import {paperProgress,progressRows,saveResult,bookmarkRows,isBookmarked,setBookm
 export const session=reactive({user:null,csrf:'',storageWarning:''});
 let catalogPromise;
 const bootstraps=new Map();
+const publicReads=new Map();
+let publicGeneration=0;
+const clone=value=>JSON.parse(JSON.stringify(value));
+const publicPath=path=>/^\/(?:catalog|metadata|papers(?:\/\d+)?)$/.test(path.split('?')[0]);
+function clearPublicReads(){publicGeneration++;publicReads.clear();catalogPromise=null}
+
 export async function api(path,options={}){
+ const method=options.method||'GET';
+ if(method!=='GET')clearPublicReads();
+ if(method!=='GET'||!publicPath(path))return requestApi(path,options);
+ const existing=publicReads.get(path);
+ if(existing&&existing.expires>Date.now())return browserData(clone(await existing.promise));
+ const generation=publicGeneration;
+ const entry={expires:Date.now()+15000,promise:null};
+ entry.promise=requestApi(path,options).then(data=>{
+   if(generation===publicGeneration){
+     entry.expires=Date.now()+15000;
+     // List rows already contain the complete detail response. Reuse briefly.
+     if(path.split('?')[0]==='/papers')for(const row of data.items||[]){
+       publicReads.set('/papers/'+row.id,{expires:entry.expires,promise:Promise.resolve(clone(row))});
+     }
+     while(publicReads.size>100)publicReads.delete(publicReads.keys().next().value);
+   }
+   return clone(data);
+ }).catch(error=>{if(publicReads.get(path)===entry)publicReads.delete(path);throw error});
+ publicReads.set(path,entry);
+ return browserData(clone(await entry.promise));
+}
+async function requestApi(path,options={}){
  let {method='GET',body,form}=options;
  if(method==='GET'&&path.split('?')[0]==='/progress')return localPage(progressRows(),path);
  if(method==='GET'&&path.split('?')[0]==='/bookmarks')return localPage(bookmarkRows(),path);
@@ -29,9 +57,8 @@ function browserData(data){
  return data;
 }
 export function loadCatalog(){
- if(!catalogPromise)catalogPromise=api('/catalog').catch(error=>{catalogPromise=null;throw error});
- return catalogPromise;
+ return api('/catalog');
 }
-export function invalidateCatalog(){catalogPromise=null}
+export function invalidateCatalog(){clearPublicReads()}
 export async function loadSession(){const d=await api('/session');session.user=d.user||{id:'browser',name:'Guest',role:'GUEST'};return d;}
 export function go(path){window.location.hash=path;}

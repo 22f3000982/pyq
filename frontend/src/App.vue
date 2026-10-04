@@ -1,7 +1,7 @@
 <script setup>
 import {ref,onMounted,computed} from 'vue';
 import {BookOpen,LayoutDashboard,History,Bookmark,Target,ShieldCheck,Search,ArrowUpRight,GraduationCap,LogOut} from 'lucide-vue-next';
-import {api,session,loadSession,go} from './api';
+import {api,session,loadSession,loadCatalog,go} from './api';
 import About from './About.vue';
 import Catalog from './Catalog.vue';import ExamBrowser from './ExamBrowser.vue';import Exam from './Exam.vue';import Records from './Records.vue';import Admin from './Admin.vue';
 const theme=ref(localStorage.getItem('pyq-theme')||'light');
@@ -10,7 +10,7 @@ function toggleTheme(){theme.value=theme.value==='dark'?'light':'dark';document.
 const route=ref(location.hash.slice(1)||'/');window.addEventListener('hashchange',()=>{route.value=location.hash.slice(1)||'/';window.scrollTo(0,0)});
 const busy=ref(true),error=ref(''),auth=ref({name:'',email:'',password:''}),authBusy=ref(false);
 const examPage=computed(()=>route.value.startsWith('/attempt/'));
-onMounted(async()=>{try{await loadSession()}catch(e){error.value=e.message}finally{busy.value=false}});
+onMounted(async()=>{void loadCatalog().catch(()=>{});try{await loadSession()}catch(e){error.value=e.message}finally{busy.value=false}});
 async function authenticate(){authBusy.value=true;error.value='';try{const d=await api('/auth/login',{method:'POST',body:auth.value});session.user=d.user;auth.value.password='';go('/admin')}catch(e){error.value=e.message}finally{authBusy.value=false}}
 async function logout(){await api('/auth/logout',{method:'POST'});await loadSession();go('/')}
 const nav=[['/','Home',BookOpen],['/progress','My progress',LayoutDashboard],['/bookmarks','Bookmarks',Bookmark],['/about','About MauryaHub',BookOpen]];

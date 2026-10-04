@@ -168,3 +168,36 @@ def test_public_gzip_excludes_session(app,client):
     assert r.headers['Content-Encoding']=='gzip'
     assert json.loads(gzip.decompress(r.data))['courses']
     assert 'Content-Encoding' not in client.get('/api/session',headers={'Accept-Encoding':'gzip'}).headers
+
+@pytest.mark.parametrize('url',['/api/papers?available=true','/api/papers/1','/api/metadata'])
+def test_public_response_hot_cache_avoids_queries_and_invalidates(app,client,url):
+    seed(1)
+    assert client.get(url).status_code==200
+    hot=client.get(url)
+    assert 'queries;desc="0"' in hot.headers['Server-Timing']
+    from backend.models import Paper
+    paper=Paper.query.first();paper.status='ARCHIVED';db.session.commit()
+    fresh=client.get(url)
+    if url.endswith('/1'):assert fresh.status_code==404
+    elif 'papers?' in url:assert fresh.json['total']==0
+
+
+def test_start_signs_images_after_transaction_release(app,client,monkeypatch):
+    pid=seed(1)[0];h=login(client)
+    from backend import exam_api
+    original=exam_api.question_with_image_urls
+    def checked(snapshot):
+        assert not db.session().in_transaction()
+        return original(snapshot)
+    monkeypatch.setattr(exam_api,'question_with_image_urls',checked)
+    r=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':pid,'mode':'exam'})
+    assert r.status_code==201
+
+
+def test_local_invalidation_during_load_does_not_reinsert_stale(app):
+    from backend.content_cache import _local_cached,_local_clear
+    def loader():
+        _local_clear()
+        return 'old'
+    assert _local_cached('race',loader)=='old'
+    assert _local_cached('race',lambda:'new')=='new'

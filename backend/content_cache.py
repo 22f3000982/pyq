@@ -15,6 +15,7 @@ CONTENT_TABLES = {'course', 'term', 'exam_type', 'paper', 'question', 'question_
 _local_lock = threading.RLock()
 _local_cache = OrderedDict()
 _local_inflight = {}
+_local_generation = 0
 
 
 def _local_limit():
@@ -45,7 +46,10 @@ def _local_put(key,value):
 
 
 def _local_clear():
-    with _local_lock:_local_cache.clear()
+    global _local_generation
+    with _local_lock:
+        _local_generation += 1
+        _local_cache.clear()
 
 
 def _local_cached(key,loader):
@@ -55,6 +59,7 @@ def _local_cached(key,loader):
     count('cache_miss')
     owner=False
     with _local_lock:
+        generation=_local_generation
         event=_local_inflight.get(key)
         if event is None:
             event=threading.Event();_local_inflight[key]=event;owner=True
@@ -67,7 +72,10 @@ def _local_cached(key,loader):
                 count('cache_hit');return value
         return loader()
     try:
-        value=loader();_local_put(key,value);return value
+        value=loader()
+        with _local_lock:
+            if generation==_local_generation:_local_put(key,value)
+        return value
     finally:
         with _local_lock:
             _local_inflight.pop(key,None);event.set()

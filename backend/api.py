@@ -152,8 +152,18 @@ def course(id):return jsonify(course_json(db.get_or_404(Course,id)))
 @api.get('/courses/<int:id>/exams')
 def course_exams(id):return jsonify(course_json(db.get_or_404(Course,id))['exams'])
 
+def cached_public_response(name, loader):
+    from .content_cache import cached
+    import json
+    # Include all query arguments: filters and pagination must never collide.
+    key=name+':'+hashlib.sha256(json.dumps(sorted(request.args.items(multi=True))).encode()).hexdigest()
+    return jsonify(cached(key,loader))
+
 @api.get('/papers')
 def papers():
+    return cached_public_response('paper-list', _paper_list)
+
+def _paper_list():
     q=visible_papers(Paper.query).join(Course).join(Term).join(ExamType)
     for key,col in [('course_id',Paper.course_id),('exam_type_id',Paper.exam_type_id),('year',Term.year),('term_id',Term.id)]:
         if request.args.get(key):q=q.filter(col==integer_argument(key))
@@ -164,13 +174,17 @@ def papers():
     if request.args.get('q'):
         for word in request.args['q'][:150].split():
             like='%'+word+'%';q=q.filter(or_(Paper.name.ilike(like),Course.name.ilike(like),Term.name.ilike(like),ExamType.name.ilike(like)))
-    return jsonify(paginate_rows(q.options(*PAPER_LOAD).order_by(Term.year.desc(),Term.month.desc(),Paper.id),paper_rows))
+    return paginate_rows(q.options(*PAPER_LOAD).order_by(Term.year.desc(),Term.month.desc(),Paper.id),paper_rows)
 
 @api.get('/papers/<int:id>')
-def paper(id):return jsonify(paper_json(visible_papers(Paper.query).filter_by(id=id).first_or_404()))
+def paper(id):
+    return cached_public_response('paper-detail:'+str(id),lambda:paper_json(visible_papers(Paper.query).options(*PAPER_LOAD).filter_by(id=id).first_or_404()))
 
 @api.get('/metadata')
-def metadata():return jsonify(terms=[{'id':x.id,'name':x.name,'year':x.year} for x in Term.query.order_by(Term.year.desc(),Term.month.desc())],exams=[{'id':x.id,'name':x.name} for x in ExamType.query.all()],levels=[r[0] for r in db.session.query(Course.level).distinct()])
+def metadata():
+    return cached_public_response('metadata', _metadata)
+
+def _metadata():return dict(terms=[{'id':x.id,'name':x.name,'year':x.year} for x in Term.query.order_by(Term.year.desc(),Term.month.desc())],exams=[{'id':x.id,'name':x.name} for x in ExamType.query.all()],levels=[r[0] for r in db.session.query(Course.level).distinct()])
 
 @api.get('/search')
 def search():

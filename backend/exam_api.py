@@ -74,7 +74,7 @@ def start_response(a):
     # Legacy helper for continuation flows that already own ORM answer objects.
     return jsonify(bootstrap_json(a) if request.args.get('bootstrap')=='1' else attempt_json(a)),201
 
-def start_payload(a,snapshots):
+def start_payload(a,snapshots,images_prepared=False):
     """Build a newly-created attempt response without re-reading its answer rows."""
     ordered=sorted(snapshots,key=lambda s:(s.get('paper_id',0),question_order(s['number']),s['id']))
     palette=[{'question_id':s['id'],'number':s['number'],'state':'NOT_VISITED','visited':False,'marked':False} for s in ordered]
@@ -83,8 +83,9 @@ def start_payload(a,snapshots):
             'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,
             'records_progress':a.records_progress,'palette':palette}
     if request.args.get('bootstrap')=='1':
-        use_paper_image_delivery(a.paper_id)
-        prepare_image_paths(ordered,attempt_image_ttl(a))
+        if not images_prepared:
+            use_paper_image_delivery(a.paper_id)
+            prepare_image_paths(ordered,attempt_image_ttl(a))
         qids=[s['id'] for s in ordered]
         bookmarks=set()
         result['items']=[{'question':question_with_image_urls(s),'answer':None,'marked':False,
@@ -100,9 +101,17 @@ def finish_new_attempt(a,snapshots):
          'visited':False,'response_touched':False,'marked':False}
         for n,s in enumerate(snapshots)
     ])
-    payload=start_payload(a,snapshots)
+    # Resolve DB-backed delivery metadata before releasing the transaction.
+    if request.args.get('bootstrap')=='1':
+        use_paper_image_delivery(a.paper_id)
+        prepare_image_paths(snapshots,attempt_image_ttl(a))
+    from types import SimpleNamespace
+    state=SimpleNamespace(**{name:getattr(a,name) for name in (
+        'id','paper_id','title','mode','status','started_at','deadline',
+        'submitted_at','result','expires_at','records_progress')})
     db.session.commit()
-    return jsonify(payload),201
+    # Signing/serializing all images must not occupy a pooled DB connection.
+    return jsonify(start_payload(state,snapshots,images_prepared=True)),201
 
 def item_json(a,i,bookmarks):
     result={'question':question_with_image_urls(i.snapshot),'answer':i.answer,'marked':i.marked,'visited':i.visited,'status':a.status,'bookmarked':i.question_id in bookmarks}
@@ -122,8 +131,17 @@ def collection_query(kind):
 @require_visitor
 def start():
     maintain_temporary_sessions()
-    expire_all(guest_hash=g.guest_hash)
-    if Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').count()>=5:abort(429,description='Finish one of your active sessions before starting another paper.')
+    # One lightweight read replaces separate expiry, cleanup and count scans.
+    now=time.time()
+    rows=db.session.query(Attempt.id,Attempt.status,Attempt.deadline,Attempt.expires_at).filter(
+        Attempt.guest_hash==g.guest_hash,
+        or_(Attempt.status=='ACTIVE',Attempt.expires_at<=now)).all()
+    if any(row.expires_at<=now or (row.status=='ACTIVE' and row.deadline and row.deadline<=now) for row in rows):
+        expire_all(guest_hash=g.guest_hash)
+        active=Attempt.query.filter_by(guest_hash=g.guest_hash,status='ACTIVE').count()
+    else:
+        active=sum(row.status=='ACTIVE' for row in rows)
+    if active>=5:abort(429,description='Finish one of your active sessions before starting another paper.')
     b=body();mode=b.get('mode','practice')
     if mode not in ('practice','exam'):abort(400,description='Choose practice or exam')
     if b.get('collection')=='mistakes' and b.get('attempt_id'):
