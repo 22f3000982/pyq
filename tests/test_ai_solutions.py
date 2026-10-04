@@ -94,3 +94,19 @@ def test_review_batches_published_text_and_status_filters(app,client):
     guest.post(f"/api/attempts/{a['id']}/submit",headers=g)
     rows=guest.get(f"/api/attempts/{a['id']}/review").json['items'];assert rows[0]['ai_solution']['available'] and not rows[1]['ai_solution']['available']
     assert client.get('/api/admin/ai-solutions?page=invalid').status_code==400
+
+def test_full_paper_queues_over_thirty_only_missing_and_no_other_paper(app,client):
+    p=seed()
+    from backend.models import Paper
+    other=Paper(identity='other',course_id=p.course_id,term_id=p.term_id,exam_type_id=p.exam_type_id,name='Other paper',status='AVAILABLE');db.session.add(other);db.session.flush()
+    db.session.add(Question(paper_id=other.id,number='1',kind='NAT',text='Other',status='AVAILABLE'))
+    for n in range(6,41):db.session.add(Question(paper_id=p.id,number=str(n),kind='NAT',text='Question '+str(n),status='AVAILABLE',answers=1,answer_status='ANSWER_AVAILABLE'))
+    db.session.commit();h=login(client,True);j=queued(client,p,h);finish(client,j,h)
+    r=client.post('/api/admin/ai-solutions/queue',json={'paper_id':p.id,'full_paper':True,'kind':'MCQ'},headers=h)
+    assert r.status_code==200 and r.json['queued']==39
+    assert SolutionJob.query.count()==40
+    assert client.post('/api/admin/ai-solutions/queue',json={'paper_id':p.id,'full_paper':True},headers=h).json['queued']==0
+    assert AISolution.query.first().text.startswith('One is correct')
+    assert client.get('/api/admin/ai-solutions').json['batches'][0]['paper_name']==p.name
+    assert client.post('/api/admin/ai-solutions/queue',json={'full_paper':True},headers=h).status_code==400
+    assert client.post('/api/admin/ai-solutions/queue',json={'paper_id':p.id,'full_paper':True,'regenerate':True},headers=h).status_code==400

@@ -77,15 +77,17 @@ def dashboard():
     batches=[]
     for b in SolutionBatch.query.order_by(SolutionBatch.id.desc()).limit(10):
         counts=dict(db.session.query(SolutionJob.status,func.count()).filter_by(batch_id=b.id).group_by(SolutionJob.status).all())
-        batches.append(dict(id=b.id,status=b.status,counts=counts,worker_online=bool(b.worker_seen and time.time()-b.worker_seen<120)))
+        paper=db.session.query(Paper).join(Question,Question.paper_id==Paper.id).join(SolutionJob,SolutionJob.question_id==Question.id).filter(SolutionJob.batch_id==b.id).first()
+        batches.append(dict(id=b.id,paper_name=paper.name if paper else None,status=b.status,counts=counts,worker_online=bool(b.worker_seen and time.time()-b.worker_seen<120)))
     counts=dict(db.session.query(AISolution.status,func.count()).group_by(AISolution.status).all())
     return jsonify(items=items,total=query.count(),page=page,batches=batches,counts=counts)
 
 @bp.post('/admin/ai-solutions/queue')
 @require_user(True)
 def queue():
-    b=body();limit=b.get('limit',30)
-    if type(limit)!=int or not 1<=limit<=30:abort(400,description='Choose 1–30 questions')
+    b=body();full=b.get('full_paper') is True;limit=None if full else b.get('limit',30)
+    if full and (type(b.get('paper_id'))!=int or b.get('question_ids') or b.get('regenerate')):abort(400,description='Choose one paper to generate missing solutions')
+    if not full and (type(limit)!=int or not 1<=limit<=30):abort(400,description='Choose 1–30 questions')
     query=Question.query.join(Paper).filter(Question.status=='AVAILABLE',Paper.status!='ARCHIVED')
     if b.get('question_ids'):
         ids=b['question_ids']
@@ -94,17 +96,22 @@ def queue():
     elif b.get('paper_id'):query=query.filter(Question.paper_id==b['paper_id'])
     else:abort(400,description='Select a paper or specific questions')
     for field,col in [('term_id',Paper.term_id),('exam_type_id',Paper.exam_type_id),('kind',Question.kind)]:
-        if b.get(field):query=query.filter(col==b[field])
+        if not full and b.get(field):query=query.filter(col==b[field])
     batch=SolutionBatch();db.session.add(batch);db.session.flush();count=0
-    # Limit candidate scans; continue through the paper on subsequent runs.
-    for q in query.order_by(Question.id).limit(500):
-        v=version(snapshot(q));sol=AISolution.query.filter_by(question_id=q.id).first();j=SolutionJob.query.filter_by(question_id=q.id).first()
+    # One bounded paper per full request; prefetch source data and job/solution rows.
+    candidates=query.options(selectinload(Question.options),selectinload(Question.images)).order_by(Question.id)
+    if not full:candidates=candidates.limit(500)
+    rows=candidates.all();ids=[q.id for q in rows]
+    solutions={s.question_id:s for s in AISolution.query.filter(AISolution.question_id.in_(ids))}
+    jobs={j.question_id:j for j in SolutionJob.query.filter(SolutionJob.question_id.in_(ids))}
+    for q in rows:
+        v=version(snapshot(q));sol=solutions.get(q.id);j=jobs.get(q.id)
         if j and j.status in ('QUEUED','PROCESSING'):continue
         if sol and sol.version==v and not b.get('regenerate'):continue
         if not j:j=SolutionJob(question_id=q.id);db.session.add(j)
         j.batch_id=batch.id;j.version=v;j.status='QUEUED';j.attempts=0;j.retry_at=0;j.lease_token=None;j.error=None
         count+=1
-        if count==limit:break
+        if limit is not None and count==limit:break
     if not count:db.session.delete(batch)
     db.session.commit();return jsonify(batch_id=batch.id if count else None,queued=count)
 
