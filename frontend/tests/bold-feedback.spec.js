@@ -18,3 +18,8 @@ it('shows actual replacement request stages and restores upload after failure',a
  await w.get('form').trigger('submit');expect(api).toHaveBeenCalledTimes(1);
  reject(Error('Connection failed'));await flushPromises();expect(w.text()).toContain('Connection failed');expect(w.get('form button').attributes('disabled')).toBeUndefined();w.unmount();
 });
+it('renders AI single-dollar inline maths alongside display maths and protects stars from bold parsing',async()=>{
+ const w=mount(MathText,{props:{inlineDollar:true,text:'Price $P_i = 5 + \\frac{P_j}{2}$ and **reason**. $$x=2$$ Then $x**2$.'}});await flushPromises();
+ expect(w.findAll('.katex')).toHaveLength(3);expect(w.get('strong').text()).toBe('reason');expect(w.findAll('strong')).toHaveLength(1);expect(w.get('.katex-display').exists()).toBe(true);w.unmount();
+});
+it('keeps source-question currency and plain dollars unchanged by default',async()=>{const w=mount(MathText,{props:{text:'Prices $10 and $20, with **bold**.'}});await flushPromises();expect(w.find('.katex').exists()).toBe(false);expect(w.text()).toContain('$10 and $20');expect(w.get('strong').text()).toBe('bold');w.unmount()});

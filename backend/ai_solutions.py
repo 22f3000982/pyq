@@ -166,8 +166,10 @@ def finish(id):
     q=db.session.get(Question,j.question_id)
     if not q or q.status!='AVAILABLE' or db.session.get(Paper,q.paper_id).status=='ARCHIVED' or version(snapshot(q))!=j.version:j.status='OUTDATED'
     elif b.get('error'):
-        code=b['error'];j.error={'quota':'Provider quota reached; resume later','network':'Temporary provider/network failure','auth':'Check Gemini API key/model access','invalid':'Invalid provider output'}.get(code,'Generation failed')
-        if code in ('quota','auth'):
+        code=b['error'];j.error={'quota':'Provider quota reached; resume later','network':'Temporary provider/network failure','auth':'Check Gemini API key/model access','invalid':'Invalid provider output','config':'Check Gemini request/model configuration'}.get(code,'Generation failed')
+        detail=str(b.get('error_detail',''))
+        if detail and len(detail)<=140 and all(c.isalnum() or c in ' _:-().' for c in detail):j.error=(j.error+' ['+detail+']')[:240]
+        if code in ('quota','auth','config'):
             db.session.get(SolutionBatch,j.batch_id).status='QUOTA_PAUSED' if code=='quota' else 'PAUSED';j.status='QUEUED';j.attempts=max(0,j.attempts-1)
         else:j.status='FAILED' if j.attempts>=3 else 'QUEUED';j.retry_at=time.time()+60*(2**min(j.attempts,3))
     else:
@@ -177,7 +179,7 @@ def finish(id):
         else:
             s=AISolution.query.filter_by(question_id=q.id).first()
             if not s:s=AISolution(question_id=q.id);db.session.add(s)
-            s.version=j.version;s.text=text;s.final_answer=final;s.status='NEEDS_REVIEW' if failures else 'CHECKS_PASSED';s.checks=failures;s.provider='gemini';s.model=str(b.get('model',''))[:100];s.prompt_version=PROMPT_VERSION;s.updated_at=time.time();j.status='DONE';j.error=None
+            s.version=j.version;s.text=text;s.final_answer=final;s.status='NEEDS_REVIEW' if failures else 'CHECKS_PASSED';s.checks=failures;s.provider=b.get('provider') if b.get('provider') in ('gemini','groq','antigravity','openrouter') else 'gemini';s.model=str(b.get('model',''))[:100];s.prompt_version=PROMPT_VERSION;s.updated_at=time.time();j.status='DONE';j.error=None
     j.lease_token=None;db.session.commit();return jsonify(ok=True,status=j.status)
 
 @bp.get('/attempts/<int:aid>/questions/<int:qid>/ai-solution')
@@ -202,3 +204,48 @@ def review_solutions(items):
         s=solutions.get(i['question']['id'])
         i['ai_solution']=dict(available=True,text=s.text,label='AI-generated explanation') if s and s.version==current.get(s.question_id) and s.version==version(i['question']) else dict(available=False)
     return items
+
+@bp.get('/admin/ai-solutions/papers/<int:pid>/export')
+@require_user(True)
+def export_solution_paper(pid):
+    p=db.session.get(Paper,pid)
+    if not p or p.status=='ARCHIVED':abort(404)
+    qs=Question.query.filter_by(paper_id=pid,status='AVAILABLE').options(selectinload(Question.options),selectinload(Question.images)).order_by(Question.id).all()
+    use_paper_image_delivery(pid)
+    snaps=[snapshot(q) for q in qs];prepare_image_paths(snaps)
+    return jsonify(format='pyq-solutions-v1',paper_id=pid,paper_name=p.name,questions=[dict(question_id=q.id,number=q.number,version=version(s),question={**question_with_image_urls(s),'answers':s.get('answers'),'answer_status':s.get('answer_status')}) for q,s in zip(qs,snaps)],solutions=[])
+
+@bp.post('/admin/ai-solutions/import')
+@require_user(True)
+def import_paper_solutions():
+    b=body();bundle=b.get('bundle');pid=b.get('paper_id')
+    if type(pid)!=int or not isinstance(bundle,dict) or bundle.get('format')!='pyq-solutions-v1' or bundle.get('paper_id')!=pid:abort(400,description='Solution file must match the selected paper and pyq-solutions-v1 format')
+    entries=bundle.get('solutions')
+    if not isinstance(entries,list) or not 1<=len(entries)<=200:abort(400,description='Import 1–200 question solutions for one paper')
+    if len(json.dumps(bundle,ensure_ascii=False))>2_000_000:abort(400,description='Solution file too large')
+    p=db.session.get(Paper,pid)
+    if not p or p.status=='ARCHIVED':abort(404)
+    qs={q.id:q for q in Question.query.filter_by(paper_id=pid,status='AVAILABLE').options(selectinload(Question.options),selectinload(Question.images)).with_for_update().all()}
+    existing={s.question_id:s for s in AISolution.query.filter(AISolution.question_id.in_(qs)).with_for_update()}
+    jobs={j.question_id:j for j in SolutionJob.query.filter(SolutionJob.question_id.in_(qs)).with_for_update()}
+    preview=[];seen=set()
+    for e in entries:
+        if not isinstance(e,dict) or type(e.get('question_id'))!=int:abort(400,description='Each solution needs an integer question_id')
+        qid=e['question_id'];q=qs.get(qid)
+        if not q or qid in seen:abort(400,description='Unknown, hidden, foreign or duplicate question')
+        seen.add(qid);v=version(snapshot(q))
+        if e.get('version')!=v:abort(409,description='Question changed since export; export the paper again')
+        if qid in existing and b.get('replace_existing') is not True:abort(409,description=f'Question {q.number} already has a solution; enable Replace existing solutions to update it')
+        if qid in jobs and jobs[qid].status=='PROCESSING':abort(409,description='Worker is processing a question; pause and wait before importing')
+        try:text,final,flags=checked_output(snapshot(q),e.get('output'))
+        except ValueError as err:abort(400,description=f'Question {q.number}: {err}')
+        preview.append(dict(question_id=qid,number=q.number,version=v,text=text,final_answer=final,checks=flags,status='NEEDS_REVIEW' if flags else 'CHECKS_PASSED',replacing=qid in existing))
+    if b.get('save') is True:
+        for entry in preview:
+            sol=existing.get(entry['question_id'])
+            if not sol:sol=AISolution(question_id=entry['question_id']);db.session.add(sol)
+            sol.version=entry['version'];sol.text=entry['text'];sol.final_answer=entry['final_answer'];sol.checks=entry['checks'];sol.status=entry['status'];sol.provider='admin-import';sol.model='chat-assisted';sol.prompt_version='import-v1';sol.updated_at=time.time()
+            job=jobs.get(entry['question_id'])
+            if job:job.status='DONE';job.error=None;job.lease_token=None
+        db.session.commit()
+    return jsonify(items=preview,saved=len(preview) if b.get('save') is True else 0)

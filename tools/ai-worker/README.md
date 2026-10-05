@@ -1,15 +1,20 @@
-# Local AI solution worker (Windows)
+# Local multi-provider worker — Windows
+1. Stop old worker (Ctrl+C), extract ZIP into a new folder, open ai-worker.
+2. Run SETUP_AI_WORKER.cmd. Python 3 required. Edit created local.env in Notepad.
+3. Enter PYQ_ADMIN_EMAIL and your API keys. Keep local.env private; quotes normally unnecessary. Do not save as local.env.txt. Do not add your admin password.
+4. Google free project: GEMINI_FREE_TIER_CONFIRMED=yes. Antigravity uses the SAME Google key: ANTIGRAVITY_ENABLED=yes. Groq free account: GROQ_FREE_TIER_CONFIRMED=yes. These acknowledgements do not verify provider billing. Enable only confirmed free accounts/projects.
+5. Run START_AI_WORKER.cmd; type admin password at hidden prompt.
+6. Website Admin > AI Solutions: pause unrelated batches and resume ONE small paper. Do not regenerate existing solutions. Failed questions need separate requeue via pending-solution generation.
+7. Inspect terminal and preview solutions. DONE means saved draft, not published. Share only Job/Fallback lines, NEVER local.env or keys.
 
-After deployment, use **Admin → AI Solutions**. Your PC runs generation; Render only queues jobs and serves saved text.
+The worker runs locally against the deployed website. No full local website setup required. All provider keys stay on PC; Render keys are not automatically available. It processes one question at a time, leaves answer keys/questions unchanged and preserves original image quality.
 
-1. Install Python 3. Download/clone this repository, open `tools/ai-worker`, and double-click `SETUP_AI_WORKER.cmd` once.
-2. Edit the created `local.env`: set `GEMINI_API_KEY`, `GEMINI_MODEL`, and `PYQ_ADMIN_EMAIL`. Confirm free API quota in your Google AI Studio project before setting `GEMINI_FREE_TIER_CONFIRMED=yes`. A Gemini subscription and API billing are separate; this flag is your acknowledgement, not an automated billing check. No paid fallback is configured.
-3. Double-click `START_AI_WORKER.cmd`. Enter your existing website admin password in the hidden prompt. No Supabase credential is needed. The Gemini key stays on your PC and goes only to Google.
-4. On the website select a course/paper, then **Generate 5 samples**. Review them, then use **Generate full paper** to queue all missing solutions for the selected paper in one click. Existing current solutions and already queued questions are skipped; filters and selected checkboxes do not limit this full-paper action. Select specific questions, regenerate failures, or pause/resume batches. The worker processes one question at a time with a minimum 10-second pause.
-5. **Preview / edit** shows the question, key and solution. `CHECKS PASSED` means source-key consistency and structure checks passed; it does not certify correct reasoning. Flagged solutions require manual editing before publication. Save a draft, then publish individually or select drafts to publish together.
-6. Practice **Check answer** loads published explanations; exam mode permits them only after submission. Source keys and scoring rules stay unchanged. A changed question hides its old solution until regeneration and publication.
-7. Ctrl+C stops safely. Jobs stay queued offline; abandoned jobs recover after a 10-minute lease. Quota/auth failures pause the batch: fix the key/model or wait for reset, then Resume. Temporary failures retry three times. Restart and sign in again if the admin session expires.
+Default order groq,gemini,antigravity,openrouter. Missing providers are skipped. For isolated tests set AI_PROVIDER_ORDER=groq, then optionally test each other provider individually. Groq text: openai/gpt-oss-120b. Groq vision: qwen/qwen3.8-27b (maximum 3 images); excess images skip Groq, never drop images. Other adapters receive all images. OpenRouter routing receives image inputs; incompatible output falls back.
 
-`local.env` and the virtual environment are ignored by Git. Never share keys or that file. Render does not need Gemini keys for this feature. Groq/OpenRouter are not used in this version.
+Only openrouter/free or :free IDs allowed, with zero prompt/completion price constraints. There is no paid fallback. Provider quotas still apply. Google/Groq free-tier flags are acknowledgements, not automated billing checks. No guarantee of correctness or daily throughput.
 
-Deployment adds three tables using the existing migration flow. One solution and one current job are stored per question, without accumulating solution revisions. Text is bounded to 14,000 characters. Start Exam carries no solution payload and invokes no AI. Check answer adds a saved-text read; worker traffic still shares the database, so run small batches outside peak exam times if necessary.
+429 cools that provider for 15 minutes in the current process; server/network/invalid output for 60 seconds; auth/config disables it for current process (restart after correcting settings). If all compatible providers are unavailable, batch safely pauses with queued job preserved. Resume manually when quota available. 15 minutes does NOT mean daily quota resets then. Model/token/day limits can exhaust before request/day limits.
+
+Missing, oversized or unsupported source images fail explicitly; signed-image HTTP failures try authenticated proxy. No images silently omitted. Output is checked locally and validated on server; source answer keys remain authoritative for scoring. Preview before publish.
+
+Mock adapter/fallback/security tests pass. Live API calls with your credentials have NOT been tested here. Antigravity preview/API configuration and OpenRouter free availability may change. Before deployment, admin error/provider metadata may remain generic/Gemini; use terminal for actual provider. server-update-source contains pending app source changes for reference, not files to copy into the worker folder. No GitHub push has been made.

@@ -110,3 +110,45 @@ def test_full_paper_queues_over_thirty_only_missing_and_no_other_paper(app,clien
     assert client.get('/api/admin/ai-solutions').json['batches'][0]['paper_name']==p.name
     assert client.post('/api/admin/ai-solutions/queue',json={'full_paper':True},headers=h).status_code==400
     assert client.post('/api/admin/ai-solutions/queue',json={'paper_id':p.id,'full_paper':True,'regenerate':True},headers=h).status_code==400
+
+def test_paper_import_preview_save_and_duplicate_protection(app,client):
+    p=seed();h=login(client,True)
+    export=client.get(f'/api/admin/ai-solutions/papers/{p.id}/export');assert export.status_code==200
+    q=next(q for q in export.json['questions'] if q['question']['kind']=='MCQ')
+    bundle={'format':'pyq-solutions-v1','paper_id':p.id,'solutions':[{'question_id':q['question_id'],'version':q['version'],'output':output()}]}
+    body={'paper_id':p.id,'bundle':bundle}
+    preview=client.post('/api/admin/ai-solutions/import',json=body,headers=h)
+    assert preview.status_code==200,preview.json
+    assert preview.json['items'][0]['status']=='CHECKS_PASSED';assert AISolution.query.count()==0
+    saved=client.post('/api/admin/ai-solutions/import',json={**body,'save':True},headers=h)
+    assert saved.json['saved']==1;assert AISolution.query.first().status=='CHECKS_PASSED'
+    assert db.session.get(Question,q['question_id']).answers==['A']
+    assert client.post('/api/admin/ai-solutions/import',json={**body,'save':True},headers=h).status_code==409
+    assert app.test_client().get(f'/api/admin/ai-solutions/papers/{p.id}/export').status_code==401
+    assert client.post('/api/admin/ai-solutions/import',json=body).status_code==403
+
+@pytest.mark.parametrize('change',['paper','version','malformed','duplicate'])
+def test_paper_import_rejects_bad_mapping_atomically(app,client,change):
+    p=seed();h=login(client,True);q=Question.query.filter_by(paper_id=p.id,kind='MCQ').first()
+    entry={'question_id':q.id,'version':version(snapshot(q)),'output':output()}
+    bundle={'format':'pyq-solutions-v1','paper_id':p.id,'solutions':[entry]}
+    if change=='paper':bundle['paper_id']=p.id+999
+    if change=='version':entry['version']='old'
+    if change=='malformed':entry['output']['option_explanations']={}
+    if change=='duplicate':bundle['solutions'].append(dict(entry))
+    r=client.post('/api/admin/ai-solutions/import',json={'paper_id':p.id,'bundle':bundle,'save':True},headers=h)
+    assert r.status_code in (400,409);assert AISolution.query.count()==0
+
+def test_replacement_is_opt_in_partial_and_unpublishes(app,client):
+    p=seed();h=login(client,True);j=queued(client,p,h);finish(client,j,h)
+    q=db.session.get(Question,j['question']['id']);s=AISolution.query.first();s.status='PUBLISHED';db.session.commit();sid=s.id
+    entry={'question_id':q.id,'version':version(snapshot(q)),'output':{**output(),'explanation':'Updated explanation.'}}
+    payload={'paper_id':p.id,'bundle':{'format':'pyq-solutions-v1','paper_id':p.id,'solutions':[entry]}}
+    assert client.post('/api/admin/ai-solutions/import',json={**payload,'save':True},headers=h).status_code==409
+    preview=client.post('/api/admin/ai-solutions/import',json={**payload,'replace_existing':True},headers=h)
+    assert preview.json['items'][0]['replacing'] is True
+    assert db.session.get(AISolution,sid).status=='PUBLISHED'
+    r=client.post('/api/admin/ai-solutions/import',json={**payload,'replace_existing':True,'save':True},headers=h)
+    assert r.status_code==200 and r.json['saved']==1
+    updated=db.session.get(AISolution,sid);assert updated.text.startswith('Updated explanation.')
+    assert updated.status=='CHECKS_PASSED' and AISolution.query.count()==1 and q.answers==['A']
