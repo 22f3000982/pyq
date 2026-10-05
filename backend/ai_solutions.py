@@ -52,6 +52,33 @@ def checked_output(s,data):
     if len(combined)>14000:raise ValueError('Solution too long')
     return combined,final,failures
 
+@bp.get('/admin/ai-solutions/summary')
+@require_user(True)
+def solution_summary():
+    # Only processed, non-archived papers with available questions count.
+    counts=db.session.query(Question.paper_id.label('paper_id'),func.count(Question.id).label('total')).filter(Question.status=='AVAILABLE').group_by(Question.paper_id).subquery()
+    query=db.session.query(Paper,counts.c.total).join(counts,counts.c.paper_id==Paper.id).filter(Paper.status!='ARCHIVED')
+    for field,col in [('course_id',Paper.course_id),('exam_type_id',Paper.exam_type_id)]:
+        if request.args.get(field):query=query.filter(col==integer_argument(field))
+    records=query.options(selectinload(Paper.term),selectinload(Paper.exam_type)).order_by(Paper.id.desc()).all()
+    papers={p.id:dict(id=p.id,name=p.name,term=p.term.name,exam=p.exam_type.name,exam_type_id=p.exam_type_id,session=p.session or '',questions=total,uploaded=0,published=0,review=0,outdated=0) for p,total in records}
+    if papers:
+        rows=db.session.query(Question,AISolution).join(AISolution,AISolution.question_id==Question.id).filter(Question.status=='AVAILABLE',Question.paper_id.in_(papers)).options(selectinload(Question.options),selectinload(Question.images)).all()
+        for q,s in rows:
+            p=papers[q.paper_id]
+            if s.version!=version(snapshot(q)):
+                p['outdated']+=1
+                continue
+            p['uploaded']+=1
+            if s.status=='PUBLISHED':p['published']+=1
+            else:p['review']+=1
+    values=list(papers.values())
+    totals=dict(papers_total=len(values),papers_complete=sum(p['uploaded']==p['questions'] for p in values),papers_published=sum(p['published']==p['questions'] for p in values),papers_not_started=sum(p['uploaded']==0 for p in values),questions_total=sum(p['questions'] for p in values),questions_uploaded=sum(p['uploaded'] for p in values),questions_published=sum(p['published'] for p in values),questions_review=sum(p['review'] for p in values),questions_outdated=sum(p['outdated'] for p in values))
+    totals['papers_pending']=totals['papers_total']-totals['papers_complete']
+    totals['papers_partial']=totals['papers_pending']-totals['papers_not_started']
+    totals['questions_pending']=totals['questions_total']-totals['questions_uploaded']
+    return jsonify(papers=values,statistics=totals)
+
 @bp.get('/admin/ai-solutions')
 @require_user(True)
 def dashboard():
@@ -219,6 +246,7 @@ def export_solution_paper(pid):
 @require_user(True)
 def import_paper_solutions():
     b=body();bundle=b.get('bundle');pid=b.get('paper_id')
+    if b.get('publish') is True and b.get('save') is not True:abort(400,description='Publishing requires saving the import')
     if type(pid)!=int or not isinstance(bundle,dict) or bundle.get('format')!='pyq-solutions-v1' or bundle.get('paper_id')!=pid:abort(400,description='Solution file must match the selected paper and pyq-solutions-v1 format')
     entries=bundle.get('solutions')
     if not isinstance(entries,list) or not 1<=len(entries)<=200:abort(400,description='Import 1–200 question solutions for one paper')
@@ -244,8 +272,10 @@ def import_paper_solutions():
         for entry in preview:
             sol=existing.get(entry['question_id'])
             if not sol:sol=AISolution(question_id=entry['question_id']);db.session.add(sol)
+            if b.get('publish') is True and not entry['checks']:entry['status']='PUBLISHED'
             sol.version=entry['version'];sol.text=entry['text'];sol.final_answer=entry['final_answer'];sol.checks=entry['checks'];sol.status=entry['status'];sol.provider='admin-import';sol.model='chat-assisted';sol.prompt_version='import-v1';sol.updated_at=time.time()
             job=jobs.get(entry['question_id'])
             if job:job.status='DONE';job.error=None;job.lease_token=None
         db.session.commit()
-    return jsonify(items=preview,saved=len(preview) if b.get('save') is True else 0)
+    saved=len(preview) if b.get('save') is True else 0
+    return jsonify(items=preview,saved=saved,published=sum(e['status']=='PUBLISHED' for e in preview) if saved else 0,needs_review=sum(bool(e['checks']) for e in preview) if saved else 0)

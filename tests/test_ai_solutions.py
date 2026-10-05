@@ -152,3 +152,60 @@ def test_replacement_is_opt_in_partial_and_unpublishes(app,client):
     assert r.status_code==200 and r.json['saved']==1
     updated=db.session.get(AISolution,sid);assert updated.text.startswith('Updated explanation.')
     assert updated.status=='CHECKS_PASSED' and AISolution.query.count()==1 and q.answers==['A']
+
+def test_solution_summary_counts_current_uploads_and_published_separately(app,client):
+    from backend.models import Paper
+    p=seed();h=login(client,True)
+    questions=Question.query.filter_by(paper_id=p.id).order_by(Question.id).all()
+    for q in questions:db.session.add(AISolution(question_id=q.id,version=version(snapshot(q)),text='Solution',status='CHECKS_PASSED'))
+    db.session.commit();path='/api/admin/ai-solutions/summary'
+    stats=client.get(path).json['statistics']
+    assert stats['papers_total']==stats['papers_complete']==1
+    assert stats['papers_pending']==stats['papers_published']==0
+    assert stats['questions_review']==5
+    for s in AISolution.query.all():s.status='PUBLISHED'
+    db.session.commit()
+    assert client.get(path).json['statistics']['papers_published']==1
+    questions[0].text+=' changed';db.session.commit()
+    stats=client.get(path).json['statistics']
+    assert stats['papers_complete']==stats['papers_published']==0
+    assert stats['papers_pending']==stats['questions_pending']==stats['questions_outdated']==1
+    questions[0].status='HIDDEN';db.session.commit()
+    stats=client.get(path).json['statistics']
+    assert stats['questions_total']==stats['questions_published']==4
+    assert stats['papers_published']==1
+    empty=Paper(identity='no-extracted-questions',name='Catalog only',course_id=p.course_id,term_id=p.term_id,exam_type_id=p.exam_type_id)
+    archived=Paper(identity='archived',name='Archived',status='ARCHIVED',course_id=p.course_id,term_id=p.term_id,exam_type_id=p.exam_type_id)
+    db.session.add_all([empty,archived]);db.session.flush()
+    db.session.add(Question(paper_id=archived.id,number='1',kind='NAT',text='Hidden paper',status='AVAILABLE'));db.session.commit()
+    assert client.get(path).json['statistics']['papers_total']==1
+    assert client.get(path+'?course_id='+str(p.course_id)).json['papers'][0]['id']==p.id
+    assert client.get(path+'?exam_type_id=999999').json['statistics']['papers_total']==0
+    assert client.get(path+'?course_id=bad').status_code==400
+    assert app.test_client().get(path).status_code==401
+
+def test_import_saves_and_publishes_checked_solutions_atomically(app,client):
+    p=seed();h=login(client,True)
+    qs=Question.query.filter_by(paper_id=p.id).order_by(Question.id).all()
+    entries=[]
+    for q in qs:
+        answer=q.answers if q.kind in ('MCQ','MSQ','TRUE_FALSE') else '2.5' if q.kind=='NAT' else 'Needs human assessment'
+        data={'final_answer':answer,'explanation':'Reasoned answer.','option_explanations':{o.key:'Explanation of choice.' for o in q.options},'needs_review':q.kind=='SUBJECTIVE'}
+        entries.append({'question_id':q.id,'version':version(snapshot(q)),'output':data})
+    payload={'paper_id':p.id,'bundle':{'format':'pyq-solutions-v1','paper_id':p.id,'solutions':entries},'save':True,'publish':True}
+    bad={**payload,'bundle':{**payload['bundle'],'solutions':[entries[0],{**entries[1],'version':'stale'}]}}
+    assert client.post('/api/admin/ai-solutions/import',json=bad,headers=h).status_code==409
+    assert AISolution.query.count()==0
+    r=client.post('/api/admin/ai-solutions/import',json=payload,headers=h)
+    assert r.status_code==200,r.json
+    assert (r.json['saved'],r.json['published'],r.json['needs_review'])==(5,4,1)
+    stats=client.get('/api/admin/ai-solutions/summary').json['statistics']
+    assert stats['papers_complete']==1 and stats['papers_published']==0
+    assert stats['questions_published']==4 and stats['questions_review']==1
+    assert AISolution.query.filter_by(status='NEEDS_REVIEW').count()==1
+    # A replacement with a discrepancy must not leave the previous published answer visible.
+    change={**entries[0],'output':{**entries[0]['output'],'needs_review':True}}
+    r=client.post('/api/admin/ai-solutions/import',json={**payload,'replace_existing':True,'bundle':{**payload['bundle'],'solutions':[change]}},headers=h)
+    assert r.json['published']==0 and r.json['needs_review']==1
+    assert AISolution.query.filter_by(question_id=qs[0].id).one().status=='NEEDS_REVIEW'
+    assert client.post('/api/admin/ai-solutions/import',json={**payload,'save':False},headers=h).status_code==400

@@ -35,12 +35,29 @@ ANSWER AND OPTION RULES
 - Existing question.answers is the scoring key; solve independently and compare. If it appears inconsistent, give your reasoned answer and set needs_review=true. Never invent reasoning to force agreement with the key or modify the supplied source key.
 - If the source key is absent, set needs_review=true. If crucial text/images are unreadable or missing, do not fabricate a solution; omit that question and tell me the omitted IDs separately in a follow-up message, not inside this import JSON. A temporary image URL may expire: request the source PDF/image if necessary.
 
-SOLUTION STYLE
-- Plain English text and LaTeX only; no HTML or Markdown tables.
-- Easy questions: 1–2 lines are enough. Harder maths: show the necessary logical steps and units; do not make explanations long for their own sake.
-- Explain why options are correct/incorrect clearly, including applicable assumptions. Do not claim guaranteed correctness or invented confidence percentages.
+SOLUTION STYLE — SHORT, STEPWISE AND EASY TO SCAN
+- Write concise English using actual newline characters in string values (JSON-escaped as \n). Separate steps with a blank line (\n\n).
+- Easy conceptual questions: one short reasoning step followed by the answer; do not pad them into three steps.
+- Calculations or multi-stage reasoning: usually 2–4 numbered steps. Each step should explain one operation in 1–2 short sentences. Do not sacrifice a necessary derivation to fit this guideline.
+- Use bold step labels supported by the website: **1. Set up:**, **2. Calculate:**, **3. Conclude:**. Use meaningful labels suitable for the question.
+- End the main explanation with **Answer: C — Perfect information.** (using the actual displayed option letter and readable result). For MSQ list all displayed letters; for numerical questions show the value. These readable labels do not replace exact option IDs in final_answer.
+- Put only key equations in display LaTeX \[ ... \]; use inline LaTeX \( ... \) for short quantities. Avoid displaying every small expression.
+- Keep option explanations separate: one short sentence per option where possible. Start with **Correct:** or **Incorrect:**. If the question asks for the incorrect statement, explain truth/falsehood and whether it should be selected explicitly.
+- Do not repeat the complete derivation in every option explanation or duplicate option explanations in the main explanation; the website appends them separately.
+- Put assumptions or ambiguity in a short **Review note:** or **Convention note:** after the answer. Set needs_review=true when an assumption changes which option is correct or the source key appears inconsistent.
+- Plain text, standard LaTeX and **bold** labels only. No HTML, Markdown tables, heading syntax (#), images, coloured tags or custom LaTeX macros.
 - Explanation: 1–8000 characters. Each option explanation: 1–1200 characters. Total combined explanation plus option explanations must stay below 14000 characters.
-- needs_review must be a JSON boolean, never a quoted string. It should be true for uncertainty, missing information or a key discrepancy.
+- needs_review must be a JSON boolean, never a quoted string. Do not claim guaranteed correctness or invent confidence percentages.
+
+
+TABLES AND GAME TREES — WHEN THEY HELP
+- For finite normal-form games, auction games, dominance/elimination and Nash-equilibrium questions, include a compact labelled payoff table before the reasoning. Use standard KaTeX LaTeX: \begin{array}{c|cc} ... \end{array}, not a Markdown table or HTML.
+- Clearly state which player owns the rows and columns and that each payoff pair is (player 1 payoff, player 2 payoff). Preserve action labels, fractions and payoff order exactly. Derive a missing finite table from the supplied rules only when justified.
+- For extensive-form questions, include a compact branching game tree when feasible, showing every decision maker, action and terminal payoff. Use a KaTeX array with \swarrow and \searrow and enough aligned columns to make parent–child links readable. TikZ, forest, Mermaid and custom packages are unsupported in this import format.
+- Never depict simultaneous or imperfect-information play as a sequential perfect-information tree. Represent information sets explicitly when feasible; otherwise explain the limitation rather than drawing a misleading tree.
+- Avoid huge trees or artificial tables for continuous-strategy questions; equations may be clearer. A visual must be mathematically faithful, not decorative.
+- Each solution must stand alone. Include only the small relevant table/tree, then retain concise numbered steps and a readable final answer; do not add lengthy prose describing every cell.
+- Escape every LaTeX backslash in JSON. A LaTeX row separator \\ needs four backslashes in the JSON source. Add whitespace after row separators before a cell beginning with '(' to avoid confusing the site's delimiter check.
 
 LATEX AND JSON ESCAPING
 - Use \( ... \) for inline maths and \[ ... \] for display maths in the displayed solution.
