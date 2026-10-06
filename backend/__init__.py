@@ -1,6 +1,6 @@
 import os, secrets, gzip, re
 from pathlib import Path
-from flask import Flask, jsonify, request, session, send_from_directory
+from flask import Flask, jsonify, request, session, send_from_directory, abort
 from sqlalchemy import text
 from flask_migrate import Migrate
 from flask_limiter import Limiter
@@ -159,6 +159,8 @@ def create_app(config=None):
             response=send_from_directory(dist,path)
             if re.fullmatch(r'assets/[^/]+-[A-Za-z0-9_-]{8,}\.(js|css|woff2?)',path):response.headers['Cache-Control']='public, max-age=31536000, immutable'
             return response
+        if path and not re.fullmatch(r'(?:about|bookmarks|progress|history|dashboard|mistakes|login|admin(?:/login)?|(?:course|paper|attempt|result)/[0-9]+|exam/[^/]+)',path):
+            abort(404)
         if not (dist/'index.html').exists(): return jsonify(message='Build frontend with npm run build'),503
         response=send_from_directory(dist,'index.html');response.headers['Cache-Control']='no-cache';return response
     from .cli import register_cli

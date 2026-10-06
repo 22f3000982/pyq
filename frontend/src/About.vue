@@ -25,7 +25,7 @@ async function changePhoto(method,form){busy.value=true;error.value='';message.v
 <p class="muted">JPG, PNG or WebP · up to 5 MB. Photo changes publish immediately; text publishes when you save.</p>
 <button v-if="page.photo_url" class="btn btn-light" type="button" @click="changePhoto('DELETE')">Remove photo</button>
 <div class="about-actions"><button class="btn btn-primary" type="submit">Save details</button><button class="btn btn-light" type="button" @click="editing=false">Cancel text changes</button></div></fieldset><p v-if="busy" role="status">Saving…</p></form>
-<article v-else class="panel about-story"><h2>{{page.headline}}</h2><p class="about-copy">{{page.description}}</p><a class="btn btn-primary" href="#/">Explore papers →</a></article>
+<article v-else class="panel about-story"><h2>{{page.headline}}</h2><p class="about-copy">{{page.description}}</p><a class="btn btn-primary" href="/">Explore papers →</a></article>
 <section class="panel about-person"><img v-if="page.photo_url" :src="page.photo_url+'?v='+version" :alt="page.name||'MauryaHub creator'" width="160" height="160"><div><div class="eyebrow">BEHIND MAURYAHUB</div><h2>{{page.name||'A student initiative'}}</h2><p class="about-copy">{{page.bio}}</p><a href="https://mauryahub.onrender.com/">Visit MauryaHub ↗</a></div></section>
 <div class="about-notes"><p><a href="/contact">Contact &amp; content removal requests</a></p><p>Found a formatting issue? Use <strong>Report Broken Format</strong> next to the question’s Bookmark button.</p><p>Independent student-built platform. Not affiliated with IIT Madras.</p></div>
 </template></section>

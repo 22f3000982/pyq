@@ -32,7 +32,7 @@ def google_drive_callback():
     from .google_drive import complete_callback
     try:complete_callback(request.args.get('code'),request.args.get('state'))
     except RuntimeError as exc:abort(400,description=str(exc))
-    return redirect('/#/admin')
+    return redirect('/admin')
 
 @admin.post('/google-drive/disconnect')
 @require_user(True)

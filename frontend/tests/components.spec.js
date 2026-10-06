@@ -38,7 +38,7 @@ describe('PDF upload form',()=>{it('posts the PDF and metadata and displays real
  mocks.api.mockImplementation(async(path)=>path.startsWith('/courses')?{items:[{id:1,name:'Deep Learning'}]}:path==='/metadata'?{terms:[{id:1,name:'May 2026'}],exams:[{id:1,name:'Quiz 1'}]}:path==='/admin/upload-pyq'?{file:{id:17,status:'QUEUED'},paper:{id:13}}:{file:{id:17,status:'AVAILABLE',effective_status:'AVAILABLE',events:[{stage:'AVAILABLE',message:'Ready'}]},paper:{id:13,question_count:20}});
  const w=mount(Upload);await flushPromises();await w.get('[aria-label="Upload course"]').setValue('1');await w.get('[aria-label="Upload exam type"]').setValue('1');await w.get('[aria-label="Upload term"]').setValue('1');
  const input=w.get('input[type="file"]');Object.defineProperty(input.element,'files',{value:[new File(['%PDF-test'],'real.pdf',{type:'application/pdf'})]});await input.trigger('change');await w.get('form').trigger('submit');await flushPromises();
- const call=mocks.api.mock.calls.find(c=>c[0]==='/admin/upload-pyq');expect(call[1].form.get('course_id')).toBe('1');expect(call[1].form.get('file').name).toBe('real.pdf');expect(w.text()).toContain('Completed ✓');expect(w.get('a').attributes('href')).toBe('#/paper/13');w.unmount();
+ const call=mocks.api.mock.calls.find(c=>c[0]==='/admin/upload-pyq');expect(call[1].form.get('course_id')).toBe('1');expect(call[1].form.get('file').name).toBe('real.pdf');expect(w.text()).toContain('Completed ✓');expect(w.get('a').attributes('href')).toBe('/paper/13');w.unmount();
 })});
 
 describe('student requested improvements',()=>{
@@ -59,7 +59,7 @@ describe('student requested improvements',()=>{
  });
  it('loads available papers after choosing a course within an exam type',async()=>{
   const {default:ExamBrowser}=await import('../src/ExamBrowser.vue');mocks.api.mockImplementation(async(path)=>path.startsWith('/courses')?{items:[{id:27,name:'Game Theory',exams:{'Quiz 1':3}}]}:path==='/metadata'?{terms:[{id:1,name:'May 2026'}]}:{items:[{id:50,name:'Game Theory.pdf',term:'May 2026',exam:'Quiz 1',question_count:16,total_marks:25}],total:1});
-  const w=mount(ExamBrowser,{props:{route:'/exam/Quiz%201'}});await flushPromises();await w.get('button[aria-label="Choose course"]').trigger('click');const search=w.get('.searchable-select-search input');await search.setValue('Game');expect(w.findAll('.searchable-select-option')).toHaveLength(1);await w.findAll('.searchable-select-option')[0].trigger('click');await flushPromises();expect(mocks.api.mock.calls.at(-1)[0]).toContain('available=true');expect(w.text()).not.toContain('Game Theory.pdf');expect(w.text()).toContain('16 questions');expect(w.text()).toContain('May 2026');expect(w.findAll('a').at(-1).attributes('href')).toBe('#/paper/50');w.unmount();
+  const w=mount(ExamBrowser,{props:{route:'/exam/Quiz%201'}});await flushPromises();await w.get('button[aria-label="Choose course"]').trigger('click');const search=w.get('.searchable-select-search input');await search.setValue('Game');expect(w.findAll('.searchable-select-option')).toHaveLength(1);await w.findAll('.searchable-select-option')[0].trigger('click');await flushPromises();expect(mocks.api.mock.calls.at(-1)[0]).toContain('available=true');expect(w.text()).not.toContain('Game Theory.pdf');expect(w.text()).toContain('16 questions');expect(w.text()).toContain('May 2026');expect(w.findAll('a').at(-1).attributes('href')).toBe('/paper/50');w.unmount();
  });
 });
 

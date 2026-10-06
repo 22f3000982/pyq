@@ -66,6 +66,6 @@ export function loadCatalog(){
 }
 export function invalidateCatalog(){clearPublicReads()}
 export async function loadSession(){const d=await api('/session');session.user=d.user||{id:'browser',name:'Guest',role:'GUEST'};return d;}
-export function go(path){window.location.hash=path;}
+export {navigate as go} from './navigation';
 
 export function loadHome(){return api('/home')}
