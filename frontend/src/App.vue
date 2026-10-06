@@ -32,5 +32,5 @@ const nav=[['/','Home',BookOpen],['/progress','My progress',LayoutDashboard],['/
 <Admin v-else-if="route.startsWith('/admin')"/>
 <Records v-else-if="['/progress','/history','/dashboard','/bookmarks','/mistakes'].includes(route)||route.startsWith('/result/')" :route="route" :key="route"/>
 <ExamBrowser v-else-if="route.startsWith('/exam/')" :route="route" :key="route"/><Catalog v-else :route="route" :key="route"/>
-</main><footer v-if="!examPage">MauryaHub · PYQ Practice <a href="#/about">About</a></footer></div></div>
+</main><footer v-if="!examPage"><a href="/study">Study library</a> · <a href="/contact">Contact</a> · MauryaHub · PYQ Practice <a href="#/about">About</a></footer></div></div>
 </template>

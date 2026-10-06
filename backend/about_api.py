@@ -10,10 +10,11 @@ about = Blueprint('about', __name__, url_prefix='/api')
 DEFAULTS = {
     'headline': 'Less searching. More practising.',
     'description': 'MauryaHub PYQ Practice brings previous-year papers together so you can choose your course and start practising. Use Practice Mode to learn at your pace, or Exam Mode for a timed attempt. No student login is required.',
+    'contact_email': '',
     'name': '',
     'bio': 'Built by a student, for students.',
 }
-LIMITS = {'headline': 160, 'description': 4000, 'name': 100, 'bio': 2000}
+LIMITS = {'headline': 160, 'description': 4000, 'name': 100, 'bio': 2000, 'contact_email': 254}
 
 def data(row):
     return {**DEFAULTS, **(row.details if row else {}), 'photo_url': '/api/about/photo' if row and row.photo_path else None}
@@ -32,6 +33,10 @@ def save_about():
             abort(400, description=f'{key} must be text, up to {LIMITS[key]} characters.')
         if key in ('headline', 'description') and not value.strip():
             abort(400, description=f'{key} cannot be empty.')
+    if 'contact_email' in incoming and incoming['contact_email'].strip():
+        import re
+        if not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", incoming['contact_email'].strip()):
+            abort(400, description='Enter a valid public contact email.')
     row = db.session.get(AboutPage, 1)
     if not row:
         row = AboutPage(id=1, details={}); db.session.add(row)
