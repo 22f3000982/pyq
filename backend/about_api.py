@@ -10,14 +10,17 @@ about = Blueprint('about', __name__, url_prefix='/api')
 DEFAULTS = {
     'headline': 'Less searching. More practising.',
     'description': 'MauryaHub PYQ Practice brings previous-year papers together so you can choose your course and start practising. Use Practice Mode to learn at your pace, or Exam Mode for a timed attempt. No student login is required.',
-    'contact_email': '',
-    'name': '',
-    'bio': 'Built by a student, for students.',
+    'contact_email': 'ashraj77777@gmail.com',
+    'name': 'Ashish Maurya',
+    'bio': 'IITM BS Degree student. Building an independent practice platform for fellow students.',
 }
 LIMITS = {'headline': 160, 'description': 4000, 'name': 100, 'bio': 2000, 'contact_email': 254}
 
 def data(row):
-    return {**DEFAULTS, **(row.details if row else {}), 'photo_url': '/api/about/photo' if row and row.photo_path else None}
+    values={**DEFAULTS, **(row.details if row else {})}
+    for key in ('contact_email','name','bio'):
+        if not values.get(key):values[key]=DEFAULTS[key]
+    return {**values, 'photo_url': '/api/about/photo' if row and row.photo_path else None}
 
 @about.get('/about')
 def public_about():

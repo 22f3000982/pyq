@@ -27,3 +27,18 @@ it('checks an unanswered practice question without saving an answer and scrolls 
  const button=w.findAll('button').find(b=>b.text()==='Check answer');expect(button.attributes('disabled')).toBeUndefined();await button.trigger('click');await flushPromises();
  expect(w.get('.feedback-summary').text()).toContain('Correct: A');expect(scroll).toHaveBeenCalled();expect(mocks.api.mock.calls.some(([p])=>p.includes('?reveal=1'))).toBe(true);w.unmount();
 });
+
+it('reveals prefetched feedback and solution immediately while answer save is pending',async()=>{
+ const question={id:1,number:'1',kind:'MSQ',text:'Choose',images:[],options:[{key:'A',text:'One'},{key:'B',text:'Two'}],marks:2};
+ let finishSave;
+ mocks.api.mockImplementation(async(path,options)=>{
+  if(path.includes('/practice-feedback?'))return {items:[{question_id:1,key:{kind:'MSQ',answers:['A','B'],answer_status:'ANSWER_AVAILABLE',marks:2,negative_marks:0,msq_scoring:'proportional-v1'},solution:{available:true,text:'Cached explanation'}}]};
+  if(options?.method==='POST'&&path.endsWith('/answers'))return new Promise(resolve=>{finishSave=resolve});
+  return {id:10,status:'ACTIVE',mode:'practice',title:'Test',server_time:Date.now()/1000,palette:[{question_id:1,number:'1',state:'VISITED'}],items:[{question,answer:null}]};
+ });
+ const w=mount(Exam,{props:{id:10}});await flushPromises();expect(w.find('.feedback').exists()).toBe(false);
+ await w.findAll('.option')[0].trigger('click');await w.findAll('button').find(b=>b.text()==='Check answer').trigger('click');await flushPromises();expect(w.get('.feedback-marks').text()).toBe('Marks: 1 / 2');expect(w.text()).toContain('Cached explanation');
+ await w.findAll('.option')[1].trigger('click');expect(w.find('.feedback').exists()).toBe(false);await w.findAll('button').find(b=>b.text()==='Check answer').trigger('click');await flushPromises();expect(w.get('.feedback-marks').text()).toBe('Marks: 2 / 2');
+ expect(mocks.api.mock.calls.some(([p])=>p.includes('?reveal=1')||p.endsWith('/ai-solution'))).toBe(false);
+ w.unmount();finishSave?.({items:[]});await flushPromises();
+});

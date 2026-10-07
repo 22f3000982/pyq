@@ -8,6 +8,7 @@ from .about_api import data
 from .engine import question_snapshot, question_order
 from .ai_solutions import version
 from .storage import image_url, send_asset
+from .site_pages import metadata
 
 study = Blueprint('study', __name__)
 
@@ -19,7 +20,7 @@ def page(title, description, **values):
     assets = {}
     if manifest.exists():
         assets = json.loads(manifest.read_text()).get('src/study.js', {})
-    return render_template('study.html', title=title, description=description, assets=assets, search=request.args.get('q','').strip()[:150], **values)
+    return render_template('study.html', title=title, description=description, assets=assets, **metadata(), search=request.args.get('q','').strip()[:150], **values)
 
 @study.get('/study')
 def library():

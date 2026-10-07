@@ -122,7 +122,11 @@ def create_app(config=None):
         app.logger.error('Database request failed (%s)',type(e).__name__)
         return jsonify(error='Database is temporarily unavailable. Please retry.'),503
     @app.errorhandler(HTTPException)
-    def http_error(e): return jsonify(error=e.description),e.code
+    def http_error(e):
+        if e.code==404 and not request.path.startswith('/api/'):
+            from flask import render_template
+            return render_template('not_found.html'),404
+        return jsonify(error=e.description),e.code
     @app.errorhandler(IntegrityError)
     def conflict(e):
         db.session.rollback(); return jsonify(error='This record already exists or conflicts with related data.'),409
@@ -136,6 +140,8 @@ def create_app(config=None):
     app.register_blueprint(ai_solutions)
     from .study_pages import study
     app.register_blueprint(study)
+    from .site_pages import site,metadata
+    app.register_blueprint(site)
     from .about_api import about
     app.register_blueprint(about)
     from .api import api
@@ -162,7 +168,14 @@ def create_app(config=None):
         if path and not re.fullmatch(r'(?:about|bookmarks|progress|history|dashboard|mistakes|login|admin(?:/login)?|(?:course|paper|attempt|result)/[0-9]+|exam/[^/]+)',path):
             abort(404)
         if not (dist/'index.html').exists(): return jsonify(message='Build frontend with npm run build'),503
-        response=send_from_directory(dist,'index.html');response.headers['Cache-Control']='no-cache';return response
+        html=(dist/'index.html').read_text()
+        from markupsafe import escape
+        meta=metadata();tags='<link rel="canonical" href="'+str(escape(meta['canonical_url']))+'">'
+        for name,key in [('google-site-verification','site_verification'),('google-adsense-account','adsense_account')]:
+            if meta[key]:tags+='<meta name="'+name+'" content="'+str(escape(meta[key]))+'">'
+        response=app.response_class(html.replace('</head>',tags+'</head>',1),mimetype='text/html');response.headers['Cache-Control']='no-cache'
+        if path.startswith(('admin','attempt/','result/','login','progress','bookmarks','history','dashboard','mistakes')):response.headers['X-Robots-Tag']='noindex, nofollow'
+        return response
     from .cli import register_cli
     register_cli(app)
     return app

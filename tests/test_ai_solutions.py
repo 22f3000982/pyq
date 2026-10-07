@@ -212,3 +212,22 @@ def test_import_saves_and_publishes_checked_solutions_atomically(app,client):
     assert r.json['published']==0 and r.json['needs_review']==1
     assert AISolution.query.filter_by(question_id=qs[0].id).one().status=='NEEDS_REVIEW'
     assert client.post('/api/admin/ai-solutions/import',json={**payload,'save':False},headers=h).status_code==400
+
+
+def test_practice_prefetch_is_bounded_owned_and_never_exposes_exam_keys(app,client):
+    from test_guest_access import visitor
+    p=seed();h=visitor(client)
+    a=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':p.id,'mode':'practice'}).json
+    qid=a['palette'][0]['question_id'];url=f"/api/attempts/{a['id']}/practice-feedback?ids={qid}"
+    r=client.get(url);assert r.status_code==200
+    assert r.json['items'][0]['key']['answers']
+    assert r.json['items'][0]['solution']=={'available':False}
+    q=db.session.get(Question,qid);sol=AISolution(question_id=qid,version=version(snapshot(q)),text='Cached published solution',status='PUBLISHED');db.session.add(sol);db.session.commit()
+    assert client.get(url).json['items'][0]['solution']['text']=='Cached published solution'
+    sol.status='DRAFT';db.session.commit();assert client.get(url).json['items'][0]['solution']=={'available':False}
+    sol.status='PUBLISHED';sol.version='stale';db.session.commit();assert client.get(url).json['items'][0]['solution']=={'available':False}
+    assert 'no-store' in r.headers['Cache-Control']
+    assert client.get(url+',1,2,3,4').status_code==400
+    assert app.test_client().get(url).status_code==404
+    e=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':p.id,'mode':'exam','duration_seconds':5400}).json
+    assert client.get(f"/api/attempts/{e['id']}/practice-feedback?ids={e['palette'][0]['question_id']}").status_code==403

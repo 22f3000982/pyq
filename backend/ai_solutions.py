@@ -215,6 +215,25 @@ def finish(id):
             s.version=j.version;s.text=text;s.final_answer=final;s.status='NEEDS_REVIEW' if failures else 'CHECKS_PASSED';s.checks=failures;s.provider=b.get('provider') if b.get('provider') in ('gemini','groq','antigravity','openrouter') else 'gemini';s.model=str(b.get('model',''))[:100];s.prompt_version=PROMPT_VERSION;s.updated_at=time.time();j.status='DONE';j.error=None
     j.lease_token=None;db.session.commit();return jsonify(ok=True,status=j.status)
 
+@bp.get('/attempts/<int:aid>/practice-feedback')
+@require_visitor
+def practice_feedback(aid):
+    a=owned(aid)
+    if a.status!='ACTIVE' or a.mode!='practice':abort(403,description='Practice feedback is only available in active practice mode')
+    raw=request.args.get('ids','').split(',')
+    if not 1<=len(raw)<=4 or any(not v.isdigit() for v in raw):abort(400,description='Request one to four question IDs')
+    ids={int(v) for v in raw}
+    items=AttemptAnswer.query.filter(AttemptAnswer.attempt_id==aid,AttemptAnswer.question_id.in_(ids)).all()
+    if len(items)!=len(ids):abort(404)
+    solutions={s.question_id:s for s in AISolution.query.filter(AISolution.question_id.in_(ids),AISolution.status=='PUBLISHED')}
+    questions={q.id:q for q in Question.query.options(selectinload(Question.options),selectinload(Question.images)).filter(Question.id.in_(solutions),Question.status=='AVAILABLE')}
+    result=[]
+    for i in items:
+        snap=i.snapshot;s=solutions.get(i.question_id);q=questions.get(i.question_id)
+        saved=dict(available=True,text=s.text,label='AI-generated explanation') if s and q and s.version==version(snap) and s.version==version(snapshot(q)) else dict(available=False)
+        result.append(dict(question_id=i.question_id,key={k:snap.get(k) for k in ('kind','answers','explanation','answer_status','marks','negative_marks','tolerance','msq_scoring')},solution=saved))
+    response=jsonify(items=result);response.headers['Cache-Control']='private, no-store';return response
+
 @bp.get('/attempts/<int:aid>/questions/<int:qid>/ai-solution')
 @require_visitor
 def student_solution(aid,qid):
