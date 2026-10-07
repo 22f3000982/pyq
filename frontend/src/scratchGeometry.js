@@ -21,6 +21,8 @@ export function recognize(points){
  return null;
 }
 export function drawStroke(ctx,s){
+ if(s.tool==='text'){ctx.save();ctx.fillStyle=s.color||'#172943';const size=Math.max(12,Math.min(72,Number(s.fontSize)||28));ctx.font=`${size}px sans-serif`;ctx.textBaseline='top';String(s.text||'').split('\n').forEach((line,i)=>ctx.fillText(line,s.x,s.y+i*size*1.25));ctx.restore();return}
+
  ctx.save();ctx.strokeStyle=s.tool==='eraser'?'#ffffff':s.color;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=s.tool==='eraser'?28:4;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();
  const shape=s.shape;
  if(shape?.type==='ellipse')ctx.ellipse(shape.x+shape.w/2,shape.y+shape.h/2,shape.w/2,shape.h/2,0,0,Math.PI*2);

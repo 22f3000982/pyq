@@ -8,9 +8,9 @@ const ExamBrowser=defineAsyncComponent(()=>import('./ExamBrowser.vue'));
 const Exam=defineAsyncComponent(()=>import('./Exam.vue'));
 const Records=defineAsyncComponent(()=>import('./Records.vue'));
 const Admin=defineAsyncComponent(()=>import('./Admin.vue'));
-const theme=ref(localStorage.getItem('pyq-theme')||'light');
-document.documentElement.dataset.theme=theme.value;
-function toggleTheme(){theme.value=theme.value==='dark'?'light':'dark';document.documentElement.dataset.theme=theme.value;localStorage.setItem('pyq-theme',theme.value)}
+const theme=ref(localStorage.getItem('pyq-theme')||(window.matchMedia?.('(prefers-color-scheme: dark)').matches?'dark':'light'));
+document.documentElement.dataset.theme=theme.value;document.documentElement.dataset.bsTheme=theme.value;
+function toggleTheme(){theme.value=theme.value==='dark'?'light':'dark';document.documentElement.dataset.theme=theme.value;document.documentElement.dataset.bsTheme=theme.value;localStorage.setItem('pyq-theme',theme.value)}
 import {currentRoute,migrateLegacyRoute,installNavigation} from './navigation';
 migrateLegacyRoute();
 const route=ref(currentRoute());

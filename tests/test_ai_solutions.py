@@ -163,6 +163,7 @@ def test_solution_summary_counts_current_uploads_and_published_separately(app,cl
     assert stats['papers_total']==stats['papers_complete']==1
     assert stats['papers_pending']==stats['papers_published']==0
     assert stats['questions_review']==5
+    assert stats['papers_without_published']==1 and stats['papers_partial_published']==0
     for s in AISolution.query.all():s.status='PUBLISHED'
     db.session.commit()
     assert client.get(path).json['statistics']['papers_published']==1
@@ -170,6 +171,8 @@ def test_solution_summary_counts_current_uploads_and_published_separately(app,cl
     stats=client.get(path).json['statistics']
     assert stats['papers_complete']==stats['papers_published']==0
     assert stats['papers_pending']==stats['questions_pending']==stats['questions_outdated']==1
+    assert stats['papers_partial_published']==1
+    assert client.get(path).json['papers'][0]['availability']=='partial'
     questions[0].status='HIDDEN';db.session.commit()
     stats=client.get(path).json['statistics']
     assert stats['questions_total']==stats['questions_published']==4

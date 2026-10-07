@@ -1,7 +1,7 @@
 """Read-only, server-rendered study pages; never create student attempts."""
 import json
 from pathlib import Path
-from flask import Blueprint, render_template, abort, current_app, redirect
+from flask import Blueprint, render_template, abort, current_app, redirect, request
 from sqlalchemy.orm import selectinload
 from .models import db, Course, Paper, Question, QuestionImage, AISolution, AboutPage
 from .about_api import data
@@ -19,12 +19,14 @@ def page(title, description, **values):
     assets = {}
     if manifest.exists():
         assets = json.loads(manifest.read_text()).get('src/study.js', {})
-    return render_template('study.html', title=title, description=description, assets=assets, **values)
+    return render_template('study.html', title=title, description=description, assets=assets, search=request.args.get('q','').strip()[:150], **values)
 
 @study.get('/study')
 def library():
     ids = db.session.query(Paper.course_id).filter(Paper.status != 'ARCHIVED', Paper.id.in_(available()))
     courses = Course.query.filter(Course.id.in_(ids)).order_by(Course.name).all()
+    search=request.args.get('q','').strip().casefold()[:150]
+    if search:courses=[c for c in courses if search in ' '.join([c.name,c.code or '',c.level or '',*(c.aliases or [])]).casefold()]
     return page('Study library', 'Browse IITM BS previous-year questions by course. Read without signing in or starting an exam.', section='library', courses=courses)
 
 @study.get('/study/courses/<int:id>')
@@ -33,6 +35,8 @@ def course(id):
     if not c: abort(404)
     papers = Paper.query.options(selectinload(Paper.term), selectinload(Paper.exam_type)).filter(Paper.course_id == id, Paper.status != 'ARCHIVED', Paper.id.in_(available())).order_by(Paper.id.desc()).all()
     if not papers: abort(404)
+    search=request.args.get('q','').strip().casefold()[:150]
+    if search:papers=[p for p in papers if search in ' '.join([p.name,p.term.name,p.exam_type.name,p.session or '']).casefold()]
     return page(c.name, f'Read {c.name} previous-year questions and available published explanations, or launch a practice test.', section='course', course=c, papers=papers)
 
 @study.get('/study/papers/<int:id>')

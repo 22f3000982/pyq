@@ -126,7 +126,7 @@ def finish_new_attempt(a,snapshots):
 
 def item_json(a,i,bookmarks):
     result={'question':question_with_image_urls(i.snapshot),'answer':i.answer,'marked':i.marked,'visited':i.visited,'status':a.status,'bookmarked':i.question_id in bookmarks}
-    if a.status!='ACTIVE' or (a.mode=='practice' and i.answer is not None):
+    if a.status!='ACTIVE' or (a.mode=='practice' and (i.answer is not None or request.args.get('reveal')=='1')):
         result['feedback']={**grade(i.snapshot,i.answer),'answers':i.snapshot['answers'],'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}
     return result
 

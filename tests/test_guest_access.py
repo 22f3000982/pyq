@@ -107,3 +107,17 @@ def test_mode_toggle_keeps_attempt_and_never_rebuilds_images(app,client,monkeypa
     assert Attempt.query.count()==before and 'items' not in r.json
     r=client.post(f"/api/attempts/{a['id']}/switch-mode",headers=h,json={'mode':'exam','duration_seconds':5400})
     assert r.status_code==200 and r.json['feedback']==[] and r.json['deadline']>time.time()
+
+
+def test_unanswered_practice_reveal_never_reveals_exam_keys(app,client):
+    p=seed();h=visitor(client)
+    for mode in ['practice','exam']:
+        a=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':p.id,'mode':mode,'duration_seconds':5400}).json
+        qid=a['palette'][0]['question_id']
+        url=f"/api/attempts/{a['id']}/questions/{qid}"
+        assert 'feedback' not in client.get(url).json
+        result=client.get(url+'?reveal=1').json
+        assert ('feedback' in result)==(mode=='practice')
+        assert result['answer'] is None
+        if mode=='practice':assert result['feedback']['awarded']==0
+        assert all(i.answer is None for i in db.session.get(Attempt,a['id']).items)

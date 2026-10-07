@@ -60,8 +60,8 @@ def solution_summary():
     query=db.session.query(Paper,counts.c.total).join(counts,counts.c.paper_id==Paper.id).filter(Paper.status!='ARCHIVED')
     for field,col in [('course_id',Paper.course_id),('exam_type_id',Paper.exam_type_id)]:
         if request.args.get(field):query=query.filter(col==integer_argument(field))
-    records=query.options(selectinload(Paper.term),selectinload(Paper.exam_type)).order_by(Paper.id.desc()).all()
-    papers={p.id:dict(id=p.id,name=p.name,term=p.term.name,exam=p.exam_type.name,exam_type_id=p.exam_type_id,session=p.session or '',questions=total,uploaded=0,published=0,review=0,outdated=0) for p,total in records}
+    records=query.options(selectinload(Paper.term),selectinload(Paper.exam_type),selectinload(Paper.course)).order_by(Paper.id.desc()).all()
+    papers={p.id:dict(id=p.id,name=p.name,course=p.course.name,term=p.term.name,exam=p.exam_type.name,exam_type_id=p.exam_type_id,session=p.session or '',questions=total,uploaded=0,published=0,review=0,outdated=0) for p,total in records}
     if papers:
         rows=db.session.query(Question,AISolution).join(AISolution,AISolution.question_id==Question.id).filter(Question.status=='AVAILABLE',Question.paper_id.in_(papers)).options(selectinload(Question.options),selectinload(Question.images)).all()
         for q,s in rows:
@@ -73,7 +73,13 @@ def solution_summary():
             if s.status=='PUBLISHED':p['published']+=1
             else:p['review']+=1
     values=list(papers.values())
+    for p in values:
+        p['missing']=p['questions']-p['uploaded']
+        p['availability']='complete' if p['published']==p['questions'] else 'partial' if p['published'] else 'none'
+        p['upload_state']='complete' if p['uploaded']==p['questions'] else 'partial' if p['uploaded'] else 'none'
     totals=dict(papers_total=len(values),papers_complete=sum(p['uploaded']==p['questions'] for p in values),papers_published=sum(p['published']==p['questions'] for p in values),papers_not_started=sum(p['uploaded']==0 for p in values),questions_total=sum(p['questions'] for p in values),questions_uploaded=sum(p['uploaded'] for p in values),questions_published=sum(p['published'] for p in values),questions_review=sum(p['review'] for p in values),questions_outdated=sum(p['outdated'] for p in values))
+    totals['papers_without_published']=sum(p['published']==0 for p in values)
+    totals['papers_partial_published']=sum(0<p['published']<p['questions'] for p in values)
     totals['papers_pending']=totals['papers_total']-totals['papers_complete']
     totals['papers_partial']=totals['papers_pending']-totals['papers_not_started']
     totals['questions_pending']=totals['questions_total']-totals['questions_uploaded']

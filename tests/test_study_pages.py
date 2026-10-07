@@ -38,3 +38,12 @@ def test_contact_admin_email_is_validated_and_public(client):
     assert client.put('/api/admin/about',json={'contact_email':'support@example.test'},headers=headers).status_code==200
     assert 'mailto:support@example.test' in client.get('/contact').text
     assert 'content removal' in client.get('/contact').text.lower()
+
+def test_study_search_and_theme(app,client):
+    c,p,q,s=seed()
+    assert 'Test maths' in client.get('/study?q=MA1').text
+    assert 'Test maths' not in client.get('/study?q=unmatched').text
+    assert 'Maths Quiz 1' in client.get(f'/study/courses/{c.id}?q=May').text
+    assert 'No papers match' in client.get(f'/study/courses/{c.id}?q=unmatched').text
+    assert 'study-theme-toggle' in client.get('/contact').text
+    assert 'study-theme.js' in client.get('/study').text
