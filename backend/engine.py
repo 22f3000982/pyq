@@ -133,11 +133,7 @@ def submit_attempt(a,now=None,record_progress=True):
     a.expires_at=a.submitted_at+RESULT_TTL_SECONDS
     db.session.flush()
     if record_progress:save_progress(a)
-    from .analytics import snapshot,enqueue
-    analytics_event=snapshot(a,automatic=bool(a.deadline and now>=a.deadline))
-    db.session.commit()
-    enqueue(analytics_event)
-    return a
+    db.session.commit();return a
 
 def expire_attempt(a):
     if a.status=='ACTIVE' and a.deadline and time.time()>=a.deadline:submit_attempt(a)

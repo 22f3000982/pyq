@@ -117,11 +117,8 @@ def finish_new_attempt(a,snapshots):
     state=SimpleNamespace(**{name:getattr(a,name) for name in (
         'id','paper_id','title','mode','status','started_at','deadline',
         'submitted_at','result','expires_at','records_progress')})
-    from .analytics import snapshot,enqueue
-    analytics_event=snapshot(a)
     with span('commit'):
         db.session.commit()
-    enqueue(analytics_event)
     # Signing/serializing all images must not occupy a pooled DB connection.
     with span('bootstrap'):
         response=jsonify(start_payload(state,snapshots,images_prepared=True))
@@ -187,9 +184,6 @@ def start():
     if not snapshots:abort(409,description='Questions not imported yet.')
     # Unknown keys/marks remain ungraded; the result reports them separately.
     a=Attempt(user_id=None,guest_hash=g.guest_hash,paper_id=p.id if p else None,mode=mode,title=title[:300],deadline=deadline,records_progress=p is not None,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
-    if p and current_app.config.get('ANALYTICS_ENABLED',True):
-        from .analytics import paper_context
-        a.analytics_context={**paper_context(p),'initial_mode':mode}
     return finish_new_attempt(a,snapshots)
 
 @exams.get('/attempts')

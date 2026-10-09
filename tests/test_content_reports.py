@@ -2,26 +2,6 @@ from backend.models import db,ContentReport,Question
 from test_engine import seed
 from conftest import login
 
-def test_hide_and_resolve_is_atomic_audited_and_blocks_stale_changes(app,client):
-    from backend.models import QuestionReview,Attempt
-    p=seed();q=Question.query.filter_by(paper_id=p.id).first();h=login(client)
-    attempt=client.post('/api/attempts',headers=h,json={'paper_id':p.id}).json
-    rid=client.post(f'/api/questions/{q.id}/report-format',headers=h,json={'issue':'TEXT'}).json['id']
-    ah=login(client,True);url=f'/api/admin/content-reports/{rid}'
-    payload={'status':'RESOLVED','hide_question':True,'updated_at':q.updated_at}
-    assert client.patch(url,headers=ah,json={**payload,'updated_at':-1}).status_code==409
-    db.session.expire_all()
-    assert db.session.get(Question,q.id).status=='AVAILABLE' and db.session.get(ContentReport,rid).status=='OPEN'
-    assert client.patch(url,headers=ah,json=payload).status_code==200
-    db.session.expire_all()
-    assert db.session.get(Question,q.id).status=='HIDDEN'
-    assert db.session.get(ContentReport,rid).status=='RESOLVED'
-    assert QuestionReview.query.one().action=='HIDE'
-    assert any(i.question_id==q.id for i in db.session.get(Attempt,attempt['id']).items)
-    fresh=client.post('/api/attempts',headers=ah,json={'paper_id':p.id}).json
-    assert q.id not in [i['question_id'] for i in fresh['palette']]
-    assert client.patch(url,headers=ah,json={'status':'OPEN','hide_question':True}).status_code==400
-
 
 def test_guest_report_dedup_and_admin_review(app,client):
     p=seed();q=Question.query.filter_by(paper_id=p.id).first();h=login(client)

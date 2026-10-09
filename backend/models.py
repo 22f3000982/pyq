@@ -135,30 +135,8 @@ class Attempt(db.Model):
     status = db.Column(db.String(20), default='ACTIVE', index=True)
     result = db.Column(db.JSON)
     version = db.Column(db.Integer, default=1, nullable=False)
-    analytics_context = db.Column(db.JSON)  # Anonymous paper/device snapshot; no visitor identity.
     __mapper_args__ = {'version_id_col': version}
     items = db.relationship('AttemptAnswer', cascade='all, delete-orphan', order_by='AttemptAnswer.position')
-
-class AnalyticsReceipt(db.Model):
-    """Short-lived deduplication receipt, independent of temporary exam sessions."""
-    key = db.Column(db.String(80), primary_key=True)
-    started_at = db.Column(db.Float, nullable=False, index=True)
-    completed = db.Column(db.Boolean, nullable=False, default=False)
-
-class AnalyticsDaily(db.Model):
-    """Permanent aggregates. No answers, IPs, visitor hashes or user identifiers."""
-    day = db.Column(db.String(10), primary_key=True)  # IST start date
-    paper_key = db.Column(db.String(64), primary_key=True)
-    mode = db.Column(db.String(20), primary_key=True)
-    device = db.Column(db.String(12), primary_key=True)
-    paper_name = db.Column(db.String(300), nullable=False)
-    course_key = db.Column(db.String(64), nullable=False)
-    course_name = db.Column(db.String(200), nullable=False)
-    starts = db.Column(db.Integer, nullable=False, default=0)
-    completions = db.Column(db.Integer, nullable=False, default=0)
-    automatic = db.Column(db.Integer, nullable=False, default=0)
-    elapsed_seconds = db.Column(db.Float, nullable=False, default=0)
-    __table_args__ = (db.Index('ix_analytics_daily_course_day','course_key','day'),)
 
 class AttemptAnswer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
