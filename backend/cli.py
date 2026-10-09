@@ -4,6 +4,13 @@ from werkzeug.security import generate_password_hash
 from .models import db,User
 
 def register_cli(app):
+    @app.cli.command('cleanup-analytics')
+    def cleanup_analytics():
+        """Remove at most 100 expired analytics receipts; keep daily summaries."""
+        from .analytics import persist
+        persist(db.engine,[])
+        click.echo('Expired analytics receipts pruned; daily summaries retained.')
+
     @app.cli.command('check-db')
     def check_db():
         """Read-only connection check. Does not create tables or migrate data."""

@@ -42,6 +42,8 @@ def app(tmp_path,remote_test_schema):
             db.session.add(User(email='admin@example.test',name='Admin',role='ADMIN',password_hash=generate_password_hash('test-password-123')));db.session.commit()
             yield a
         finally:
+            if a.extensions.get('analytics'):
+                a.extensions['analytics'].close()
             db.session.remove()
             if remote_test_schema:
                 # Clear ONLY this dedicated test schema between tests, in one query.

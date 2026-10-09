@@ -203,3 +203,49 @@ preferences disable spinner animation. Exam options and navigation have no new a
 ## AI solutions: local PC generation
 
 Admin → AI Solutions queues small batches; a single local Windows worker generates Gemini text solutions, and administrators review/edit/publish them. Published explanations load only after practice Check answer or exam submission. Start Exam does not invoke AI or include solution text. Setup instructions: [tools/ai-worker/README.md](tools/ai-worker/README.md). Normal deployment migrations add the queue/solution tables; no source answer keys or scoring rules are changed.
+
+## Admin analytics
+
+The administrator's Analytics tab reports paper starts, completions, completion
+rate, average elapsed completion time, course/paper totals and basic device type.
+Content Reports also includes **Hide & mark resolved** beside Mark resolved.
+It hides the reported question and resolves that report in one transaction,
+records an audit entry, and preserves existing attempt snapshots. The action
+checks the question version and rejects edits during active paper processing.
+
+Today and Last 7 days use IST calendar dates (including today); timestamps remain
+UTC epoch values. Completions belong to the attempt's **start date**, original
+mode and original device group. Timer-triggered submissions are included and
+shown separately. Elapsed time includes idle time, so it does not by itself
+measure difficulty. Bookmark/topic/wrong-answer collections are excluded.
+
+Run `flask --app backend:create_app db upgrade` before starting the updated app.
+Existing attempts without analytics snapshots are not backfilled. Collection
+starts after deployment; no historical counts are invented.
+
+The existing Start/Submit requests enqueue small anonymous snapshots after their
+main transaction commits. A lazy per-process daemon writes batches of up to 100
+events once per second, using its own single-connection pool and short timeouts.
+There are no additional learner requests, analytics polling, GA4, IP storage,
+raw User-Agent storage, fingerprints, answers or visitor identifiers in analytics.
+Device classification is a coarse mobile/desktop/unknown hint, not identification.
+
+The queue holds 1,000 events per process. Overflow and failed batches are dropped;
+analytics failures do not fail Start/Submit. A crash/restart can lose queued
+events. The admin details show **this process's** queue/drop/failure counters;
+they reset on restart and are not global durable health totals. Under multiple
+web workers, requests may display different local counters.
+
+Daily summaries are permanent and independent of expiring learner sessions or
+deleted catalog papers. Dashboard queries use summaries rather than raw event
+history and show the top 50 papers/courses. Deduplication receipts are retained
+for 30 days and pruned in bounded batches on writes. The command
+`flask --app backend:create_app cleanup-analytics` also prunes up to 100 old receipts during
+quiet periods; repeat as needed. Events older than 30 days are ignored so old
+replays cannot recreate totals after receipt removal. A completion arriving
+before its start event still records one real start and one completion.
+
+Set `ANALYTICS_ENABLED=false` in the environment to disable collection.
+`ANALYTICS_QUEUE_SIZE` controls the bound. Tests default to manual flushing;
+production starts the writer lazily after fork. Summary storage can later be
+rolled into monthly summaries without changing the learner request flow.
