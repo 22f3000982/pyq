@@ -117,6 +117,8 @@ def finish_new_attempt(a,snapshots):
     state=SimpleNamespace(**{name:getattr(a,name) for name in (
         'id','paper_id','title','mode','status','started_at','deadline',
         'submitted_at','result','expires_at','records_progress')})
+    from .analytics import record
+    record(a)
     with span('commit'):
         db.session.commit()
     # Signing/serializing all images must not occupy a pooled DB connection.
@@ -184,6 +186,9 @@ def start():
     if not snapshots:abort(409,description='Questions not imported yet.')
     # Unknown keys/marks remain ungraded; the result reports them separately.
     a=Attempt(user_id=None,guest_hash=g.guest_hash,paper_id=p.id if p else None,mode=mode,title=title[:300],deadline=deadline,records_progress=p is not None,expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS)
+    if p and current_app.config.get('ANALYTICS_ENABLED',True) and getattr(g.user,'role',None)!='ADMIN' and not current_app.config.get('ANALYTICS_EXCLUDE_TRAFFIC',False):
+        from .analytics import paper_context
+        a.analytics_context={**paper_context(p),'initial_mode':mode}
     return finish_new_attempt(a,snapshots)
 
 @exams.get('/attempts')
@@ -391,6 +396,8 @@ def switch_mode(id):
         if not 60<=duration<=28800:abort(400,description='Duration must be 1–480 minutes')
         deadline=time.time()+duration
     # Change the existing session in place. No new snapshots or image URLs.
+    if source.analytics_context:
+        source.analytics_context={**source.analytics_context,'assisted':True}
     source.mode=mode
     source.deadline=deadline
     source.expires_at=(deadline+RESULT_TTL_SECONDS) if deadline else time.time()+ACTIVE_TTL_SECONDS
@@ -403,6 +410,8 @@ def switch_mode(id):
             'explanation':i.snapshot['explanation'],'answer_status':i.snapshot['answer_status']}}
             for i in source.items if i.answer is not None]
     payload={**attempt_status_json(source),'mode':source.mode,'title':source.title,'feedback':feedback}
+    from .analytics import update_expiry
+    update_expiry(source)
     db.session.commit()
     return jsonify(payload),200
 

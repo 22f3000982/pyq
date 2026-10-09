@@ -203,3 +203,41 @@ preferences disable spinner animation. Exam options and navigation have no new a
 ## AI solutions: local PC generation
 
 Admin → AI Solutions queues small batches; a single local Windows worker generates Gemini text solutions, and administrators review/edit/publish them. Published explanations load only after practice Check answer or exam submission. Start Exam does not invoke AI or include solution text. Setup instructions: [tools/ai-worker/README.md](tools/ai-worker/README.md). Normal deployment migrations add the queue/solution tables; no source answer keys or scoring rules are changed.
+
+## Admin usage analytics
+
+Admin → Analytics shows permanent starts, submissions, active browsers (not exact
+people), initial exam/practice modes, expired unsubmitted sessions, elapsed completion
+duration, coarse device categories, popular papers/courses and daily trends.
+Today/7d/30d/all/custom ranges use IST start dates. CSV exports include definitions
+and date ranges. Mode switches are not new sessions; exams submitted in practice
+are separate from exam completions. Timer submissions are identified.
+
+Minimal durable usage records do not reference temporary attempts, answers or
+catalog foreign keys. They survive cleanup and process restarts. No historical
+counts are invented. Legacy best-effort daily totals are preserved in their old
+tables but excluded from new reports (they cannot establish browser identity).
+
+Run `flask --app backend:create_app db upgrade` before starting. The 0009 migration
+is retained for deployments that already applied it; 0010 adds the durable ledger.
+Do not downgrade production migrations or erase old statistics to revert code.
+
+No new frontend scripts/requests or writes on question navigation, answer save or
+Check Answer. A small INSERT/UPDATE shares the Start/Submit transaction inside a
+savepoint. Failed analytics statements roll back their savepoint and are logged;
+they do not intentionally fail the learner operation, but their counts can be
+missing. This is not zero overhead; compare ON/OFF latency on the actual hosting.
+Reports run on demand and are cached 30 seconds (at most 64 cache entries per
+process). Tables/chart are bounded to 50 entries/90 recorded days. Indexes support
+start-day/course queries. The permanent ledger grows with usage; monthly rollups
+are a future storage optimization, not a substitute for unique-browser evidence.
+
+Admins are excluded. Set ANALYTICS_EXCLUDE_TRAFFIC=true on a testing deployment,
+or ANALYTICS_ENABLED=false to disable collection. A random first-party HttpOnly
+cookie lasts up to one year; only its HMAC-derived identifier is stored. Clearing
+cookies, changing devices or rotating SECRET_KEY changes browser counts. Analytics
+never stores names, emails, IPs, full User-Agent, fingerprints or learner answers.
+
+Content Reports includes Hide & mark resolved beside Mark resolved: atomic,
+audited, version-checked and blocked during processing. Existing attempts keep
+snapshots; newly started papers exclude the hidden question.
