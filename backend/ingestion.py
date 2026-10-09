@@ -5,7 +5,7 @@ import fitz
 from flask import current_app
 from sqlalchemy import update
 from .models import *
-from .acquisition import event
+from .acquisition import event,matching_import
 from .visual_pdf import layout_document
 from .automatic_parser import parse_document,clean_assets
 from .providers import provider,segment_plain
@@ -29,7 +29,7 @@ def store_upload(upload,paper,batch,replace=False):
     try:
         if upload.mimetype not in ('application/pdf','application/octet-stream'):raise ValueError('Only PDF uploads are accepted')
         data=upload.read(current_app.config['MAX_UPLOAD_SIZE']+1);f.pages=validate_pdf(data);sha=hashlib.sha256(data).hexdigest()
-        old=IngestionFile.query.filter_by(file_hash=sha).first()
+        stored,old=matching_import(sha,paper.course_id,f.id)
         if old:
             write_asset(old.path or (sha+'.pdf'),data)
             old.path=old.path or (sha+'.pdf')
@@ -46,7 +46,7 @@ def store_upload(upload,paper,batch,replace=False):
                 event(f,'DEDUPLICATED',f'Identical file already imported for this paper as import {old.id}; no reprocessing needed')
             if old.status in FAILURES:old.status='QUEUED';old.error=None;old.retries+=1;paper.status='PROCESSING'
         else:
-            f.file_hash=sha;f.path=sha+'.pdf';write_asset(f.path,data);f.status='QUEUED';paper.status='PROCESSING';paper.canonical_paper_id=None
+            f.file_hash=None if stored else sha;f.path=sha+'.pdf';write_asset(f.path,data);f.status='QUEUED';paper.status='PROCESSING';paper.canonical_paper_id=None
             event(f,'UPLOADED',f'{len(data)} bytes; SHA-256 {sha}')
     except Exception as e:
         f.status='PROCESSING_FAILED';f.error=str(e)[:1500];f.finished_at=time.time();event(f,'UPLOAD_FAILED',f.error)
@@ -135,7 +135,8 @@ def process_file(id):
         for name in sorted({image['path'] for item in records for image in item.get('images',[])}):publish(name,verify=True)
         event(f,'EXTRACTED',f'{len(records)} question records; {len(layout["assets"])} content images');db.session.commit()
         issues.extend({'number':i.get('number'),'status':i.get('status'),'warnings':i.get('warnings',[])} for i in records if i.get('status')=='EXTRACTION_FAILED')
-        prior_available=Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count()
+        effective_id=paper.canonical_paper_id or paper.id
+        prior_available=Question.query.filter_by(paper_id=effective_id,status='AVAILABLE').count()
         content_savepoint=db.session.begin_nested()
         new_ids=[];seen=set();available=0;failed=0
         for item in records:
@@ -175,6 +176,8 @@ def process_file(id):
         if prior_available and (not available or failed or any(i.get('status')=='EXTRACTION_FAILED' for i in records)):
             content_savepoint.rollback()
             raise ValueError('Replacement extraction did not fully validate. Existing available questions were preserved.')
+        if available and not failed:
+            paper.canonical_paper_id=None
         content_savepoint.commit()
         # Retire superseded current-bank records, never historical attempt snapshots.
         if new_ids:
@@ -209,8 +212,9 @@ def process_file(id):
             f.status='EXTRACTION_FAILED';f.error=f'{type(e).__name__}: {str(e)[:1200]}';f.finished_at=time.time()
             if 'issues' in locals():f.warnings=layout.get('warnings',[])+issues
             if paper.status!='ARCHIVED':
-                existing=Question.query.filter_by(paper_id=paper.id,status='AVAILABLE').count()
-                failed_existing=Question.query.filter_by(paper_id=paper.id,status='EXTRACTION_FAILED').count()
+                effective_id=paper.canonical_paper_id or paper.id
+                existing=Question.query.filter_by(paper_id=effective_id,status='AVAILABLE').count()
+                failed_existing=Question.query.filter_by(paper_id=effective_id,status='EXTRACTION_FAILED').count()
                 paper.status=('PARTIALLY_AVAILABLE' if failed_existing else 'AVAILABLE') if existing else 'EXTRACTION_FAILED'
             event(f,'EXTRACTION_FAILED',f.error);db.session.commit()
         except Exception:

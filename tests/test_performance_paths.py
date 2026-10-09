@@ -60,15 +60,22 @@ def test_local_cache_fallback_reuses_paper_snapshots_without_redis(app,client):
 
 
 def test_warm_attempt_start_avoids_answer_row_reread(app,client):
+    from sqlalchemy import event
+    statements=[]
+    def capture(conn,cursor,statement,parameters,context,many):statements.append(statement.lower())
     pid=seed(1)[0];h=login(client)
     app.config['CONTENT_CACHE_URL']=''
     client.get(f'/api/papers/{pid}/questions')  # warm immutable paper content
-    r=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':pid,'mode':'exam','duration_seconds':5400})
+    event.listen(db.engine,'before_cursor_execute',capture)
+    try:r=client.post('/api/attempts?bootstrap=1',headers=h,json={'paper_id':pid,'mode':'exam','duration_seconds':5400})
+    finally:event.remove(db.engine,'before_cursor_execute',capture)
     assert r.status_code==201 and len(r.json['items'])==2
+    assert not any(s.lstrip().startswith('select') and 'attempt_answer' in s for s in statements)
     # Hot start should not re-select newly inserted AttemptAnswer rows just to
     # construct the bootstrap response.
     count=int(re.search(r'queries;desc="?(\d+)"?',r.headers['Server-Timing'])[1])
-    assert count<=7
+    # Analytics adds one bounded ledger insert; no answer-row reread is allowed.
+    assert count<=(8 if app.config.get('ANALYTICS_ENABLED') else 7)
 
 
 def test_image_cache_hit_never_downloads(app,client,monkeypatch):

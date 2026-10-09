@@ -120,3 +120,44 @@ def test_partial_replacement_does_not_replace_valid_bank(app,client,monkeypatch)
     assert [(x.id,x.text,x.status) for x in Question.query.filter_by(paper_id=p.id).all()]==before
     assert db.session.get(IngestionFile,fid).status=='EXTRACTION_FAILED'
     assert any(w.get('number')=='2' for w in db.session.get(IngestionFile,fid).warnings)
+
+
+def test_alias_replacement_detaches_only_after_valid_extraction(app,client,monkeypatch):
+    p,q,h=setup(client)
+    alias=Paper(identity='alias',course_id=p.course_id,exam_type_id=p.exam_type_id,term_id=p.term_id,name='Alias',status='AVAILABLE',canonical_paper_id=p.id)
+    db.session.add(alias);db.session.commit()
+    original=q.text
+    mocked_parser(monkeypatch,[record(1,'EXTRACTION_FAILED')])
+    r=client.post(f'/api/admin/papers/{alias.id}/replacement',headers=h,data={'file':(io.BytesIO(pdf_bytes()),'correct.pdf')})
+    assert r.status_code==202,r.json
+    process_file(r.json['file']['id'])
+    db.session.refresh(alias)
+    assert alias.canonical_paper_id==p.id and alias.status=='AVAILABLE'
+    mocked_parser(monkeypatch,[record(1)])
+    r=client.post(f'/api/admin/papers/{alias.id}/replacement',headers=h,data={'file':(io.BytesIO(pdf_bytes()),'correct.pdf')})
+    assert r.status_code==202,r.json
+    process_file(r.json['file']['id'])
+    db.session.refresh(alias);db.session.refresh(q)
+    assert alias.canonical_paper_id is None
+    assert q.text==original
+    assert Question.query.filter_by(paper_id=alias.id,status='AVAILABLE').count()==1
+
+
+def test_identical_pdf_in_different_course_does_not_alias(app,client):
+    from backend.models import Course
+    from backend.ingestion import store_upload
+    from werkzeug.datastructures import FileStorage
+    p,q,h=setup(client);data=pdf_bytes()
+    batch=IngestionBatch(user_id=1);db.session.add(batch);db.session.flush()
+    first=store_upload(FileStorage(stream=io.BytesIO(data),filename='java.pdf',content_type='application/pdf'),p,batch)
+    course=Course(name='Application Development 1',code='APP1');db.session.add(course);db.session.flush()
+    other=Paper(identity='other',course_id=course.id,term_id=p.term_id,exam_type_id=p.exam_type_id,name='Different course')
+    db.session.add(other);db.session.commit()
+    second=store_upload(FileStorage(stream=io.BytesIO(data),filename='app.pdf',content_type='application/pdf'),other,batch)
+    assert second.status=='QUEUED'
+    assert other.canonical_paper_id is None
+    assert second.path==first.path
+    assert second.file_hash is None
+
+    again=store_upload(FileStorage(stream=io.BytesIO(data),filename='app.pdf',content_type='application/pdf'),other,batch)
+    assert again.status=='DUPLICATE' and other.canonical_paper_id is None

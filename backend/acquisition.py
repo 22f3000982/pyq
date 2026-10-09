@@ -7,9 +7,19 @@ from urllib.parse import urlparse,urljoin,parse_qs
 from pathlib import Path
 import requests
 from flask import current_app
-from sqlalchemy import func,update
+from sqlalchemy import func,update,or_
 from sqlalchemy.exc import IntegrityError
 from .models import db,Paper,Question,IngestionBatch,IngestionFile,User
+
+def matching_import(sha,course_id,exclude_id=None):
+    """Share assets globally, but reuse question records only within a course."""
+    query=IngestionFile.query.filter(IngestionFile.file_hash==sha)
+    if exclude_id is not None:query=query.filter(IngestionFile.id!=exclude_id)
+    stored=query.first()
+    matches=IngestionFile.query.join(Paper,IngestionFile.paper_id==Paper.id).filter(Paper.course_id==course_id,or_(IngestionFile.file_hash==sha,IngestionFile.path==sha+'.pdf'))
+    if exclude_id is not None:matches=matches.filter(IngestionFile.id!=exclude_id)
+    old=matches.order_by(IngestionFile.id).first()
+    return stored,old
 
 ALLOWED={'drive.google.com','drive.usercontent.google.com','drive.googleusercontent.com','docs.google.com','google.com','www.google.com'}
 
@@ -151,7 +161,7 @@ def download_one(file_id):
         from .ingestion import update_batch
         update_batch(record.batch_id)
         return False
-    old=IngestionFile.query.filter(IngestionFile.file_hash==result['hash'],IngestionFile.id!=file_id).first()
+    stored,old=matching_import(result['hash'],paper.course_id,file_id)
     if old:
         temp.unlink(missing_ok=True);record.duplicate_of_id=old.id;record.status='DUPLICATE';record.path=old.path
         canonical=db.session.get(Paper,old.paper_id)
@@ -164,7 +174,7 @@ def download_one(file_id):
         update_batch(record.batch_id)
         return True
     path=result['hash']+'.pdf';temp.replace(Path(current_app.config['UPLOAD_DIR'])/path)
-    record.path=path;record.file_hash=result['hash']
+    record.path=path;record.file_hash=None if stored else result['hash']
     try:
         from .storage import publish
         publish(path);record.status='QUEUED';event(record,'DOWNLOADED',f"{result['size']} bytes; SHA-256 {result['hash']}")
@@ -203,7 +213,7 @@ def download_pending(app,workers=4,paper_ids=None,limit=None):
                 if error:
                     f.status='PROCESSING_FAILED';f.error=error;f.finished_at=time.time();p.status='PROCESSING_FAILED';event(f,'ACQUISITION_FAILED',error)
                 else:
-                    old=IngestionFile.query.filter_by(file_hash=result['hash']).first()
+                    stored,old=matching_import(result['hash'],p.course_id,f.id)
                     if old:
                         temp.unlink(missing_ok=True);f.duplicate_of_id=old.id;f.status='DUPLICATE';f.path=old.path
                         canonical=db.session.get(Paper,old.paper_id)
@@ -214,7 +224,7 @@ def download_pending(app,workers=4,paper_ids=None,limit=None):
                             p.status='AVAILABLE'
                         event(f,'DEDUPLICATED',f'Identical PDF content to import {old.id}, paper {old.paper_id}');f.finished_at=time.time()
                     else:
-                        path=result['hash']+'.pdf';temp.replace(directory/path);f.path=path;f.file_hash=result['hash']
+                        path=result['hash']+'.pdf';temp.replace(directory/path);f.path=path;f.file_hash=None if stored else result['hash']
                         try:
                             from .storage import publish
                             publish(path);f.status='QUEUED';event(f,'DOWNLOADED',f"{result['size']} bytes; SHA-256 {result['hash']}")

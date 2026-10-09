@@ -147,7 +147,7 @@ def register_content_routes(admin):
         from flask import current_app
         p=db.session.execute(db.select(Paper).filter_by(id=id).with_for_update()).scalar_one_or_none()
         if p is None:abort(404)
-        if p.status=='ARCHIVED' or p.canonical_paper_id:abort(409,description='Restore this paper first, or replace its original canonical paper.')
+        if p.status=='ARCHIVED':abort(409,description='Restore this paper first.')
         if IngestionFile.query.filter(IngestionFile.paper_id==id,IngestionFile.status.in_(['QUEUED','FETCH_QUEUED','FETCHING','PROCESSING'])).first():abort(409,description='This paper is already processing')
         upload=request.files.get('file')
         if not upload:abort(400,description='Choose a PDF')

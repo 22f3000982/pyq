@@ -43,6 +43,34 @@ def register_cli(app):
         batch,count=queue_catalog() if app.config['CATALOG_AUTO_PROCESS'] else (None,0)
         report.update(batch_id=batch,queued=count)
         click.echo(json.dumps(report,indent=2))
+    @app.cli.command('repair-catalog-sources')
+    @click.argument('path',type=click.Path(exists=True))
+    @click.option('--course-code',required=True)
+    @click.option('--term',multiple=True,required=True)
+    @click.option('--apply',is_flag=True)
+    def repair_catalog_sources(path,course_code,term,apply):
+        """Preview or queue corrected sources for existing papers only."""
+        from .catalog import scan_workbook,compare_scan,code_key
+        from .models import Paper
+        from .acquisition import queue_catalog
+        scan=scan_workbook(path);preview=compare_scan(scan)
+        changes=[e for e in preview['items']['changed'] if code_key(e['course_code'])==code_key(course_code) and e['term_name'] in term]
+        click.echo(json.dumps([{'paper_id':e['paper_id'],'term':e['term_name'],'exam':e['exam_name'],'name':e['name']} for e in changes],indent=2))
+        if not apply:
+            click.echo('Preview only; no changes. Use --apply to queue these existing papers.');return
+        ids=[e['paper_id'] for e in changes]
+        if not ids:click.echo('No source corrections needed.');return
+        from .models import IngestionFile
+        if IngestionFile.query.filter(IngestionFile.paper_id.in_(ids),IngestionFile.status.in_(['QUEUED','FETCH_QUEUED','FETCHING','PROCESSING'])).first():
+            raise click.ClickException('A selected paper is already processing; finish or recover it before repair.')
+        for e in changes:
+            paper=db.session.get(Paper,e['paper_id'])
+            paper.source_url=e['url'];paper.name=e['name']
+            # Keep the existing bank (including any alias) until validation succeeds.
+        db.session.commit()
+        batch,count=queue_catalog(paper_ids=ids,limit=len(ids),force_paper_ids=set(ids))
+        click.echo(json.dumps({'batch_id':batch,'queued':count}))
+
     @app.cli.command('worker')
     @click.option('--once',is_flag=True)
     def worker(once):

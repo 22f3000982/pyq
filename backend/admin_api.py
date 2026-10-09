@@ -10,6 +10,17 @@ from .engine import question_snapshot,validate_question,aggregate
 from .ingestion import store_upload,update_batch,root
 admin=Blueprint('admin',__name__,url_prefix='/api/admin')
 
+@admin.post('/catalog/repair-java-2025')
+@require_user(True)
+def repair_java_sources():
+    from .catalog_repairs import repair_java_2025
+    payload=body()
+    apply=payload.get('apply',False)
+    if not isinstance(apply,bool):abort(400,description='apply must be true or false')
+    try:return jsonify(repair_java_2025(g.user.id,apply))
+    except ValueError as exc:
+        db.session.rollback();abort(409,description=str(exc))
+
 @admin.get('/analytics')
 @require_user(True)
 def analytics_report():

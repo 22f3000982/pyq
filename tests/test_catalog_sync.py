@@ -236,3 +236,33 @@ def test_course_codes_abbreviations_and_project_exclusion(tmp_path):
     assert scan['entries'][0]['course_name']=='Machine Learning Foundations(MLF)'
     assert scan['entries'][1]['course_code']=='CS2005'
     assert len(scan['issues'])==1 and 'disagrees' in scan['issues'][0]['warning']
+
+
+def test_swapped_names_follow_corroborating_row_and_filename_codes(tmp_path):
+    from backend.catalog import scan_workbook
+    wb=openpyxl.Workbook();master=wb.active
+    master.append(['Course Name','Course Code'])
+    master.append(['Application Development - 1','CS2003'])
+    master.append(['Programming Concepts using Java','CS2005'])
+    term=wb.create_sheet('Sep 2025');term.append(['Course Code','Course Name','Quiz 1'])
+    term.append(['CS2005','Application Development - 1','cs2005_2025T3_Q1_AN.pdf'])
+    term['C2'].hyperlink='https://example.com/java.pdf'
+    term.append(['CS2003','Programming Concepts using Java','cs2003_2025T3_Q1_AN.pdf'])
+    term['C3'].hyperlink='https://example.com/app.pdf'
+    path=tmp_path/'swapped.xlsx';wb.save(path)
+    entries=scan_workbook(path)['entries']
+    assert entries[0]['course_code']=='CS2005'
+    assert entries[1]['course_code']=='CS2003'
+
+
+def test_cross_course_source_match_cannot_override_correct_course(app):
+    from backend.catalog import compare_scan,source_token
+    java=Course(name='Java',code='CS2005');appdev=Course(name='AppDev',code='CS2003')
+    term=Term(name='Sep 2025',year=2025,month=9);exam=ExamType(name='Quiz 1')
+    db.session.add_all([java,appdev,term,exam]);db.session.flush()
+    wrong=Paper(identity='wrong',course_id=appdev.id,term_id=term.id,exam_type_id=exam.id,name='wrong',source_url='https://example.com/java.pdf')
+    target=Paper(identity='target',course_id=java.id,term_id=term.id,exam_type_id=exam.id,name='old',source_url='https://example.com/app.pdf')
+    db.session.add_all([wrong,target]);db.session.commit()
+    entry=dict(key=paper_key('CS2005','Sep 2025','Quiz 1','','java.pdf'),course_code='CS2005',term_name='Sep 2025',exam_name='Quiz 1',session='',name='java.pdf',url='https://example.com/java.pdf',source_token=source_token('https://example.com/java.pdf'))
+    report=compare_scan({'entries':[entry],'workbook_hash':'repair-test','issues':[],'terms':{'Sep 2025':1},'linked_cells':1})
+    assert report['items']['changed'][0]['paper_id']==target.id

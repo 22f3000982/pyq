@@ -90,7 +90,7 @@ def scan_workbook(path,level=None):
             if len(candidates)==1:
                 named_code=candidates[0]
                 if code and code!=named_code:
-                    report['issues'].append({'sheet':sheet.title,'course':course_name,'warning':'Course code disagrees with course name; matched the recognized name'})
+                    report['issues'].append({'sheet':sheet.title,'course':course_name,'warning':'Course code disagrees with course name; checking PDF filename evidence, otherwise matching the recognized name'})
                 code=named_code
             if code and base_name(course_name)!=base_name(master_courses[code]['name']):
                 report['issues'].append({'sheet':sheet.title,'course':course_name,'warning':'Course name differs from master list; matched course code'})
@@ -127,9 +127,18 @@ def scan_workbook(path,level=None):
                         practical=re.search(r'(N?OPPE|NPPE)[\s_-]*(\d+)',label,re.I)
                         if practical:examname=practical[1].upper()+' '+practical[2]
                         else:examname='Practical assessment';warnings.append('Assessment type requires review')
-                    key=paper_key(code,term['name'],examname,session,label)
-                    entry={'key':key,'course_code':code,'course_name':course['name'],'course_level':course['level'],
-                           'course_type':course['course_type'],'term_name':term['name'],'term_year':term['year'],
+                    entry_code=code
+                    filename_code=re.match(r'(?i)^(?:BS)?([A-Z]{2}\d{4})_',label)
+                    confirmed_code=code_aliases.get(code_key(filename_code[1])) if filename_code else None
+                    # Require two independent source signals before overriding a
+                    # contradictory row name: row code AND PDF filename prefix.
+                    if confirmed_code and confirmed_code==code_aliases.get(code_key(raw_code)) and confirmed_code!=code:
+                        entry_code=confirmed_code
+                        warnings.append('Row name conflicts with matching row code and PDF filename; matched the confirmed course code')
+                    entry_course=master_courses[entry_code]
+                    key=paper_key(entry_code,term['name'],examname,session,label)
+                    entry={'key':key,'course_code':entry_code,'course_name':entry_course['name'],'course_level':entry_course['level'],
+                           'course_type':entry_course['course_type'],'term_name':term['name'],'term_year':term['year'],
                            'term_month':term['month'],'exam_name':examname,'session':session,'name':label,
                            'variant':label if len(parts)>1 else '','url':url,'source_token':source_token(url),
                            'sheet':sheet.title,'cell':cell.coordinate,'raw_text':value,'warnings':warnings}
@@ -174,7 +183,8 @@ def _match_entries(scan,ready):
     for entry in scan['entries']:
         paper=None;token=entry['source_token'];structure=structural_key(entry['course_code'],entry['term_name'],entry['exam_name'],entry['session'])
         # Strongest signal: same source file, including links seen in older workbook imports.
-        source_matches=[p for p in catalog['sources'].get(token,[]) if p.id not in claimed]
+        structural_ids={p.id for p in catalog['structural'].get(structure,[])}
+        source_matches=[p for p in catalog['sources'].get(token,[]) if p.id not in claimed and p.id in structural_ids]
         if len(source_matches)==1:paper=source_matches[0]
         elif source_matches:
             exact_ids={p.id for p in catalog['exact'].get(entry['key'],[])}
