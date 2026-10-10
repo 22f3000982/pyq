@@ -83,6 +83,57 @@ def reset_library(user_id,cleanup_storage=True,cancel_active=False):
             current_app.logger.error('library_reset_storage_cleanup_failed type=%s',type(exc).__name__)
     return {'reset':True,'before':inventory['counts'],'storage':storage,'warning':warning}
 
+def diploma_reset_inventory():
+    papers=[p.id for p in Paper.query.join(Course).filter(Course.level=='Diploma').all()]
+    questions=[q.id for q in Question.query.filter(Question.paper_id.in_(papers)).all()]
+    files=[f.id for f in IngestionFile.query.filter(IngestionFile.paper_id.in_(papers)).all()]
+    blockers=[]
+    if IngestionFile.query.filter(IngestionFile.paper_id.in_(papers),IngestionFile.status.in_(['FETCHING','PROCESSING'])).count():
+        blockers.append('Diploma processing is active. Pause processing and wait for the current paper to finish before resetting.')
+    if Paper.query.filter(Paper.id.notin_(papers),Paper.canonical_paper_id.in_(papers)).count():
+        blockers.append('Another level shares a Diploma question bank. Resolve that link before resetting.')
+    if Question.query.filter(Question.paper_id.notin_(papers),Question.ingestion_file_id.in_(files)).count():
+        blockers.append('Another level references a Diploma import. Resolve that link before resetting.')
+    if AttemptAnswer.query.join(Attempt).filter(AttemptAnswer.question_id.in_(questions),or_(Attempt.paper_id.notin_(papers),Attempt.paper_id.is_(None))).count():
+        blockers.append('A mixed-paper attempt references Diploma questions. Remove that attempt before resetting.')
+    return {'counts':{'papers':len(papers),'questions':len(questions),
+        'courses':Course.query.filter_by(level='Diploma').count(),
+        'solutions':AISolution.query.filter(AISolution.question_id.in_(questions)).count(),
+        'attempts':Attempt.query.filter(Attempt.paper_id.in_(papers)).count()},
+        'blockers':blockers,'confirmation':'RESET DIPLOMA'}
+
+def reset_diploma(user_id):
+    # Lock targeted papers; running extraction must finish before this operation.
+    papers=[p.id for p in Paper.query.join(Course).filter(Course.level=='Diploma').with_for_update().all()]
+    # Claims update ingestion rows atomically; lock those rows before checking
+    # active work so a queued job cannot become active during deletion.
+    IngestionFile.query.filter(IngestionFile.paper_id.in_(papers)).with_for_update().all()
+    preview=diploma_reset_inventory()
+    if preview['blockers']:raise RuntimeError(' '.join(preview['blockers']))
+    questions=[q.id for q in Question.query.filter(Question.paper_id.in_(papers)).all()]
+    files=[f.id for f in IngestionFile.query.filter(IngestionFile.paper_id.in_(papers)).all()]
+    attempts=[a.id for a in Attempt.query.filter(Attempt.paper_id.in_(papers)).all()]
+    ingestion_batches=[bid for bid, in db.session.query(IngestionFile.batch_id).filter(IngestionFile.paper_id.in_(papers)).distinct()]
+    solution_batches=[bid for bid, in db.session.query(SolutionJob.batch_id).filter(SolutionJob.question_id.in_(questions)).distinct()]
+    for model,column,ids in [(SolutionJob,SolutionJob.question_id,questions),(AISolution,AISolution.question_id,questions),
+        (Bookmark,Bookmark.question_id,questions),(ContentReport,ContentReport.question_id,questions),
+        (QuestionReview,QuestionReview.question_id,questions),(AttemptAnswer,AttemptAnswer.attempt_id,attempts),
+        (Attempt,Attempt.id,attempts),(PaperProgress,PaperProgress.paper_id,papers),
+        (QuestionImage,QuestionImage.question_id,questions),(QuestionOption,QuestionOption.question_id,questions),
+        (Question,Question.paper_id,papers),(SourceEntry,SourceEntry.paper_id,papers)]:
+        model.query.filter(column.in_(ids)).delete(synchronize_session=False)
+    IngestionFile.query.filter(IngestionFile.duplicate_of_id.in_(files)).update({IngestionFile.duplicate_of_id:None},synchronize_session=False)
+    IngestionFile.query.filter(IngestionFile.id.in_(files)).delete(synchronize_session=False)
+    Paper.query.filter(Paper.id.in_(papers)).update({Paper.canonical_paper_id:None},synchronize_session=False)
+    Paper.query.filter(Paper.id.in_(papers)).delete(synchronize_session=False)
+    IngestionBatch.query.filter(IngestionBatch.id.in_(ingestion_batches),~IngestionBatch.id.in_(db.session.query(IngestionFile.batch_id))).delete(synchronize_session=False)
+    SolutionBatch.query.filter(SolutionBatch.id.in_(solution_batches),~SolutionBatch.id.in_(db.session.query(SolutionJob.batch_id))).delete(synchronize_session=False)
+    # Keep shared metadata, audit history, permanent analytics and storage assets.
+    # In particular, never purge the project R2 prefix for a level-only reset.
+    db.session.add(ImportRun(report={'mode':'diploma_only_reset','requested_by':user_id,'before':preview['counts'],'created_at':time.time()}))
+    db.session.commit();invalidate()
+    return {'reset':True,'before':preview['counts'],'storage_preserved':True}
+
 def _stage(p):
     name=(p.exam_type.name or '').strip().casefold();session=(p.session or '').strip().upper()
     if name=='quiz 1':return ('quiz1','Quiz 1',1)

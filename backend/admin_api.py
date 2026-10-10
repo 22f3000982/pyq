@@ -305,6 +305,23 @@ def library_reset():
     try:return jsonify(reset_library(g.user.id,cleanup_storage=payload.get('cleanup_storage',True),cancel_active=payload.get('cancel_active',False)))
     except RuntimeError as exc:abort(409,description=str(exc))
 
+@admin.get('/library-reset/diploma/preview')
+@require_user(True)
+def diploma_reset_preview():
+    from .library_campaign import diploma_reset_inventory
+    return jsonify(diploma_reset_inventory())
+
+@admin.post('/library-reset/diploma')
+@require_user(True)
+def diploma_reset():
+    from .library_campaign import reset_diploma
+    if body().get('confirmation')!='RESET DIPLOMA':
+        abort(400,description='Type RESET DIPLOMA exactly to confirm.')
+    try:return jsonify(reset_diploma(g.user.id))
+    except RuntimeError as exc:
+        db.session.rollback()
+        abort(409,description=str(exc))
+
 @admin.get('/catalog/batches/latest')
 @require_user(True)
 def latest_catalog_batch():

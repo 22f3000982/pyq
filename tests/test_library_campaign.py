@@ -190,3 +190,45 @@ def test_recover_interrupted_file_preserves_completed_papers(app,client):
     retry=client.post(f'/api/admin/catalog/files/{item.id}/retry',headers=h,json={})
     assert retry.status_code==202 and retry.json['queued']==1
     assert client.post(f'/api/admin/catalog/files/{item.id}/retry',headers=h,json={}).json['queued']==0
+
+
+def test_diploma_reset_preserves_other_levels_and_all_storage(app,client,monkeypatch):
+    h=login(client,True)
+    post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    diploma=Course.query.first();diploma.level='Diploma'
+    original=Paper.query.first()
+    keep=Course(name='Degree course',code='KEEP',level='Degree');db.session.add(keep);db.session.flush()
+    p=Paper(identity='keep-paper',name='Keep paper',course_id=keep.id,term_id=original.term_id,exam_type_id=original.exam_type_id)
+    db.session.add(p);db.session.flush()
+    q=Question(paper_id=p.id,number='1',kind='MCQ',text='Keep',status='AVAILABLE')
+    removed=Question(paper_id=original.id,number='1',kind='MCQ',text='Remove',status='AVAILABLE')
+    db.session.add_all([q,removed]);db.session.commit();keep_id=p.id;qid=q.id
+    monkeypatch.setattr('backend.library_campaign.purge_project_prefix',lambda:(_ for _ in ()).throw(AssertionError('Storage must stay untouched')))
+    preview=client.get('/api/admin/library-reset/diploma/preview',headers=h)
+    assert preview.json['counts']['papers']==5 and preview.json['counts']['questions']==1
+    assert client.post('/api/admin/library-reset/diploma',headers=h,json={'confirmation':'RESET PYQ LIBRARY'}).status_code==400
+    done=client.post('/api/admin/library-reset/diploma',headers=h,json={'confirmation':'RESET DIPLOMA'})
+    assert done.status_code==200 and done.json['storage_preserved']
+    db.session.expire_all()
+    assert Paper.query.count()==1 and db.session.get(Paper,keep_id)
+    assert Question.query.count()==1 and db.session.get(Question,qid)
+    assert Course.query.count()==2 and Term.query.count()==2
+    assert post_xlsx(client,'/api/admin/catalog/refresh',h,workbook()).status_code==201
+    assert Paper.query.count()==6
+
+
+def test_diploma_reset_blocks_shared_bank_and_running_import(app,client):
+    h=login(client,True);post_xlsx(client,'/api/admin/catalog/refresh',h,workbook())
+    Course.query.first().level='Diploma';p=Paper.query.first()
+    keep=Course(name='Foundation',code='FOUND',level='Foundation');db.session.add(keep);db.session.flush()
+    alias=Paper(identity='shared-paper',name='Shared',course_id=keep.id,term_id=p.term_id,exam_type_id=p.exam_type_id,canonical_paper_id=p.id)
+    db.session.add(alias);db.session.commit()
+    endpoint='/api/admin/library-reset/diploma'
+    assert client.post(endpoint,headers=h,json={'confirmation':'RESET DIPLOMA'}).status_code==409
+    assert Paper.query.count()==6
+    alias.canonical_paper_id=None
+    batch=IngestionBatch(user_id=User.query.filter_by(role='ADMIN').first().id);db.session.add(batch);db.session.flush()
+    db.session.add(IngestionFile(batch_id=batch.id,paper_id=p.id,filename='active.pdf',status='PROCESSING'))
+    db.session.commit()
+    assert client.post(endpoint,headers=h,json={'confirmation':'RESET DIPLOMA'}).status_code==409
+    assert Paper.query.count()==6
