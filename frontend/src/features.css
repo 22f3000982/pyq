@@ -167,3 +167,13 @@
 
 .comprehension-layout:not(.comprehension-split){display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
 .comprehension-layout:not(.comprehension-split)>.comprehension-question{flex:1}
+
+.comprehension-split{grid-template-columns:minmax(0,var(--passage-width,60%)) 12px minmax(0,1fr);gap:0}
+.comprehension-split>.comprehension-passage{padding:0 10px;border-right:0}
+.comprehension-split>.comprehension-question{padding-left:10px}
+.passage-divider{cursor:col-resize;touch-action:none;display:flex;align-items:center;justify-content:center;background:transparent}
+.passage-divider span{height:44px;width:4px;border-radius:3px;background:#94a3b8}
+.passage-divider:hover,.passage-divider:focus-visible{background:#dbeafe;outline:2px solid #2563eb;outline-offset:-2px}
+.passage-resizing{user-select:none}
+[data-theme="dark"] .passage-divider:hover,[data-theme="dark"] .passage-divider:focus-visible{background:#243d59}
+@media(max-width:900px){.passage-divider{display:none}.comprehension-split>.comprehension-question{padding-left:0}.comprehension-split>.comprehension-passage{border-bottom:1px solid var(--line)}}
