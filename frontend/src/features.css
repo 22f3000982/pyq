@@ -177,3 +177,13 @@
 .passage-resizing{user-select:none}
 [data-theme="dark"] .passage-divider:hover,[data-theme="dark"] .passage-divider:focus-visible{background:#243d59}
 @media(max-width:900px){.passage-divider{display:none}.comprehension-split>.comprehension-question{padding-left:0}.comprehension-split>.comprehension-passage{border-bottom:1px solid var(--line)}}
+
+/* Phones use one continuous passage + question scroll instead of split panes. */
+@media(max-width:900px){
+ .comprehension-layout.comprehension-split{display:block;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+ .comprehension-split>.comprehension-passage{display:block;border:0;padding:10px}
+ .comprehension-split .comprehension-heading,.comprehension-split .passage-divider{display:none}
+ .comprehension-split .comprehension-passage-body{display:block!important;max-height:none;overflow:visible;padding:0}
+ .comprehension-split>.comprehension-question{display:block;overflow:visible;padding:0}
+ .exam-layout .comprehension-split .question-content{overflow:visible}
+}
