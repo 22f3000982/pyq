@@ -49,7 +49,7 @@ describe('student requested improvements',()=>{
  it('shows comprehension passage and question in one full-width flow',async()=>{
   const a={id:7,mode:'exam',title:'Comprehension',status:'ACTIVE',deadline:Date.now()/1000+3600,server_time:Date.now()/1000,palette:[{question_id:7,number:'7',state:'NOT_VISITED'}]};
   mocks.api.mockImplementation(async path=>path==='/attempts/7'?a:path.endsWith('/questions')?{status:'ACTIVE',items:[{question:{id:7,number:'7',kind:'MCQ',passage:'Shared passage text',shared_passage:true,text:'What follows?',marks:1,negative_marks:0,options:[{key:'A',text:'Alpha'},{key:'B',text:'Beta'}],images:[]},answer:null,marked:false}]}:{items:[]});
-  const w=mount(Exam,{props:{id:7}});await flushPromises();expect(w.find('.comprehension-split').exists()).toBe(false);expect(w.find('.question-stem').text()).toContain('Shared passage text');expect(w.find('.question-stem').text()).toContain('What follows?');expect(w.findAll('.option')).toHaveLength(2);w.unmount();
+  const w=mount(Exam,{props:{id:7}});await flushPromises();expect(w.find('.comprehension-split').exists()).toBe(true);expect(w.find('.comprehension-passage').text()).toContain('Shared passage text');expect(w.find('.question-stem').text()).toContain('What follows?');expect(w.findAll('.option')).toHaveLength(2);w.unmount();
  });
  it('uses arrow keys for navigation and ignores them inside a text input',async()=>{
   const a={id:1,mode:'practice',title:'DEMO DATA',status:'ACTIVE',deadline:null,server_time:Date.now()/1000,palette:[{question_id:1,number:'2',state:'NOT_VISITED'},{question_id:2,number:'3',state:'NOT_VISITED'}]};
