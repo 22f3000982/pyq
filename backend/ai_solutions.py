@@ -1,9 +1,9 @@
 """Explicit admin queue and saved text delivery; never invoke an LLM on Render."""
 import hashlib,json,secrets,time
-from flask import Blueprint,jsonify,request,abort
+from flask import Blueprint,jsonify,request,abort,send_file
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
-from .models import db,Question,Paper,AISolution,SolutionBatch,SolutionJob,Attempt,AttemptAnswer
+from .models import db,Question,Paper,AISolution,SolutionBatch,SolutionJob,Attempt,AttemptAnswer,IngestionFile
 from .api import require_user,require_visitor,body,integer_argument
 from .engine import question_snapshot,grade
 from .exam_api import owned,question_with_image_urls,prepare_image_paths,use_paper_image_delivery
@@ -270,7 +270,10 @@ def export_solution_paper(pid):
 @bp.post('/admin/ai-solutions/import')
 @require_user(True)
 def import_paper_solutions():
-    b=body();bundle=b.get('bundle');pid=b.get('paper_id')
+    return jsonify(import_solution_data(body()))
+
+def import_solution_data(b,commit=True):
+    bundle=b.get('bundle');pid=b.get('paper_id')
     if b.get('publish') is True and b.get('save') is not True:abort(400,description='Publishing requires saving the import')
     if type(pid)!=int or not isinstance(bundle,dict) or bundle.get('format')!='pyq-solutions-v1' or bundle.get('paper_id')!=pid:abort(400,description='Solution file must match the selected paper and pyq-solutions-v1 format')
     entries=bundle.get('solutions')
@@ -301,6 +304,69 @@ def import_paper_solutions():
             sol.version=entry['version'];sol.text=entry['text'];sol.final_answer=entry['final_answer'];sol.checks=entry['checks'];sol.status=entry['status'];sol.provider='admin-import';sol.model='chat-assisted';sol.prompt_version='import-v1';sol.updated_at=time.time()
             job=jobs.get(entry['question_id'])
             if job:job.status='DONE';job.error=None;job.lease_token=None
-        db.session.commit()
+        if commit:db.session.commit()
+        else:db.session.flush()
     saved=len(preview) if b.get('save') is True else 0
-    return jsonify(items=preview,saved=saved,published=sum(e['status']=='PUBLISHED' for e in preview) if saved else 0,needs_review=sum(bool(e['checks']) for e in preview) if saved else 0)
+    return dict(items=preview,saved=saved,published=sum(e['status']=='PUBLISHED' for e in preview) if saved else 0,needs_review=sum(bool(e['checks']) for e in preview) if saved else 0)
+
+
+@bp.get('/admin/ai-solutions/bundle/export')
+@require_user(True)
+def export_solution_bundle():
+    import io,zipfile
+    from pathlib import Path
+    from .storage import ensure_local
+    raw=request.args.get('ids','').split(',')
+    try:ids=[int(x) for x in raw]
+    except ValueError:abort(400,description='Choose 1–5 paper IDs')
+    if not 1<=len(ids)<=5 or len(set(ids))!=len(ids):abort(400,description='Choose 1–5 different papers')
+    papers=[];warnings=[];output=io.BytesIO();size=0
+    with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
+        for pid in ids:
+            data=export_solution_paper.__wrapped__(pid).get_json()
+            if not data['questions']:abort(400,description=f'Paper {pid} has no available questions')
+            paper=db.session.get(Paper,pid)
+            data.update(course=paper.course.name,term=paper.term.name,exam=paper.exam_type.name,session=paper.session or '')
+            papers.append(data)
+            record=IngestionFile.query.filter_by(paper_id=pid).filter(IngestionFile.path.isnot(None),IngestionFile.status.in_(['AVAILABLE','PARTIAL','DUPLICATE'])).order_by(IngestionFile.id.desc()).first()
+            if record:
+                try:
+                    path=ensure_local(record.path)
+                    length=path.stat().st_size
+                    if size+length>100*1024*1024:raise ValueError('Bundle PDF size limit reached')
+                    archive.write(path,f'paper-{pid}/source.pdf');size+=length
+                except Exception:
+                    warnings.append(f'Paper {pid}: PDF unavailable in bundle; attach the original PDF separately.')
+            else:warnings.append(f'Paper {pid}: no stored PDF; attach the original PDF separately.')
+        archive.writestr('questions.json',json.dumps({'format':'pyq-solutions-bundle-v1','papers':papers},ensure_ascii=False,indent=2))
+        prompt=(Path(__file__).resolve().parent.parent/'tools/ai-worker/SOLUTION_IMPORT_PROMPT.txt').read_text()
+        prompt=prompt.replace('OUTPUT CONTRACT','PER-PAPER OBJECT CONTRACT').replace('Return ONE valid JSON object only, without Markdown fences, introductory prose or trailing commentary. The result must be ready to paste into the website\'s solution import field.', 'Return only the outer bundled JSON described above, without Markdown fences or commentary. The contract below describes EACH paper object inside papers, not the outer object.')
+        instruction='Return ONE JSON object: {"format":"pyq-solutions-bundle-v1","papers":[{"format":"pyq-solutions-v1","paper_id":123,"solutions":[...]}]}. Use one paper object per exported paper. Apply the following solution rules to every paper. Never mix paper/question IDs. Do not return separate files.\n\n'
+        archive.writestr('BUNDLE_PROMPT.txt',instruction+prompt)
+        archive.writestr('README.txt','Exported papers: '+', '.join(map(str,ids))+'\n'+'\n'.join(warnings)+'\nUpload or paste the single returned bundled JSON, preview, then Save & Publish.')
+    output.seek(0)
+    return send_file(output,mimetype='application/zip',as_attachment=True,download_name='pyq-solution-bundle.zip')
+
+@bp.post('/admin/ai-solutions/bundle/import')
+@require_user(True)
+def import_solution_bundle():
+    from werkzeug.exceptions import HTTPException
+    b=body();bundle=b.get('bundle')
+    if not isinstance(bundle,dict) or bundle.get('format')!='pyq-solutions-bundle-v1':abort(400,description='Use pyq-solutions-bundle-v1 format')
+    papers=bundle.get('papers')
+    if not isinstance(papers,list) or not 1<=len(papers)<=5:abort(400,description='Import 1–5 papers per bundle')
+    if len(json.dumps(bundle))>8_000_000:abort(413)
+    ids=[p.get('paper_id') if isinstance(p,dict) else None for p in papers]
+    if any(type(pid)!=int for pid in ids) or len(set(ids))!=len(ids):abort(400,description='Paper IDs must be unique integers')
+    results=[]
+    for paper in papers:
+        try:
+            with db.session.begin_nested():
+                result=import_solution_data({**b,'bundle':paper,'paper_id':paper['paper_id']},commit=False)
+                result.update(paper_id=paper['paper_id'],paper_name=db.session.get(Paper,paper['paper_id']).name)
+                result['missing']=Question.query.filter_by(paper_id=paper['paper_id'],status='AVAILABLE').count()-len(result['items'])
+                results.append(result)
+        except HTTPException as exc:
+            results.append({'paper_id':paper['paper_id'],'error':exc.description,'items':[],'saved':0,'published':0,'needs_review':0})
+    if b.get('save') is True:db.session.commit()
+    return jsonify(papers=results,saved=sum(p['saved'] for p in results),published=sum(p['published'] for p in results),needs_review=sum(p['needs_review'] for p in results))
