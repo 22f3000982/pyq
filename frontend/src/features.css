@@ -141,3 +141,10 @@
 .scratch-text-editor{display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding:10px;background:var(--surface,#fff);color:var(--ink)}.scratch-text-editor label:first-child{flex:1;min-width:160px}.scratch-text-editor textarea{width:100%}[data-theme="dark"] .scratch-toolbar,[data-theme="dark"] .scratch-pagebar,[data-theme="dark"] .scratch-text-editor{background:#1a2636;color:#eef2f9}[data-theme="dark"] .scratch-toolbar button,[data-theme="dark"] .scratch-pagebar button,[data-theme="dark"] .scratch-text-editor button,[data-theme="dark"] .scratch-text-editor select{background:#26384d;color:#eef2f9;border-color:#536982}
 
 .scratch-page-surface{position:relative;width:100%;container-type:inline-size}.scratch-notebook .scratch-inline-text{position:absolute;margin:0;padding:0;border:0;border-left:1px dashed #2856b6;border-radius:0;background:transparent!important;color:#172943;line-height:1.25;font-family:sans-serif;resize:none;outline:none!important;box-shadow:none!important;min-height:0;overflow:auto;white-space:pre;z-index:2}.scratch-inline-text::placeholder{color:#64748b}.scratch-notebook .scratch-page-surface canvas{height:auto;aspect-ratio:14/9}
+
+/* Current position stays distinct from every answer/review state. */
+.palette button.current,.palette-legend i.current{border:3px solid #2563eb;outline:2px solid #93c5fd;outline-offset:2px;box-shadow:none}
+.current-question-label{color:#1d4ed8;font-size:.9rem;font-weight:750;letter-spacing:0;text-transform:none}
+.current-question-label small{font-weight:500;font-size:.8rem}
+[data-theme="dark"] .palette button.current,[data-theme="dark"] .palette-legend i.current{border-color:#60a5fa;outline-color:#bfdbfe}
+[data-theme="dark"] .current-question-label{color:#93c5fd}

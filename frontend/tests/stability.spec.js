@@ -13,7 +13,7 @@ describe('nonblocking exam navigation',()=>{
   const w=mount(Exam,{props:{id:4}});await flushPromises();let release;
   const base=mocks.api.getMockImplementation();mocks.api.mockImplementation((path,o)=>path.endsWith('/answers')&&o.body.items?.some(x=>x.answer==='3/4')?new Promise(r=>release=r):base(path,o));
   await w.get('input.numeric-answer').setValue('3/4');await vi.advanceTimersByTimeAsync(400);
-  await button(w,'Save & next').trigger('click');expect(w.text()).toContain('QUESTION 2');
+  await button(w,'Save & next').trigger('click');expect(w.text()).toContain('Question 2 of 2');
   await w.get('input.numeric-answer').setValue('0');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('3/4');
   await button(w,'Submit exam').trigger('click');await button(w,'Submit attempt').trigger('click');expect(mocks.api.mock.calls.some(c=>c[0].endsWith('/submit'))).toBe(false);
   release({items:[{question_id:1,state:'ANSWERED'}]});await flushPromises();expect(mocks.api).toHaveBeenCalledWith('/attempts/4/answers',expect.objectContaining({body:expect.objectContaining({items:expect.arrayContaining([expect.objectContaining({question_id:2,answer:'0'})])})}));
@@ -23,7 +23,7 @@ describe('nonblocking exam navigation',()=>{
   const w=mount(Exam,{props:{id:4},attachTo:document.body});await flushPromises();
   const first=w.get('input.numeric-answer');expect(document.activeElement).toBe(first.element);
   await first.setValue('-2.75');await first.trigger('keydown',{key:'Enter'});await flushPromises();
-  expect(w.text()).toContain('QUESTION 2');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('-2.75');w.unmount();
+  expect(w.text()).toContain('Question 2 of 2');await button(w,'Previous').trigger('click');expect(w.get('input.numeric-answer').element.value).toBe('-2.75');w.unmount();
  });
  it('navigates through untouched questions without writing visited state to the server',async()=>{
   const w=mount(Exam,{props:{id:4}});await flushPromises();await button(w,'Save & next').trigger('click');await button(w,'Previous').trigger('click');await vi.advanceTimersByTimeAsync(1000);
