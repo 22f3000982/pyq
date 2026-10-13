@@ -7,6 +7,6 @@ it('colours outcomes and jumps to the correct review page',async()=>{
  const w=mount(Records,{props:{route:'/result/1'},attachTo:document.body});await flushPromises();
  expect(w.find('.result-correct').exists()).toBe(true);expect(w.find('.result-incorrect').exists()).toBe(true);expect(w.find('.result-partial').exists()).toBe(true);expect(w.find('.result-skipped').exists()).toBe(true);
  await w.get('.result-skipped').trigger('click');await flushPromises();
- expect(mocks.api).toHaveBeenCalledWith('/attempts/1/review?page=2&limit=24');expect(scroll).toHaveBeenCalledWith({behavior:'smooth',block:'start'});
+ expect(mocks.api).toHaveBeenCalledWith('/attempts/1/review?page=26&limit=1');expect(scroll).toHaveBeenCalledWith({behavior:'smooth',block:'start'});
  const count=mocks.api.mock.calls.length;await w.get('.result-skipped').trigger('click');await flushPromises();expect(mocks.api.mock.calls.length).toBe(count);w.unmount();delete Element.prototype.scrollIntoView;
 });
