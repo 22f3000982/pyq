@@ -1,6 +1,6 @@
 <script setup>
 import {computed,reactive} from 'vue';import MathText from './MathText.vue';
-const props=defineProps({text:String,images:{type:Array,default:()=>[]}});
+const props=defineProps({text:String,images:{type:Array,default:()=>[]},lazy:{type:Boolean,default:false}});
 const failed=reactive(new Set()),fallback=reactive(new Set());
 function proxyUrl(id){return '/api/images/'+id+'?proxy=1'}
 function imageError(img){if(img.url?.startsWith('https://')&&!fallback.has(img.id)){fallback.add(img.id);return}failed.add(img.id)}
@@ -17,4 +17,4 @@ const parts=computed(()=>{
  return out;
 });
 </script>
-<template><div class="source-content"><template v-for="(part,n) in parts" :key="n"><span v-if="part.missing" class="missing-asset" role="status">[Source notation unavailable]</span><span v-else-if="part.img&&failed.has(part.img.id)" class="missing-asset" role="status">Source diagram or notation unavailable. <button type="button" class="text-btn" @click="retryImage(part.img.id)">Retry image</button></span><img v-else-if="part.img" :src="fallback.has(part.img.id)?proxyUrl(part.img.id):(part.img.url||proxyUrl(part.img.id))" :alt="part.img.alt" class="question-image" :class="{'inline-notation':part.img.inline}" :style="part.img.width?{width:part.img.width+'em'}:undefined" @error="imageError(part.img)" decoding="async"><MathText v-else :text="part.text"/></template></div></template>
+<template><div class="source-content"><template v-for="(part,n) in parts" :key="n"><span v-if="part.missing" class="missing-asset" role="status">[Source notation unavailable]</span><span v-else-if="part.img&&failed.has(part.img.id)" class="missing-asset" role="status">Source diagram or notation unavailable. <button type="button" class="text-btn" @click="retryImage(part.img.id)">Retry image</button></span><img v-else-if="part.img" :src="fallback.has(part.img.id)?proxyUrl(part.img.id):(part.img.url||proxyUrl(part.img.id))" :alt="part.img.alt" class="question-image" :class="{'inline-notation':part.img.inline}" :style="part.img.width?{width:part.img.width+'em'}:undefined" @error="imageError(part.img)" :loading="lazy?'lazy':'eager'" decoding="async"><MathText v-else :text="part.text"/></template></div></template>

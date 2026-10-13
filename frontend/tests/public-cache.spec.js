@@ -9,7 +9,7 @@ it('deduplicates public requests and reuses full paper details from list',async(
 });
 it('expires public data and isolates different filters',async()=>{
  vi.useFakeTimers();await api('/papers?course_id=1');await api('/papers?course_id=2');
- vi.advanceTimersByTime(15001);await api('/papers?course_id=1');expect(fetch).toHaveBeenCalledTimes(3);
+ vi.advanceTimersByTime(60001);await api('/papers?course_id=1');expect(fetch).toHaveBeenCalledTimes(3);
 });
 it('never caches attempts and clears public content on writes',async()=>{
  await api('/papers/9');await api('/attempts/1');await api('/attempts/1');
@@ -29,4 +29,14 @@ it('home response primes catalog, metadata and stats without extra requests',asy
  expect(await api('/metadata')).toEqual(home.meta);
  expect(await api('/stats')).toEqual(home.stats);
  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+it('keeps public lists warm across answer writes',async()=>{
+ await api('/papers?course_id=1');await api('/attempts/7/answers',{method:'POST',body:{question_id:1,answer:['A']}});await api('/papers?course_id=1');expect(fetch).toHaveBeenCalledTimes(2);
+});
+it('reuses the submit result once instead of refetching it on navigation',async()=>{
+ fetch.mockResolvedValueOnce({ok:true,json:async()=>({id:7,status:'SUBMITTED',result:{percentage:80}})});
+ await api('/attempts/7/submit',{method:'POST'});
+ expect((await api('/attempts/7')).result.percentage).toBe(80);expect(fetch).toHaveBeenCalledTimes(1);
+ await api('/attempts/7');expect(fetch).toHaveBeenCalledTimes(2);
 });

@@ -232,3 +232,22 @@ def test_worker_warmup_reads_public_content_without_attempts_or_storage_writes(a
     r=client.get('/api/home')
     assert 'queries;desc="0"' in r.headers['Server-Timing']
     assert Attempt.query.count()==before
+
+
+def test_review_signs_verified_images_without_storage_reads_and_keeps_answers(app,client,monkeypatch):
+    from backend.models import Paper
+    pid=seed(1)[0];h=login(client)
+    paper=db.session.get(Paper,pid);paper.source_metadata={'question_assets_verified_r2':True};db.session.commit()
+    app.config.update(STORAGE_BACKEND='r2',IMAGE_DELIVERY='signed',R2_ENDPOINT_URL='https://test.r2.cloudflarestorage.com')
+    configure_delivery(app)
+    monkeypatch.setattr('backend.storage.private_asset_url',lambda path,id,expires=600:'https://test.r2.cloudflarestorage.com/bucket/'+path+'?signed=1')
+    monkeypatch.setattr('backend.storage.ensure_local',lambda name:pytest.fail('Review must not download assets'))
+    a=client.post('/api/attempts',headers=h,json={'paper_id':pid,'mode':'practice'}).json
+    assert client.post(f"/api/attempts/{a['id']}/submit",headers=h).status_code==200
+    review=client.get(f"/api/attempts/{a['id']}/review").json
+    assert review['items']
+    for item in review['items']:
+        assert 'answers' in item['question']
+        for image in item['question']['images']:
+            assert image['url'].startswith('https://test.r2.cloudflarestorage.com/')
+            assert '_asset_path' not in image

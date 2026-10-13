@@ -300,6 +300,12 @@ def review(id):
     from .ai_solutions import review_solutions
     result=paginate(q,lambda i:{'question':i.snapshot,'answer':i.answer,'outcome':i.outcome,'awarded':i.awarded,'manual_note':i.manual_note})
     result['items']=review_solutions(result['items'])
+    use_paper_image_delivery(a.paper_id)
+    prepare_image_paths([i['question'] for i in result['items']],attempt_image_ttl(a))
+    for item in result['items']:
+        # Keep submitted snapshot answers/marks; only replace image metadata.
+        images=question_with_image_urls(item['question'])['images']
+        item['question']={**item['question'],'images':[{k:v for k,v in image.items() if k!='_asset_path'} for image in images]}
     return jsonify(result)
 
 @exams.route('/questions/<int:id>/bookmark',methods=['POST','DELETE'])
