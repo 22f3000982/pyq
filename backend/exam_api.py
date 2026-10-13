@@ -18,7 +18,13 @@ def owned(id):
         cleanup_sessions(guest_hash=g.guest_hash);abort(410,description='This temporary session has expired. Your latest paper score is retained; you can retake the paper.')
     return a
 
-def attempt_json(a):return {'id':a.id,'paper_id':a.paper_id,'title':a.title,'mode':a.mode,'status':a.status,'started_at':a.started_at,'deadline':a.deadline,'submitted_at':a.submitted_at,'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,'records_progress':a.records_progress,'palette':[{'question_id':i.question_id,'number':i.snapshot['number'],'state':palette_state(i),'visited':i.visited,'marked':i.marked} for i in sorted(a.items,key=lambda i:(i.snapshot.get("paper_id",0),question_order(i.snapshot["number"]),i.position))]}
+def attempt_json(a):
+    items=list(a.items)
+    review_index={item.question_id:n for n,item in enumerate(sorted(items,key=lambda i:i.position))}
+    return {'id':a.id,'paper_id':a.paper_id,'title':a.title,'mode':a.mode,'status':a.status,'started_at':a.started_at,'deadline':a.deadline,'submitted_at':a.submitted_at,'server_time':time.time(),'result':a.result,'expires_at':a.expires_at,'records_progress':a.records_progress,
+        'palette':[{'question_id':i.question_id,'number':i.snapshot['number'],'state':palette_state(i),'visited':i.visited,'marked':i.marked,
+                    'outcome':i.outcome if a.status!='ACTIVE' else None,'review_index':review_index[i.question_id]}
+                   for i in sorted(items,key=lambda i:(i.snapshot.get('paper_id',0),question_order(i.snapshot['number']),i.position))]}
 
 def attempt_status_json(a):
     # Deliberately excludes a.items/snapshots. This endpoint is used for the

@@ -121,3 +121,15 @@ def test_unanswered_practice_reveal_never_reveals_exam_keys(app,client):
         assert result['answer'] is None
         if mode=='practice':assert result['feedback']['awarded']==0
         assert all(i.answer is None for i in db.session.get(Attempt,a['id']).items)
+
+
+def test_submitted_palette_reports_outcomes_and_review_order(app,client):
+    from test_engine import seed
+    from conftest import login
+    p=seed();h=login(client)
+    attempt=client.post('/api/attempts',headers=h,json={'paper_id':p.id,'mode':'practice'}).json
+    qid=attempt['palette'][0]['question_id']
+    client.post(f"/api/attempts/{attempt['id']}/answers",headers=h,json={'question_id':qid,'answer':['A']})
+    result=client.post(f"/api/attempts/{attempt['id']}/submit",headers=h).json
+    assert result['palette'][0]['outcome']=='CORRECT'
+    assert sorted(i['review_index'] for i in result['palette'])==list(range(len(result['palette'])))
