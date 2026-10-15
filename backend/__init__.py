@@ -94,9 +94,16 @@ def create_app(config=None):
         response.headers['Referrer-Policy']='same-origin'
         response.headers['X-Frame-Options']='SAMEORIGIN'
         response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'self' https://tcsion.com https://www.tcsion.com; object-src 'none'; base-uri 'self'"
+        # Keep third-party ad permissions off every other route, including the SPA.
+        if request.path.startswith('/study/papers/') and response.status_code==200:
+            from flask import g
+            if getattr(g,'study_ads_allowed',False):
+                response.headers['Content-Security-Policy']=response.headers['Content-Security-Policy'].replace("script-src 'self'", "script-src 'self' https://pagead2.googlesyndication.com https://fundingchoicesmessages.google.com").replace("frame-src 'self'", "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com").replace("connect-src 'self'", "connect-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net").replace("img-src 'self' data:", "img-src 'self' data: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net")
         if app.extensions.get('image_origin'):
             response.headers['Content-Security-Policy']=response.headers['Content-Security-Policy'].replace("img-src 'self' data:","img-src 'self' data: "+app.extensions['image_origin'])
         if request.path.startswith('/api/') and not request.path.startswith('/api/images/'): response.headers['Cache-Control']='no-store'
+        if request.path in ('/api/home','/api/session','/api/study-featured'):
+            response.headers['X-Robots-Tag']='noindex'
         # Compress shared public content only; session/CSRF and answer APIs are excluded.
         shared=request.path in ('/api/home','/api/stats','/api/catalog','/api/metadata','/api/courses','/api/papers','/api/demo-papers') or bool(re.fullmatch(r'/api/papers/\d+/questions',request.path))
         if shared:
@@ -142,6 +149,8 @@ def create_app(config=None):
         db.session.rollback(); return jsonify(error=str(e)),400
     from .ai_solutions import bp as ai_solutions
     app.register_blueprint(ai_solutions)
+    from .content_quality import quality
+    app.register_blueprint(quality)
     from .study_pages import study
     app.register_blueprint(study)
     from .site_pages import site,metadata

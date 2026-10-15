@@ -3,12 +3,14 @@ import json
 from pathlib import Path
 from flask import Blueprint, render_template, abort, current_app, redirect, request
 from sqlalchemy.orm import selectinload
-from .models import db, Course, Paper, Question, QuestionImage, AISolution, AboutPage
+from .models import db, Course, Paper, Question, QuestionImage, AISolution, AboutPage, CourseGuide, StudyPaperSettings, ContentQualityReview
 from .about_api import data
 from .engine import question_snapshot, question_order
 from .ai_solutions import version
 from .storage import image_url, send_asset
 from .site_pages import metadata
+from .public_content import paper_title, paper_items
+from .course_guides import suggested_guide
 
 study = Blueprint('study', __name__)
 
@@ -38,7 +40,7 @@ def course(id):
     if not papers: abort(404)
     search=request.args.get('q','').strip().casefold()[:150]
     if search:papers=[p for p in papers if search in ' '.join([p.name,p.term.name,p.exam_type.name,p.session or '']).casefold()]
-    return page(c.name, f'Read {c.name} previous-year questions and available published explanations, or launch a practice test.', section='course', course=c, papers=papers)
+    return page(c.name, f'Read {c.name} previous-year questions and available published explanations, or launch a practice test.', section='course', course=c, papers=papers, paper_title=paper_title, guide=public_guide(c), coverage=solution_coverage([p.id for p in papers]))
 
 @study.get('/study/papers/<int:id>')
 def paper(id):
@@ -48,12 +50,10 @@ def paper(id):
     if not questions: abort(404)
     questions.sort(key=lambda q: question_order(q.number))
     solutions = {s.question_id:s for s in AISolution.query.filter(AISolution.question_id.in_([q.id for q in questions]), AISolution.status == 'PUBLISHED').all()}
-    items=[]
-    for q in questions:
-        snap=question_snapshot(q)
-        s=solutions.get(q.id)
-        items.append(dict(question=q, snapshot=snap, solution=s.text if s and s.version==version(snap) else None))
-    return page(p.name, f'{p.course.name}: {p.exam_type.name}, {p.term.name}. Read questions and available published solutions.', section='paper', paper=p, items=items)
+    items=paper_items(questions,solutions)
+    published=sum(bool(i['solution']) for i in items)
+    from .advertising import ad_context
+    return page(paper_title(p), f'{p.course.name}: {p.exam_type.name}, {p.term.name}. {len(items)} questions and {published} published explanations.', section='paper', paper=p, items=items, published_count=published, advertising=ad_context(p,questions,solutions))
 
 @study.get('/study/images/<int:id>')
 def image(id):
@@ -66,6 +66,44 @@ def image(id):
         return redirect(url,302)
     return send_asset(image.path,mimetype='image/png',conditional=True)
 
-@study.get('/contact')
+from . import limiter
+from .contact import public_contact
+
+@study.route('/contact', methods=['GET', 'POST'])
+@limiter.limit('5 per hour', methods=['POST'])
 def contact():
-    return page('Contact & content removal', 'Contact MauryaHub for support, corrections and copyright or content removal requests.', section='contact', about=data(db.session.get(AboutPage,1)))
+    return public_contact()
+
+
+def public_guide(course):
+    guide=db.session.get(CourseGuide,course.id)
+    if guide:
+        return guide if guide.published else None
+    # Original revision guidance is shown with no claim of official curriculum coverage.
+    suggested=suggested_guide(course)
+    return suggested if suggested['introduction'] else None
+
+def solution_coverage(paper_ids):
+    if not paper_ids:return {}
+    from sqlalchemy import func
+    totals=dict(db.session.query(Question.paper_id,func.count(Question.id)).filter(Question.paper_id.in_(paper_ids),Question.status=='AVAILABLE').group_by(Question.paper_id))
+    rows=db.session.query(Question,AISolution).join(AISolution,AISolution.question_id==Question.id).options(selectinload(Question.options),selectinload(Question.images)).filter(Question.paper_id.in_(paper_ids),Question.status=='AVAILABLE',AISolution.status=='PUBLISHED').all()
+    counts={pid:0 for pid in paper_ids}
+    for q,s in rows:
+        if s.version==version(question_snapshot(q)):counts[q.paper_id]+=1
+    return {pid:dict(total=total,published=counts.get(pid,0)) for pid,total in totals.items()}
+
+@study.get('/study/featured')
+def featured():
+    # Editors explicitly select papers; current coverage is verified before display.
+    papers=Paper.query.join(StudyPaperSettings,StudyPaperSettings.paper_id==Paper.id).options(selectinload(Paper.course),selectinload(Paper.term),selectinload(Paper.exam_type)).filter(StudyPaperSettings.featured.is_(True),Paper.status=='AVAILABLE').order_by(Paper.id.desc()).limit(12).all()
+    coverage=solution_coverage([p.id for p in papers])
+    papers=[p for p in papers if coverage.get(p.id,{}).get('published',0)>0]
+    return page('Featured study papers','Read selected papers and their published explanations without starting an exam.',section='featured',papers=papers,paper_title=paper_title,coverage=coverage)
+
+@study.get('/api/study-featured')
+def featured_data():
+    from flask import jsonify
+    papers=Paper.query.join(StudyPaperSettings,StudyPaperSettings.paper_id==Paper.id).options(selectinload(Paper.course),selectinload(Paper.term),selectinload(Paper.exam_type)).filter(StudyPaperSettings.featured.is_(True),Paper.status=='AVAILABLE').order_by(Paper.id.desc()).limit(6).all()
+    coverage=solution_coverage([p.id for p in papers])
+    return jsonify(items=[dict(id=p.id,title=paper_title(p),**coverage[p.id]) for p in papers if coverage.get(p.id,{}).get('published',0)>0]),200,{'Cache-Control':'public, max-age=60'}

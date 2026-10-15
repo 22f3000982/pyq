@@ -21,12 +21,12 @@ def metadata():
     return dict(canonical_url=origin()+request.path,site_verification=setting('GOOGLE_SITE_VERIFICATION'),adsense_account='ca-'+publisher if publisher else '')
 @site.get('/robots.txt')
 def robots():
-    return Response('User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: '+origin()+'/sitemap.xml\n',mimetype='text/plain',headers={'Cache-Control':'public, max-age=300'})
+    return Response('User-agent: *\nAllow: /\nDisallow: /api/\nAllow: /api/home$\nAllow: /api/session$\nAllow: /api/study-featured$\nSitemap: '+origin()+'/sitemap.xml\n',mimetype='text/plain',headers={'Cache-Control':'public, max-age=300'})
 @site.get('/sitemap.xml')
 def sitemap():
     ready=db.session.query(Question.paper_id).filter(Question.status=='AVAILABLE')
     rows=db.session.query(Paper.id,Paper.course_id).filter(Paper.status!='ARCHIVED',Paper.id.in_(ready)).all()
-    paths=['/','/study','/about','/contact','/privacy','/content-policy']
+    paths=['/','/study/featured','/study','/about','/contact','/privacy','/content-policy']
     paths += [f'/study/courses/{i}' for i in sorted({r.course_id for r in rows})]
     paths += [f'/study/papers/{r.id}' for r in rows]
     root=Element('urlset',xmlns='http://www.sitemaps.org/schemas/sitemap/0.9')

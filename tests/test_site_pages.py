@@ -30,3 +30,20 @@ def test_spa_canonical_and_private_routes(app,client):
     app.config.update(GOOGLE_SITE_VERIFICATION='verify-token',ADSENSE_PUBLISHER_ID='')
     r=client.get('/');assert 'rel="canonical" href="https://mauryahub.in/"' in r.text and 'verify-token' in r.text
     assert client.get('/admin/login').headers['X-Robots-Tag']=='noindex, nofollow'
+
+
+def test_home_rendering_resources_are_not_blocked(client):
+    # Google's longest matching rule wins; $ anchors exact public endpoints.
+    rules=[]
+    for line in client.get('/robots.txt').text.splitlines():
+        if line.startswith(('Allow:', 'Disallow:')):
+            key,path=line.split(':',1);rules.append((key,path.strip()))
+    def allowed(path):
+        matches=[(len(rule.rstrip('$')),kind=='Allow') for kind,rule in rules if (path==rule[:-1] if rule.endswith('$') else path.startswith(rule))]
+        return max(matches)[1] if matches else True
+    for path in ('/','/assets/app-any.js','/study','/api/home','/api/session','/api/study-featured'):
+        assert allowed(path),path
+    for path in ('/api/admin/stats','/api/attempts/1','/api/auth/login','/api/session/extra'):
+        assert not allowed(path),path
+    assert client.get('/api/session').headers['X-Robots-Tag']=='noindex'
+    assert client.get('/api/session').headers['Cache-Control']=='no-store'

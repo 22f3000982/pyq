@@ -67,6 +67,7 @@ class SourceEntry(db.Model):
     url = db.Column(db.Text)
 
 class Question(db.Model):
+    paper = db.relationship('Paper')
     __table_args__ = (db.Index('ix_question_paper_status_id','paper_id','status','id'),)
     id = db.Column(db.Integer, primary_key=True)
     paper_id = db.Column(db.ForeignKey('paper.id'), nullable=False, index=True)
@@ -294,3 +295,33 @@ class SolutionJob(db.Model):
     lease_until=db.Column(db.Float)
     retry_at=db.Column(db.Float,nullable=False,default=0)
     error=db.Column(db.String(240))
+
+class ContactMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(254), nullable=False)
+    topic = db.Column(db.String(40), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(12), nullable=False, default='OPEN')
+    created_at = db.Column(db.Float, nullable=False, default=time.time)
+    __table_args__ = (db.Index('ix_contact_message_status_id', 'status', 'id'),)
+
+class CourseGuide(db.Model):
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete='CASCADE'), primary_key=True)
+    introduction = db.Column(db.Text, nullable=False, default='')
+    topics = db.Column(db.Text, nullable=False, default='')
+    prerequisites = db.Column(db.Text, nullable=False, default='')
+    mistakes = db.Column(db.Text, nullable=False, default='')
+    practice = db.Column(db.Text, nullable=False, default='')
+    published = db.Column(db.Boolean, nullable=False, default=False)
+
+class ContentQualityReview(db.Model):
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id', ondelete='CASCADE'), primary_key=True)
+    fingerprint = db.Column(db.String(64), nullable=False)
+    checks = db.Column(db.JSON, nullable=False)
+    reviewed_at = db.Column(db.Float, nullable=False, default=time.time)
+
+class StudyPaperSettings(db.Model):
+    paper_id = db.Column(db.Integer, db.ForeignKey('paper.id', ondelete='CASCADE'), primary_key=True)
+    featured = db.Column(db.Boolean, nullable=False, default=False)
+    allow_ads = db.Column(db.Boolean, nullable=False, default=False)

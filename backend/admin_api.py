@@ -580,3 +580,6 @@ def update_content_report(id):
 
 from .admin_content import register_content_routes
 register_content_routes(admin)
+
+from .contact import register_contact_routes
+register_contact_routes(admin)
