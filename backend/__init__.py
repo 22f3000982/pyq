@@ -149,6 +149,8 @@ def create_app(config=None):
         db.session.rollback(); return jsonify(error=str(e)),400
     from .ai_solutions import bp as ai_solutions
     app.register_blueprint(ai_solutions)
+    from .oppe import bp as oppe
+    app.register_blueprint(oppe)
     from .content_quality import quality
     app.register_blueprint(quality)
     from .study_pages import study
@@ -178,7 +180,7 @@ def create_app(config=None):
             response=send_from_directory(dist,path)
             if re.fullmatch(r'assets/[^/]+-[A-Za-z0-9_-]{8,}\.(js|css|woff2?)',path):response.headers['Cache-Control']='public, max-age=31536000, immutable'
             return response
-        if path and not re.fullmatch(r'(?:about|bookmarks|progress|history|dashboard|mistakes|login|admin(?:/login)?|(?:course|paper|attempt|result)/[0-9]+|exam/[^/]+)',path):
+        if path and not re.fullmatch(r'(?:about|bookmarks|progress|history|dashboard|mistakes|login|admin(?:/(?:login|oppe))?|(?:course|paper|attempt|result)/[0-9]+|exam/[^/]+)',path):
             abort(404)
         if not (dist/'index.html').exists(): return jsonify(message='Build frontend with npm run build'),503
         html=(dist/'index.html').read_text()

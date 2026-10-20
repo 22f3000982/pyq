@@ -1,0 +1,1712 @@
+{
+  "format": "mauryahub-oppe-v1",
+  "course_slug": "python",
+  "questions": [
+    {
+      "external_id": "rangalabs-question-95",
+      "content": {
+        "title": "Sum of Squares and Absolute Difference of Squares",
+        "statement": "Write a function that takes two integers and returns a tuple of two values: the sum of their squares, and the absolute difference of their squares.",
+        "topic": "Tuples",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def sum_squares_abs_diff_squares(a: int, b: int) -> tuple:\n    # Write a function that takes two integers and returns a tuple of two values: the sum of their squares…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def sum_squares_abs_diff_squares(a: int, b: int) -> tuple:\n    # █ FILLED BY STUDENT: Write a function that takes two integers and returns a tuple of two values: the sum of their squares…\n    return (a**2 + b**2, abs(a**2 - b**2))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/95",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "sum_squares_abs_diff_squares",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[3,4]",
+            "expected": "((25, 7), [3, 4])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-96",
+      "content": {
+        "title": "Is Odd-Length Palindrome",
+        "statement": "Write a function that takes a string and returns True only if it is a palindrome and has an odd number of characters, False otherwise.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def is_odd_length_palindrome(s: str) -> bool:\n    # Write a function that takes a string and returns True only if it is a palindrome and has an odd numb…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def is_odd_length_palindrome(s: str) -> bool:\n    # █ FILLED BY STUDENT: Write a function that takes a string and returns True only if it is a palindrome and has an odd numb…\n    return len(s) % 2 == 1 and s == s[::-1]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/96",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "is_odd_length_palindrome",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"hello\"]",
+            "expected": "(False, ['hello'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-97",
+      "content": {
+        "title": "Remove Elements at Two Given Indices",
+        "statement": "Write a function that removes the elements at two given index positions from a list, modifying the list in place and returning nothing.\n\nBecause deleting a smaller index first shifts later elements and invalidates the second index, the larger index must be deleted first.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def remove_elements_at_two_indices(l: list, i1: int, i2: int):\n    # Write a function that removes the elements at two given index positions from a list, modifying the l…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def remove_elements_at_two_indices(l: list, i1: int, i2: int):\n    # █ FILLED BY STUDENT: Write a function that removes the elements at two given index positions from a list, modifying the l…\n    first, second = (i1, i2) if i1 > i2 else (i2, i1)\n    del l[first]\n    del l[second]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/97",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "remove_elements_at_two_indices",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[1,2,3,4,5,6,7],5,1]",
+            "expected": "(None, [[1, 3, 4, 5, 7], 5, 1])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-98",
+      "content": {
+        "title": "Sum of Squares of Even Numbers",
+        "statement": "Write a function that takes a list of numbers and returns the sum of the squares of only the even numbers in the list.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def sum_of_squares_of_even(nums: list) -> int:\n    # Write a function that takes a list of numbers and returns the sum of the squares of only the even nu…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def sum_of_squares_of_even(nums: list) -> int:\n    # █ FILLED BY STUDENT: Write a function that takes a list of numbers and returns the sum of the squares of only the even nu…\n    return sum(x**2 for x in nums if x % 2 == 0)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/98",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "sum_of_squares_of_even",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[1,2,3,4,5,6]]",
+            "expected": "(56, [[1, 2, 3, 4, 5, 6]])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-99",
+      "content": {
+        "title": "Uppercase Only Vowels",
+        "statement": "Read an integer n, then n lines of text.\n\nFor each line, convert every vowel to uppercase and every non-vowel character to lowercase, and print the transformed line.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n, then n lines of text. For each line, convert every vowel to uppercase and every n…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n, then n lines of text. For each line, convert every vowel to uppercase and every n…\nn = int(input())\nvowels = \"aeiouAEIOU\"\nfor _ in range(n):\n    line = input()\n    print(\"\".join(c.upper() if c in vowels else c.lower() for c in line))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/99",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "2\nHello World\nPython Programming\n",
+            "expected": "hEllO wOrld\npythOn prOgrAmmIng\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-100",
+      "content": {
+        "title": "Student Marks Filter",
+        "statement": "Write a function that takes a list of (roll number, marks) tuples and an optional criteria string, and returns the matching roll numbers in original order. Criteria: `'above_average'` (marks ≥ class average), `'below_average'` (marks < average), `'fail'` (marks < 40), `'toppers'` (marks ≥ 90), and `None` (return all). Any other criteria value should return `None` instead of a list.",
+        "topic": "Dictionaries",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def get_roll_nos(data: list, criteria=None):\n    # Write a function that takes a list of (roll number, marks) tuples and an optional criteria string, a…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def get_roll_nos(data: list, criteria=None):\n    # █ FILLED BY STUDENT: Write a function that takes a list of (roll number, marks) tuples and an optional criteria string, a…\n    avg = sum(m for _, m in data) / len(data)\n    filters = {\n        'above_average': lambda m: m >= avg,\n        'below_average': lambda m: m < avg,\n        'fail': lambda m: m < 40,\n        'toppers': lambda m: m >= 90,\n        None: lambda m: True,\n    }\n    if criteria not in filters:\n        return None\n    return [r for r, m in data if filters[criteria](m)]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/100",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "get_roll_nos",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[[\"101\",85],[\"102\",75],[\"103\",45],[\"104\",95],[\"105\",35]],\"above_average\"]",
+            "expected": "(['101', '102', '104'], [[['101', 85], ['102', 75], ['103', 45], ['104', 95], ['105', 35]], 'above_average'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-101",
+      "content": {
+        "title": "Print Pattern — V Shape",
+        "statement": "Read an integer n and print a V-shaped pattern: on each row a backslash and forward slash move one step closer together, meeting as a single \"v\" character on the final row.",
+        "topic": "Loops & Pattern Printing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n and print a V-shaped pattern: on each row a backslash and forward slash move one s…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n and print a V-shaped pattern: on each row a backslash and forward slash move one s…\nn = int(input())\nfor i in range(1, n + 1):\n    if i == n:\n        print(\" \" * (n - 1) + \"v\")\n    else:\n        print(\" \" * (i - 1) + \"\\\\\" + \" \" * (2 * (n - i) - 1) + \"/\")",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/101",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n",
+            "expected": "\\   /\n \\ /\n  v\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-102",
+      "content": {
+        "title": "Check Positive Odd or Negative Even",
+        "statement": "Write a function that takes an integer and returns True if it is a positive odd number or a negative even number, and False otherwise (including for zero).",
+        "topic": "Conditionals",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def is_positive_odd_or_negative_even(n: int) -> bool:\n    # Write a function that takes an integer and returns True if it is a positive odd number or a negative…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def is_positive_odd_or_negative_even(n: int) -> bool:\n    # █ FILLED BY STUDENT: Write a function that takes an integer and returns True if it is a positive odd number or a negative…\n    return (n > 0 and n % 2 != 0) or (n < 0 and n % 2 == 0)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/102",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "is_positive_odd_or_negative_even",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[3]",
+            "expected": "(True, [3])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-103",
+      "content": {
+        "title": "Check if String is Within Quotes and Has Quotes Inside",
+        "statement": "Write a function that takes a string and returns True only if it starts with a double-quote character, ends with a double-quote character, and contains at least one more double-quote somewhere strictly between the first and last characters.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def within_and_has_double_quotes(s: str) -> bool:\n    # Write a function that takes a string and returns True only if it starts with a double-quote characte…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def within_and_has_double_quotes(s: str) -> bool:\n    # █ FILLED BY STUDENT: Write a function that takes a string and returns True only if it starts with a double-quote characte…\n    return (len(s) >= 3 and\n            s[0] == '\"' and\n            s[-1] == '\"' and\n            '\"' in s[1:-1])",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/103",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "within_and_has_double_quotes",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"\\\"abcd\\\"efgh\\\"\"]",
+            "expected": "(True, ['\"abcd\"efgh\"'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-104",
+      "content": {
+        "title": "Replace Middle with N Times Middle",
+        "statement": "Write a function that takes a tuple of odd length and an integer n, and returns a new tuple where the single middle element has been replaced by n consecutive copies of itself, with all other elements left unchanged.",
+        "topic": "Tuples",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def replace_middle_with_n_times_middle(t: tuple, n: int) -> tuple:\n    # Write a function that takes a tuple of odd length and an integer n, and returns a new tuple where th…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def replace_middle_with_n_times_middle(t: tuple, n: int) -> tuple:\n    # █ FILLED BY STUDENT: Write a function that takes a tuple of odd length and an integer n, and returns a new tuple where th…\n    mid = len(t) // 2\n    return t[:mid] + (t[mid],) * n + t[mid+1:]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/104",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "replace_middle_with_n_times_middle",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[{\"__tuple__\":[1,2,3,4,5]},5]",
+            "expected": "((1, 2, 3, 3, 3, 3, 3, 4, 5), [(1, 2, 3, 4, 5), 5])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-105",
+      "content": {
+        "title": "Count Positive Integers Ignoring None",
+        "statement": "Write a function that takes a list that may contain `None` values mixed with integers, and returns a count of how many elements are strictly greater than zero, ignoring `None` entries.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def count_positive_ignore_none(nums: list) -> int:\n    # Write a function that takes a list that may contain `None` values mixed with integers, and returns a…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def count_positive_ignore_none(nums: list) -> int:\n    # █ FILLED BY STUDENT: Write a function that takes a list that may contain `None` values mixed with integers, and returns a…\n    return sum(1 for x in nums if x is not None and x > 0)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/105",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "count_positive_ignore_none",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[1,-2,3,0,null,4]]",
+            "expected": "(3, [[1, -2, 3, 0, None, 4]])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-106",
+      "content": {
+        "title": "Find Sum and Absolute Difference Alternately",
+        "statement": "Read an integer n, then n lines each containing two comma-separated integers.\n\nFor each pair, if its 1-based position in the sequence is odd, print the sum of the two numbers;\n\nif the position is even, print the absolute difference between them.",
+        "topic": "Loops",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n, then n lines each containing two comma-separated integers. For each pair, if its …\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n, then n lines each containing two comma-separated integers. For each pair, if its …\nn = int(input())\nfor i in range(1, n + 1):\n    a, b = map(int, input().split(\",\"))\n    print(a + b if i % 2 == 1 else abs(a - b))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/106",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n1,2\n3,5\n4,3\n",
+            "expected": "3\n2\n7\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-107",
+      "content": {
+        "title": "Matrix Walk",
+        "statement": "Write a function that takes a square matrix and a shape label — `\"L\"`, `\"Z\"`, or `\"O\"` — and returns a flat list of the matrix elements visited along the path that shape describes. `\"L\"` traces down the first column then across the bottom row. `\"Z\"` traces the top row, then the diagonal from top-right toward bottom-left, then the bottom row. `\"O\"` traces clockwise around the matrix's outer border starting from the top-left corner.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def walk_matrix(M, shape):\n    # Write a function that takes a square matrix and a shape label — `\"L\"`, `\"Z\"`, or `\"O\"` — and returns…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def walk_matrix(M, shape):\n    # █ FILLED BY STUDENT: Write a function that takes a square matrix and a shape label — `\"L\"`, `\"Z\"`, or `\"O\"` — and returns…\n    n = len(M)\n    if shape == \"L\":\n        return [M[r][0] for r in range(n)] + [M[n-1][c] for c in range(1, n)]\n    elif shape == \"Z\":\n        top = [M[0][c] for c in range(n)]\n        diag = [M[r][n-1-r] for r in range(1, n-1)]\n        bot = [M[n-1][c] for c in range(n)]\n        return top + diag + bot\n    elif shape == \"O\":\n        top = [M[0][c] for c in range(n)]\n        right = [M[r][n-1] for r in range(1, n)]\n        bottom = [M[n-1][c] for c in range(n-2, -1, -1)]\n        left = [M[r][0] for r in range(n-2, 0, -1)]\n        return top + right + bottom + left",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/107",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "walk_matrix",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[[1,2,3],[4,5,6],[7,8,9]],\"L\"]",
+            "expected": "([1, 4, 7, 8, 9], [[[1, 2, 3], [4, 5, 6], [7, 8, 9]], 'L'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-108",
+      "content": {
+        "title": "Print Pattern — X Shape",
+        "statement": "Read an integer n and print an X-shaped pattern: the top half shows a backslash and forward slash converging toward a centre row containing an \"x\", and the bottom half mirrors this outward again.\n\nWhen n is 0, only the centre \"x\" line is printed.",
+        "topic": "Loops & Pattern Printing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n and print an X-shaped pattern: the top half shows a backslash and forward slash co…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n and print an X-shaped pattern: the top half shows a backslash and forward slash co…\nn = int(input())\nfor i in range(1, n + 1):\n    print(\" \" * (i-1) + \"\\\\\" + \" \" * (2*(n-i)+1) + \"/\")\nprint(\" \" * n + \"x\")\nfor j in range(1, n + 1):\n    print(\" \" * (n-j) + \"/\" + \" \" * (2*(j-1)+1) + \"\\\\\")",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/108",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "2\n",
+            "expected": "\\   /\n \\ /\n  x\n / \\\n/   \\\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-109",
+      "content": {
+        "title": "Check if a Number is Divisible by Exactly One of Two Numbers",
+        "statement": "Write a function that takes a number and two divisors and returns True if the number is divisible by exactly one of the two divisors (not both, and not neither), False otherwise.",
+        "topic": "Conditionals",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def div_by_exactly_one(num: int, a: int, b: int) -> bool:\n    # Write a function that takes a number and two divisors and returns True if the number is divisible by…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def div_by_exactly_one(num: int, a: int, b: int) -> bool:\n    # █ FILLED BY STUDENT: Write a function that takes a number and two divisors and returns True if the number is divisible by…\n    return (num % a == 0) != (num % b == 0)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/109",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "div_by_exactly_one",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[20,5,6]",
+            "expected": "(True, [20, 5, 6])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-110",
+      "content": {
+        "title": "Convert Date from mm-dd-yy to yy-dd-mm",
+        "statement": "Write a function that takes a date string in `\"mm-dd-yy\"` format and returns it rearranged into `\"yy-dd-mm\"` format, swapping the month and year while leaving the day in the middle unchanged.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def mm_dd_yy_to_yy_dd_mm(date: str) -> str:\n    # Write a function that takes a date string in `\"mm-dd-yy\"` format and returns it rearranged into `\"yy…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def mm_dd_yy_to_yy_dd_mm(date: str) -> str:\n    # █ FILLED BY STUDENT: Write a function that takes a date string in `\"mm-dd-yy\"` format and returns it rearranged into `\"yy…\n    mm, dd, yy = date.split(\"-\")\n    return f\"{yy}-{dd}-{mm}\"",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/110",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "mm_dd_yy_to_yy_dd_mm",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"12-25-21\"]",
+            "expected": "('21-25-12', ['12-25-21'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-111",
+      "content": {
+        "title": "Increment Dict Value with Max Limit",
+        "statement": "Write a function that takes a dictionary, a key, an increment amount, and an upper limit.\n\nIt should add the increment to the value stored at that key, but cap the result so it never exceeds the limit, modifying the dictionary in place and returning nothing.",
+        "topic": "Dictionaries",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def increment_value_with_max_limit(d: dict, key: str, inc: int, limit: int):\n    # Write a function that takes a dictionary, a key, an increment amount, and an upper limit. It should …\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def increment_value_with_max_limit(d: dict, key: str, inc: int, limit: int):\n    # █ FILLED BY STUDENT: Write a function that takes a dictionary, a key, an increment amount, and an upper limit. It should …\n    d[key] = min(d[key] + inc, limit)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/111",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "increment_value_with_max_limit",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[{\"x\":5,\"y\":3,\"z\":5},\"y\",5,5]",
+            "expected": "(None, [{'x': 5, 'y': 5, 'z': 5}, 'y', 5, 5])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-112",
+      "content": {
+        "title": "Last Word Starting with Uppercase Letter",
+        "statement": "Write a function that takes a sentence and returns the last word in it whose first letter is uppercase. If no word starts with an uppercase letter, it returns `None`.",
+        "topic": "Loops",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def last_word_starts_with_upper_case(sentence: str):\n    # Write a function that takes a sentence and returns the last word in it whose first letter is upperca…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def last_word_starts_with_upper_case(sentence: str):\n    # █ FILLED BY STUDENT: Write a function that takes a sentence and returns the last word in it whose first letter is upperca…\n    result = None\n    for word in sentence.split():\n        if word[0].isupper():\n            result = word\n    return result",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/112",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "last_word_starts_with_upper_case",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"This is a Test sentence\"]",
+            "expected": "('Test', ['This is a Test sentence'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-113",
+      "content": {
+        "title": "Swap Every Alternate Line and Reverse Odd Lines",
+        "statement": "Read an integer n followed by n lines.\n\nProcess the lines in consecutive pairs: for each pair, print the second line reversed, then the first line unchanged.\n\nIf n is odd, there is one unpaired final line — print it reversed on its own.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n followed by n lines. Process the lines in consecutive pairs: for each pair, print …\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n followed by n lines. Process the lines in consecutive pairs: for each pair, print …\nn = int(input())\nlines = [input() for _ in range(n)]\nfor i in range(0, n, 2):\n    if i + 1 < n:\n        print(lines[i + 1][::-1])\n        print(lines[i])\n    else:\n        print(lines[i][::-1])",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/113",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "5\napple\norange\npineapple\nmango\nkiwi\n",
+            "expected": "egnaro\napple\nognam\npineapple\niwik\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-114",
+      "content": {
+        "title": "Word Filters",
+        "statement": "Write a function that takes a list of words and an optional criteria string, and returns only the words matching that criteria. Supported criteria: `'continuous'` (word ends with \"ing\", case-insensitive), `'vowel_rich'` (more than 5 vowels), `'consonant_rich'` (more than 5 consonant letters), and `'sorted'` (the word's letters, lowercased, are already in ascending alphabetical order). An unrecognised criteria value should return `None` rather than a list.",
+        "topic": "Dictionaries",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def get_words_by_criteria(words, criteria=None):\n    # Write a function that takes a list of words and an optional criteria string, and returns only the wo…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def get_words_by_criteria(words, criteria=None):\n    # █ FILLED BY STUDENT: Write a function that takes a list of words and an optional criteria string, and returns only the wo…\n    vowels = \"aeiou\"\n    def is_continuous(w):\n        return w.lower().endswith(\"ing\")\n    def is_vowel_rich(w):\n        return sum(1 for c in w.lower() if c in vowels) > 5\n    def is_consonant_rich(w):\n        return sum(1 for c in w.lower() if c.isalpha() and c not in vowels) > 5\n    def is_sorted_word(w):\n        letters = [c.lower() for c in w if c.isalpha()]\n        return letters == sorted(letters)\n    filters = {\n        \"continuous\": is_continuous,\n        \"vowel_rich\": is_vowel_rich,\n        \"consonant_rich\": is_consonant_rich,\n        \"sorted\": is_sorted_word,\n    }\n    if criteria not in filters:\n        return None\n    return [w for w in words if filters[criteria](w)]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/114",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "get_words_by_criteria",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[\"running\",\"aeiobcdioe\",\"acc\",\"xyz\",\"BOTbot\",\"BboOTt\",\"jumpiNg\",\"SPINNING\",\"alphabetical\"],\"continuous\"]",
+            "expected": "(['running', 'jumpiNg', 'SPINNING'], [['running', 'aeiobcdioe', 'acc', 'xyz', 'BOTbot', 'BboOTt', 'jumpiNg', 'SPINNING', 'alphabetical'], 'continuous'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-115",
+      "content": {
+        "title": "Print Pattern — N Shape",
+        "statement": "Read an integer n and print an N-shaped pattern: every row is bordered by a vertical bar `|` on both sides, and a backslash moves one position to the right on each successive row, tracing a diagonal from top-left to bottom-right.",
+        "topic": "Loops & Pattern Printing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n and print an N-shaped pattern: every row is bordered by a vertical bar `|` on both…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n and print an N-shaped pattern: every row is bordered by a vertical bar `|` on both…\nn = int(input())\nfor i in range(1, n + 1):\n    print(\"|\" + \" \" * (i - 1) + \"\\\\\" + \" \" * (n - i) + \"|\")",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/115",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n",
+            "expected": "|\\  |\n| \\ |\n|  \\|\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-116",
+      "content": {
+        "title": "Check Even or Divisible by 5",
+        "statement": "Write a function that takes an integer and returns True if it is even or divisible by 5 (or both), and False if neither condition holds.",
+        "topic": "Conditionals",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def is_even_or_divisible_by_5(num: int) -> bool:\n    # Write a function that takes an integer and returns True if it is even or divisible by 5 (or both), a…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def is_even_or_divisible_by_5(num: int) -> bool:\n    # █ FILLED BY STUDENT: Write a function that takes an integer and returns True if it is even or divisible by 5 (or both), a…\n    return num % 2 == 0 or num % 5 == 0",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/116",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "is_even_or_divisible_by_5",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[8]",
+            "expected": "(True, [8])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-117",
+      "content": {
+        "title": "Deinterleave Even and Odd Indices in String",
+        "statement": "Write a function that takes a string and returns a new string containing all characters originally at even index positions, followed by all characters originally at odd index positions.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def deinterleave(s: str) -> str:\n    # Write a function that takes a string and returns a new string containing all characters originally a…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def deinterleave(s: str) -> str:\n    # █ FILLED BY STUDENT: Write a function that takes a string and returns a new string containing all characters originally a…\n    return s[::2] + s[1::2]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/117",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "deinterleave",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"abcdef\"]",
+            "expected": "('acebdf', ['abcdef'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-118",
+      "content": {
+        "title": "Make Dictionary from Elements in Index of Lists",
+        "statement": "Write a function that takes two lists (keys and values) and an index, and returns a dictionary containing a single key-value pair: the element at that index in the keys list mapped to the element at that same index in the values list.\n\nThe two lists are not guaranteed to be the same length, but the index is always valid for both.",
+        "topic": "Dictionaries",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def make_dict_from_elems_in_index(keys, values, index: int) -> dict:\n    # Write a function that takes two lists (keys and values) and an index, and returns a dictionary conta…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def make_dict_from_elems_in_index(keys, values, index: int) -> dict:\n    # █ FILLED BY STUDENT: Write a function that takes two lists (keys and values) and an index, and returns a dictionary conta…\n    return {keys[index]: values[index]}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/118",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "make_dict_from_elems_in_index",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[\"apple\",\"banana\",\"cherry\"],[10,20,30,40],1]",
+            "expected": "({'banana': 20}, [['apple', 'banana', 'cherry'], [10, 20, 30, 40], 1])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-119",
+      "content": {
+        "title": "Count Unique Even and Odd Numbers",
+        "statement": "Write a function that takes a list of numbers (which may contain duplicates) and returns a dictionary with two keys, `\"even\"` and `\"odd\"`, whose values are the counts of unique even and unique odd numbers in the list respectively.",
+        "topic": "Sets",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def count_unique_even_odd(l: list) -> dict:\n    # Write a function that takes a list of numbers (which may contain duplicates) and returns a dictionar…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def count_unique_even_odd(l: list) -> dict:\n    # █ FILLED BY STUDENT: Write a function that takes a list of numbers (which may contain duplicates) and returns a dictionar…\n    unique = set(l)\n    return {\n        \"even\": sum(1 for x in unique if x % 2 == 0),\n        \"odd\": sum(1 for x in unique if x % 2 != 0)\n    }",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/119",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "count_unique_even_odd",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[1,2,2,3,4,5,5,6,9]]",
+            "expected": "({'even': 3, 'odd': 4}, [[1, 2, 2, 3, 4, 5, 5, 6, 9]])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-120",
+      "content": {
+        "title": "Vowel Count of Words",
+        "statement": "Read a sentence.\n\nFor each word in it, count how many vowels (upper or lower case) it contains, and print the word immediately followed by that count in parentheses, with words separated by single spaces.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read a sentence. For each word in it, count how many vowels (upper or lower case) it contains, and p…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read a sentence. For each word in it, count how many vowels (upper or lower case) it contains, and p…\ns = input()\nvowels = \"aeiouAEIOU\"\nprint(\" \".join(f\"{w}({sum(1 for c in w if c in vowels)})\" for w in s.split(\" \")))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/120",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "Computer science is amazing\n",
+            "expected": "Computer(3) science(3) is(1) amazing(3)\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-121",
+      "content": {
+        "title": "Student Score Filter",
+        "statement": "Write a function that takes a dictionary mapping student names to lists of their scores, plus a criteria string, and returns a set of matching student names. Criteria: `\"excellent\"` (average score ≥ 85), `\"good\"` (average score between 50 inclusive and 85 exclusive), `\"all_pass\"` (every individual score is ≥ 50), and `\"balanced\"` (the difference between the student's highest and lowest score is ≤ 10).",
+        "topic": "Dictionaries",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def filter_students(data: dict, criteria: str) -> set:\n    # Write a function that takes a dictionary mapping student names to lists of their scores, plus a crit…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def filter_students(data: dict, criteria: str) -> set:\n    # █ FILLED BY STUDENT: Write a function that takes a dictionary mapping student names to lists of their scores, plus a crit…\n    if criteria == \"excellent\":\n        return {name for name, scores in data.items()\n                if sum(scores) / len(scores) >= 85}\n    elif criteria == \"good\":\n        return {name for name, scores in data.items()\n                if 50 <= sum(scores) / len(scores) < 85}\n    elif criteria == \"all_pass\":\n        return {name for name, scores in data.items()\n                if all(s >= 50 for s in scores)}\n    elif criteria == \"balanced\":\n        return {name for name, scores in data.items()\n                if max(scores) - min(scores) <= 10}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/121",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "filter_students",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[{\"Alice\":[90,80,85],\"Bob\":[40,50,60],\"Charlie\":[30,40,20],\"Ram\":[78,92,85,79,81],\"Babu\":[67,70,75],\"Kumar\":[100,100,100,100,100,100,40]},\"excellent\"]",
+            "expected": "({'Alice', 'Kumar'}, [{'Alice': [90, 80, 85], 'Bob': [40, 50, 60], 'Charlie': [30, 40, 20], 'Ram': [78, 92, 85, 79, 81], 'Babu': [67, 70, 75], 'Kumar': [100, 100, 100, 100, 100, 100, 40]}, 'excellent'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-122",
+      "content": {
+        "title": "Pattern Printing — W Pattern",
+        "statement": "Read an integer n and print a W-shaped pattern of n rows bordered by `|` on both sides, where a forward slash and backslash move diagonally from the outer edges inward as the rows increase.",
+        "topic": "Loops & Pattern Printing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n and print a W-shaped pattern of n rows bordered by `|` on both sides, where a forw…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n and print a W-shaped pattern of n rows bordered by `|` on both sides, where a forw…\nn = int(input())\nfor i in range(1, n + 1):\n    pad = \" \" * (n - i)\n    inner = \" \" * (2 * (i - 1))\n    print(f\"|{pad}/{inner}\\\\{pad}|\")",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/122",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n",
+            "expected": "|  /\\  |\n| /  \\ |\n|/    \\|\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-129",
+      "content": {
+        "title": "Pattern Printing — Z Pattern",
+        "statement": "Read an integer n and print a Z-shaped pattern: the first and last rows are full rows of n stars, and each row in between contains a single star that moves one position to the left as the row number increases, with no trailing spaces after it.",
+        "topic": "Loops & Pattern Printing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n and print a Z-shaped pattern: the first and last rows are full rows of n stars, an…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n and print a Z-shaped pattern: the first and last rows are full rows of n stars, an…\nn = int(input())\nfor i in range(1, n + 1):\n    if i == 1 or i == n:\n        print(\"*\" * n)\n    else:\n        print(\" \" * (n - i) + \"*\")",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/129",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "5\n",
+            "expected": "*****\n   *\n  *\n *\n*****\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-130",
+      "content": {
+        "title": "Check Even Number and Second Last Digit is Two",
+        "statement": "Write a function that takes an integer and returns True only if the number is even and its second-to-last digit is 2, False otherwise.",
+        "topic": "Conditionals",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def is_even_and_second_last_digit_is_two(num: int) -> bool:\n    # Write a function that takes an integer and returns True only if the number is even and its second-to…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def is_even_and_second_last_digit_is_two(num: int) -> bool:\n    # █ FILLED BY STUDENT: Write a function that takes an integer and returns True only if the number is even and its second-to…\n    return num % 2 == 0 and (num // 10) % 10 == 2",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/130",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "is_even_and_second_last_digit_is_two",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[232]",
+            "expected": "(False, [232])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-131",
+      "content": {
+        "title": "Capitalize nth Character",
+        "statement": "Write a function that takes a string and a 0-based index n, and returns a new string with the character at position n capitalized.\n\nIf n is out of range for the string, the original string should be returned unchanged.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def upper_nth_index_char(s: str, n: int) -> str:\n    # Write a function that takes a string and a 0-based index n, and returns a new string with the charac…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def upper_nth_index_char(s: str, n: int) -> str:\n    # █ FILLED BY STUDENT: Write a function that takes a string and a 0-based index n, and returns a new string with the charac…\n    if n >= len(s):\n        return s\n    return s[:n] + s[n].upper() + s[n+1:]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/131",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "upper_nth_index_char",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"hello\",1]",
+            "expected": "('hEllo', ['hello', 1])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-132",
+      "content": {
+        "title": "Merge and Remove Duplicates",
+        "statement": "Write a function that takes two lists and returns a set containing all unique elements found across both lists combined.",
+        "topic": "Sets",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def merge_and_remove_duplicates(list1: list, list2: list) -> set:\n    # Write a function that takes two lists and returns a set containing all unique elements found across …\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def merge_and_remove_duplicates(list1: list, list2: list) -> set:\n    # █ FILLED BY STUDENT: Write a function that takes two lists and returns a set containing all unique elements found across …\n    return set(list1 + list2)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/132",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "merge_and_remove_duplicates",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[1,2,2],[2,1,1]]",
+            "expected": "({1, 2}, [[1, 2, 2], [2, 1, 1]])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-133",
+      "content": {
+        "title": "Replace Vowels with Next Alphabet",
+        "statement": "Write a function that takes a string and replaces every vowel with the next letter in the alphabet (preserving case: lowercase vowels become the next lowercase letter, uppercase vowels become the next uppercase letter), leaving all non-vowel characters unchanged.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def replace_vowels_with_next_alphabet(s: str) -> str:\n    # Write a function that takes a string and replaces every vowel with the next letter in the alphabet (…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def replace_vowels_with_next_alphabet(s: str) -> str:\n    # █ FILLED BY STUDENT: Write a function that takes a string and replaces every vowel with the next letter in the alphabet (…\n    vowels = \"aeiouAEIOU\"\n    result = \"\"\n    for c in s:\n        if c in vowels:\n            result += chr(ord(c) + 1)\n        else:\n            result += c\n    return result",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/133",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "replace_vowels_with_next_alphabet",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"HELLO\"]",
+            "expected": "('HFLLP', ['HELLO'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-134",
+      "content": {
+        "title": "Max Column Sum and Max Column Sum Index",
+        "statement": "Read two integers m and n, then m rows each containing n space-separated integers forming a matrix.\n\nCompute the sum of each column, then print the 0-based index of the column with the largest sum (choosing the smallest index in case of a tie) on the first line, and that maximum sum on the second line.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read two integers m and n, then m rows each containing n space-separated integers forming a matrix. …\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read two integers m and n, then m rows each containing n space-separated integers forming a matrix. …\nm, n = map(int, input().split())\nmatrix = [list(map(int, input().split())) for _ in range(m)]\ncol_sums = [sum(matrix[r][c] for r in range(m)) for c in range(n)]\nmax_sum = max(col_sums)\nmax_idx = col_sums.index(max_sum)\nprint(max_idx)\nprint(max_sum)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/134",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3 4\n1 2 3 4\n5 6 7 8\n9 10 11 12\n",
+            "expected": "3\n24\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-135",
+      "content": {
+        "title": "Analyze Sentences",
+        "statement": "Write a function that takes a sentence and a task name, then performs one of four analyses. `\"count_words\"` returns the total number of words. `\"count_palindrome_words\"` returns how many words read the same forwards and backwards. `\"count_words_with_repeated_chars\"` returns how many words contain at least one repeated character. `\"words_with_max_len\"` returns a set of the longest word(s) in the sentence.",
+        "topic": "Sets",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def process_sentence(sentence: str, task: str):\n    # Write a function that takes a sentence and a task name, then performs one of four analyses. `\"count_…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def process_sentence(sentence: str, task: str):\n    # █ FILLED BY STUDENT: Write a function that takes a sentence and a task name, then performs one of four analyses. `\"count_…\n    words = sentence.split()\n    if task == \"count_words\":\n        return len(words)\n    elif task == \"count_palindrome_words\":\n        count = 0\n        for w in words:\n            if w == w[::-1]:\n                count += 1\n        return count\n    elif task == \"count_words_with_repeated_chars\":\n        count = 0\n        for w in words:\n            if len(set(w)) < len(w):\n                count += 1\n        return count\n    elif task == \"words_with_max_len\":\n        max_len = max(len(w) for w in words)\n        result = set()\n        for w in words:\n            if len(w) == max_len:\n                result.add(w)\n        return result",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/135",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "process_sentence",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"level noon civic radar something\",\"count_words\"]",
+            "expected": "(5, ['level noon civic radar something', 'count_words'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-136",
+      "content": {
+        "title": "Centered Triangle of Zeroes",
+        "statement": "Read an integer n and print a right-aligned (centred) triangle of n rows, where row i contains i zero characters separated by single spaces, with no trailing space, and left-padded so the triangle's base aligns to the right.",
+        "topic": "Loops & Pattern Printing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read an integer n and print a right-aligned (centred) triangle of n rows, where row i contains i zer…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read an integer n and print a right-aligned (centred) triangle of n rows, where row i contains i zer…\nn = int(input())\nfor i in range(1, n + 1):\n    row = \" \".join([\"0\"] * i)\n    print(\" \" * (n - i) + row)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/136",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n",
+            "expected": "  0\n 0 0\n0 0 0\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-137",
+      "content": {
+        "title": "Describe Number Based on Divisibility",
+        "statement": "Write a function that classifies an integer based on divisibility by 3 and 5.\n\nIf the number is divisible by both 3 and 5, return \"FizzBuzz\".\n\nIf it's divisible by 3 only, return \"Fizz\".\n\nIf divisible by 5 only, return \"Buzz\".\n\nOtherwise return \"Normal\".\n\nExactly one of the four outcomes should ever be returned.",
+        "topic": "Conditionals",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def describe_number(num: int) -> str:\n    # Write a function that classifies an integer based on divisibility by 3 and 5. If the number is divis…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def describe_number(num: int) -> str:\n    # █ FILLED BY STUDENT: Write a function that classifies an integer based on divisibility by 3 and 5. If the number is divis…\n    if num % 15 == 0:\n        return \"FizzBuzz\"\n    elif num % 3 == 0:\n        return \"Fizz\"\n    elif num % 5 == 0:\n        return \"Buzz\"\n    return \"Normal\"",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/137",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "describe_number",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[9]",
+            "expected": "('Fizz', [9])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-138",
+      "content": {
+        "title": "Card to Value Tuple",
+        "statement": "Write a function that converts a playing-card string like \"AH\" or \"10D\" into a tuple `(suit_value, rank_value)`. The suit is always the last character of the string (S=1, H=2, D=3, C=4). The rank is everything before that last character, where A=1, J=11, Q=12, K=13, and numeric ranks 2–10 keep their face value.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def card_to_value_tuple(card: str) -> tuple:\n    # Write a function that converts a playing-card string like \"AH\" or \"10D\" into a tuple `(suit_value, r…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def card_to_value_tuple(card: str) -> tuple:\n    # █ FILLED BY STUDENT: Write a function that converts a playing-card string like \"AH\" or \"10D\" into a tuple `(suit_value, r…\n    suit_values = {'S': 1, 'H': 2, 'D': 3, 'C': 4}\n    rank_values = {'A': 1, 'J': 11, 'Q': 12, 'K': 13}\n    suit = card[-1]\n    rank = card[:-1]\n    return (suit_values[suit], rank_values[rank] if rank in rank_values else int(rank))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/138",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "card_to_value_tuple",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"AH\"]",
+            "expected": "((2, 1), ['AH'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-139",
+      "content": {
+        "title": "Rotate Even Indices",
+        "statement": "Write a function that rotates only the elements sitting at even indices of a list to the right by k positions, leaving the elements at odd indices completely untouched.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def rotate_even(l: list, k: int) -> list:\n    # Write a function that rotates only the elements sitting at even indices of a list to the right by k …\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def rotate_even(l: list, k: int) -> list:\n    # █ FILLED BY STUDENT: Write a function that rotates only the elements sitting at even indices of a list to the right by k …\n    evens = l[::2]\n    n = len(evens)\n    rotated = evens[-k % n:] + evens[:-k % n]\n    l[::2] = rotated\n    return l",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/139",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "rotate_even",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[1,2,3,4,5,6],1]",
+            "expected": "([5, 2, 1, 4, 3, 6], [[5, 2, 1, 4, 3, 6], 1])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-140",
+      "content": {
+        "title": "Unique Sum Pairs",
+        "statement": "Write a function that returns a set of unique sorted tuples, where each tuple holds two numbers from the input list that add up to a target k.\n\nA number is only allowed to pair with itself if it occurs at least twice in the list.",
+        "topic": "Sets",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "from collections import Counter\n\ndef unique_sum_pairs(nums: list, k: int) -> set:\n    # Write a function that returns a set of unique sorted tuples, where each tuple holds two numbers from…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "from collections import Counter\n\ndef unique_sum_pairs(nums: list, k: int) -> set:\n    # █ FILLED BY STUDENT: Write a function that returns a set of unique sorted tuples, where each tuple holds two numbers from…\n    count = Counter(nums)\n    result = set()\n    for num in count:\n        complement = k - num\n        if complement in count:\n            if num != complement or count[num] >= 2:\n                result.add(tuple(sorted((num, complement))))\n    return result",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/140",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "unique_sum_pairs",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[1,2,3,2,1],4]",
+            "expected": "({(1, 3), (2, 2)}, [[1, 2, 3, 2, 1], 4])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-141",
+      "content": {
+        "title": "Replace Consonants with Hash",
+        "statement": "Read a count n followed by n lines of text. For every line, replace each consonant letter with `#`, leaving vowels, spaces, and any non-alphabetic characters unchanged, and print the transformed line.",
+        "topic": "I/O Processing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read a count n followed by n lines of text. For every line, replace each consonant letter with `#`, …\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read a count n followed by n lines of text. For every line, replace each consonant letter with `#`, …\nn = int(input())\nvowels = \"aeiouAEIOU\"\nfor _ in range(n):\n    line = input()\n    print(\"\".join(\"#\" if c.isalpha() and c not in vowels else c for c in line))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/141",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "2\nHello World\nGood Night\n",
+            "expected": "#e##o #o###\n#oo# #i###\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-142",
+      "content": {
+        "title": "Text Frequency Analysis",
+        "statement": "Write a function `analyse_text(sentence, task)` that dispatches to one of four text-analysis sub-tasks based on the `task` string: `\"count_non_whitespace\"` counts every character that isn't a space or newline; `\"most_frequent_char\"` finds the most common alphabetic character case-insensitively, breaking ties by picking the alphabetically largest letter; `\"count_diverse_words\"` counts how many words contain more than 5 distinct alphabetic characters (case-insensitive); `\"word_with_highest_char_frequency\"` returns the original word whose most-repeated character occurs the most times, breaking ties by the first such word in the sentence.",
+        "topic": "Data Aggregation & Multi-Function Programs",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "from collections import Counter\n\ndef analyse_text(sentence: str, task: str):\n    # Write a function `analyse_text(sentence, task)` that dispatches to one of four text-analysis sub-tas…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "from collections import Counter\n\ndef analyse_text(sentence: str, task: str):\n    # █ FILLED BY STUDENT: Write a function `analyse_text(sentence, task)` that dispatches to one of four text-analysis sub-tas…\n    words = sentence.split()\n    alpha_only = [c.lower() for c in sentence if c.isalpha()]\n    clean_words = [''.join(c.lower() for c in w if c.isalpha()) for w in words]\n\n    if task == \"count_non_whitespace\":\n        return sum(1 for c in sentence if c not in (' ', '\\n'))\n    elif task == \"most_frequent_char\":\n        freq = Counter(alpha_only)\n        max_count = max(freq.values())\n        return max(c for c in freq if freq[c] == max_count)\n    elif task == \"count_diverse_words\":\n        return sum(1 for w in clean_words if len(set(w)) > 5)\n    elif task == \"word_with_highest_char_frequency\":\n        def max_freq(w): return max(Counter(w).values()) if w else 0\n        return max(zip(words, clean_words), key=lambda p: max_freq(p[1]))[0]",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/142",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "analyse_text",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"Python is fun, programming is awesome.\",\"count_non_whitespace\"]",
+            "expected": "(33, ['Python is fun, programming is awesome.', 'count_non_whitespace'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-143",
+      "content": {
+        "title": "Draw Arrow Trail from Movement Deltas",
+        "statement": "Read a line of space-separated movement deltas. Track a running horizontal position, and for each delta draw an arrow aligned to that position: a positive delta draws a rightward arrow starting at the current position; a negative delta draws a leftward arrow ending at the current position; a delta of zero draws a single `=` at the current position. Update the position by the delta after drawing each arrow.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read a line of space-separated movement deltas. Track a running horizontal position, and for each de…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read a line of space-separated movement deltas. Track a running horizontal position, and for each de…\ndeltas = list(map(int, input().split()))\npos = 0\nfor d in deltas:\n    if d > 0:\n        print(\" \" * pos + \"=\" * d + \">\")\n    elif d < 0:\n        v = -d\n        print(\" \" * (pos - v) + \"<\" + \"=\" * (v - 1))\n    else:\n        print(\" \" * pos + \"=\")\n    pos += d",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/143",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "1 4 -2 5 0 -3 0 -3 1 4\n",
+            "expected": "=>\n ====>\n   <=\n   =====>\n        =\n     <==\n     =\n  <==\n  =>\n   ====>\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-144",
+      "content": {
+        "title": "Check If a Number is a Decreasing 4-Digit Number",
+        "statement": "Write a function that returns True if the digits of a 4-digit integer are strictly decreasing from left to right (each digit strictly greater than the one after it), and False otherwise — equal adjacent digits do not count as decreasing.",
+        "topic": "Arithmetic",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def is_decreasing_number(n: int) -> bool:\n    # Write a function that returns True if the digits of a 4-digit integer are strictly decreasing from l…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def is_decreasing_number(n: int) -> bool:\n    # █ FILLED BY STUDENT: Write a function that returns True if the digits of a 4-digit integer are strictly decreasing from l…\n    s = str(n)\n    return all(s[i] > s[i+1] for i in range(len(s) - 1))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/144",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "is_decreasing_number",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[4321]",
+            "expected": "(True, [4321])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-145",
+      "content": {
+        "title": "Parse Equation and Solve for x",
+        "statement": "Write a function that parses a linear equation string of the form `ax+b=c` or `ax-b=c` (spaces may appear anywhere and should be ignored) and returns the value of x as a float. Handle the cases where the coefficient before `x` is implicit (missing, just `+`, or just `-`) and where the constant term is missing.",
+        "topic": "Strings",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def solve_for_x(equation: str) -> float:\n    # Write a function that parses a linear equation string of the form `ax+b=c` or `ax-b=c` (spaces may a…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def solve_for_x(equation: str) -> float:\n    # █ FILLED BY STUDENT: Write a function that parses a linear equation string of the form `ax+b=c` or `ax-b=c` (spaces may a…\n    equation = equation.replace(\" \", \"\")\n    left, c = equation.split(\"=\")\n    a_part, b_part = left.split(\"x\")\n    a = float(a_part) if a_part not in (\"\", \"+\", \"-\") else float(a_part + \"1\")\n    b = float(b_part) if b_part != \"\" else 0.0\n    return (float(c) - b) / a",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/145",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "solve_for_x",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"2x +3= 11\"]",
+            "expected": "(4.0, ['2x +3= 11'])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-146",
+      "content": {
+        "title": "Divide Number Into Almost Equal Parts",
+        "statement": "Write a function that splits an integer n into k parts that are as equal as possible and sum to n, placing the larger values at the beginning of the returned list.",
+        "topic": "Arithmetic",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def divide_into_almost_equal_parts(n: int, k: int) -> list:\n    # Write a function that splits an integer n into k parts that are as equal as possible and sum to n, p…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def divide_into_almost_equal_parts(n: int, k: int) -> list:\n    # █ FILLED BY STUDENT: Write a function that splits an integer n into k parts that are as equal as possible and sum to n, p…\n    base, remainder = divmod(n, k)\n    return [base + 1] * remainder + [base] * (k - remainder)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/146",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "divide_into_almost_equal_parts",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[5,3]",
+            "expected": "([2, 2, 1], [5, 3])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-147",
+      "content": {
+        "title": "Compute Polynomial Value",
+        "statement": "Write a function that evaluates a polynomial given a list of its coefficients in descending degree order and a value for x (e.g. `[2,3,5,7]` represents `2x³+3x²+5x+7`).",
+        "topic": "Arithmetic",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def evaluate_polynomial(coef: list, x: int) -> int:\n    # Write a function that evaluates a polynomial given a list of its coefficients in descending degree o…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def evaluate_polynomial(coef: list, x: int) -> int:\n    # █ FILLED BY STUDENT: Write a function that evaluates a polynomial given a list of its coefficients in descending degree o…\n    n = len(coef) - 1\n    return sum(c * x ** (n - i) for i, c in enumerate(coef))",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/147",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-call",
+        "entry_function": "evaluate_polynomial",
+        "entry_functions": [],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[[2,3,5,7],2]",
+            "expected": "(45, [[2, 3, 5, 7], 2])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-148",
+      "content": {
+        "title": "Update Todo List Based on Given Indices",
+        "statement": "Read a count n, a line of space-separated 0-based indices, then n todo-list lines each formatted as `- [ ] <task>`. Mark the items whose index appears in the given list as complete by changing `[ ]` to `[x]` for just that line's checkbox; indices beyond the list's range are simply ignored.",
+        "topic": "Sets",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read a count n, a line of space-separated 0-based indices, then n todo-list lines each formatted as …\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read a count n, a line of space-separated 0-based indices, then n todo-list lines each formatted as …\nn = int(input())\nindices = set(map(int, input().split()))\nfor i in range(n):\n    line = input()\n    if i in indices:\n        line = line.replace(\"[ ]\", \"[x]\", 1)\n    print(line)",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/148",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n0 2\n- [ ] Buy groceries\n- [ ] Read a book\n- [ ] Write code\n",
+            "expected": "- [x] Buy groceries\n- [ ] Read a book\n- [x] Write code\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-149",
+      "content": {
+        "title": "Batsman Performance Analysis",
+        "statement": "Given a dictionary mapping year → list of runs scored in each match that year, implement five functions: `overall_run_stats` returns the min, max, total and average across all runs ever scored; `century_rate` returns the percentage (rounded) of matches in a given list that were centuries (≥100 runs); `average_yearly_century_rate` averages the century rate across all years; `years_with_more_than_average_yearly_century_rate` returns the set of years whose century rate strictly exceeds that overall average; `year_with_most_average_runs` returns the year with the highest average runs per match, with ties broken in favor of the earliest year.",
+        "topic": "Lists",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "def overall_run_stats(batsman_data: dict) -> dict:\n    # Given a dictionary mapping year → list of runs scored in each match that year, implement five functi…\n    # YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "def overall_run_stats(batsman_data: dict) -> dict:\n    # █ FILLED BY STUDENT: Given a dictionary mapping year → list of runs scored in each match that year, implement five functi…\n    all_runs = [r for runs in batsman_data.values() for r in runs]\n    return {\n        \"min\": min(all_runs),\n        \"max\": max(all_runs),\n        \"total\": sum(all_runs),\n        \"average\": round(sum(all_runs) / len(all_runs))\n    }\n\ndef century_rate(runs: list) -> int:\n    return round(sum(1 for r in runs if r >= 100) / len(runs) * 100)\n\ndef average_yearly_century_rate(batsman_data: dict) -> int:\n    rates = [century_rate(runs) for runs in batsman_data.values()]\n    return round(sum(rates) / len(rates))\n\ndef years_with_more_than_average_yearly_century_rate(batsman_data: dict) -> set:\n    avg = average_yearly_century_rate(batsman_data)\n    return {year for year, runs in batsman_data.items() if century_rate(runs) > avg}\n\ndef year_with_most_average_runs(batsman_data: dict) -> int:\n    return min(\n        batsman_data,\n        key=lambda y: (-sum(batsman_data[y]) / len(batsman_data[y]), y)\n    )",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/149",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "python-dispatch",
+        "entry_function": "overall_run_stats",
+        "entry_functions": [
+          "overall_run_stats",
+          "century_rate",
+          "average_yearly_century_rate",
+          "years_with_more_than_average_yearly_century_rate",
+          "year_with_most_average_runs"
+        ],
+        "comparison": "python-value",
+        "tests": [
+          {
+            "input": "[\"overall_run_stats\",[{\"__intdict__\":[[2016,[88,66,130,122,117,95,86]],[2017,[149,66,110]],[2018,[157,84]],[2019,[148,127,71,117]],[2020,[91,156,80,135,152,109]]]}]]",
+            "expected": "({'min': 66, 'max': 157, 'total': 2456, 'average': 112}, [{2016: [88, 66, 130, 122, 117, 95, 86], 2017: [149, 66, 110], 2018: [157, 84], 2019: [148, 127, 71, 117], 2020: [91, 156, 80, 135, 152, 109]}])",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-150",
+      "content": {
+        "title": "Horizontal Bar Chart",
+        "statement": "Read n lines each formatted as `key:value`. Print a horizontal bar chart where every key is right-aligned so all the colons line up in a single column, followed by a bar of `#` characters whose length equals the value.",
+        "topic": "I/O Processing",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "# Read n lines each formatted as `key:value`. Print a horizontal bar chart where every key is right-al…\n# YOUR CODE HERE",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "# █ FILLED BY STUDENT: Read n lines each formatted as `key:value`. Print a horizontal bar chart where every key is right-al…\nn = int(input())\npairs = [input().split(\":\") for _ in range(n)]\nwidth = max(len(k) for k, _ in pairs)\nfor key, val in pairs:\n    print(f\"{key:>{width}}:{'#' * int(val)}\")",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/150",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "6\napple:10\nbanana:5\nplum:6\ncherry:3\ndates:8\nstrawberry:15\n",
+            "expected": "     apple:##########\n    banana:#####\n      plum:######\n    cherry:###\n     dates:########\nstrawberry:###############\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    }
+  ]
+}

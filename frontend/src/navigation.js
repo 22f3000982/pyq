@@ -1,5 +1,5 @@
 // History routing keeps SPA navigation immediate while exposing real URLs.
-const routePattern=/^\/(?:|about|bookmarks|progress|history|dashboard|mistakes|login|admin(?:\/login)?|(?:course|paper|attempt|result)\/\d+|exam\/[^/]+)$/;
+const routePattern=/^\/(?:|about|bookmarks|progress|history|dashboard|mistakes|login|admin(?:\/(?:login|oppe))?|(?:course|paper|attempt|result)\/\d+|exam\/[^/]+)$/;
 export function isAppPath(path){return routePattern.test(path)}
 export function currentRoute(){return window.location.pathname}
 export function migrateLegacyRoute(){

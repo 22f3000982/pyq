@@ -1,0 +1,1039 @@
+{
+  "format": "mauryahub-oppe-v1",
+  "course_slug": "java",
+  "questions": [
+    {
+      "external_id": "rangalabs-question-80",
+      "content": {
+        "title": "Employee / Manager / Director — abstract printBonus()",
+        "statement": "Abstract class Employee has private String name and double salary with getters.\n\nAbstract method printBonus() prints 'name : bonus'.\n\nManager extends Employee — printBonus() computes 10% of salary.\n\nDirector extends Employee — printBonus() computes 15% of salary.",
+        "topic": "Abstract Classes",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nabstract class Employee {\n    private String name;  private double salary;\n    public Employee(String n, double s) { name = n; salary = s; }\n    public double getSalary() { return salary; }\n    public String getName() { return name; }\n    // Implement printBonus()\n    // YOUR CODE HERE\n}\n\nclass Manager extends Employee {\n    public Manager(String name, double salary) { super(name, salary); }\n    // Implement printBonus()\n    // YOUR CODE HERE\n}\n\nclass Director extends Employee {\n    public Director(String name, double salary) { super(name, salary); }\n    // Implement printBonus()\n    // YOUR CODE HERE\n}\n\npublic class BonusTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String n1=sc.next(); double s1=sc.nextDouble();\n        String n2=sc.next(); double s2=sc.nextDouble();\n        Manager m = new Manager(n1, s1);\n        Director d = new Director(n2, s2);\n        m.printBonus();\n        d.printBonus();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nabstract class Employee {\n    private String name;  private double salary;\n    public Employee(String n, double s) { name = n; salary = s; }\n    public double getSalary() { return salary; }\n    public String getName() { return name; }\n    // █ FILLED BY STUDENT: Implement printBonus()\n    public abstract void printBonus();\n}\n\nclass Manager extends Employee {\n    public Manager(String name, double salary) { super(name, salary); }\n    // █ FILLED BY STUDENT: Implement printBonus()\n    public void printBonus() { System.out.println(getName() + \" : \" + getSalary() * 0.1); }\n}\n\nclass Director extends Employee {\n    public Director(String name, double salary) { super(name, salary); }\n    // █ FILLED BY STUDENT: Implement printBonus()\n    public void printBonus() { System.out.println(getName() + \" : \" + getSalary() * 0.15); }\n}\n\npublic class BonusTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String n1=sc.next(); double s1=sc.nextDouble();\n        String n2=sc.next(); double s2=sc.nextDouble();\n        Manager m = new Manager(n1, s1);\n        Director d = new Director(n2, s2);\n        m.printBonus();\n        d.printBonus();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/80",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "BonusTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "Manoj 50000\nDeepa 70000\n",
+            "expected": "Manoj : 5000.0\r\nDeepa : 10500.0\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-81",
+      "content": {
+        "title": "Shopping / Amazon / Flipkart / User — abstract offers()",
+        "statement": "Abstract class Shopping has abstract void offers().\n\nAmazon.offers() prints 'Great Indian festival sale from 6th-8th Oct 2022'.\n\nFlipkart.offers() prints 'Big Billion Days from 5th-9th Oct 2022'.\n\nClass User has getOffers(Shopping obj) which calls obj.offers().",
+        "topic": "Abstract Classes",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "// Define class Shopping\n// YOUR CODE HERE\n \nclass Amazon extends Shopping {\n    // Implement offers()\n    // YOUR CODE HERE\n}\n\nclass Flipkart extends Shopping {\n    // Implement offers()\n    // YOUR CODE HERE\n}\n\nclass User {\n    public void getOffers(Shopping obj) { obj.offers(); }\n}\n\npublic class AbstractTest {\n    public static void main(String[] args) {\n        User u = new User();\n        u.getOffers(new Amazon());\n        u.getOffers(new Flipkart());\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "// █ FILLED BY STUDENT: Define class Shopping\nabstract class Shopping { public abstract void offers(); }\n \nclass Amazon extends Shopping {\n    // █ FILLED BY STUDENT: Implement offers()\n    public void offers() { System.out.println(\"Great Indian festival sale from 6th-8th Oct 2022\"); }\n}\n\nclass Flipkart extends Shopping {\n    // █ FILLED BY STUDENT: Implement offers()\n    public void offers() { System.out.println(\"Big Billion Days from 5th-9th Oct 2022\"); }\n}\n\nclass User {\n    public void getOffers(Shopping obj) { obj.offers(); }\n}\n\npublic class AbstractTest {\n    public static void main(String[] args) {\n        User u = new User();\n        u.getOffers(new Amazon());\n        u.getOffers(new Flipkart());\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/81",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "AbstractTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "(none)",
+            "expected": "Great Indian festival sale from 6th-8th Oct 2022\r\nBig Billion Days from 5th-9th Oct 2022\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-82",
+      "content": {
+        "title": "Appraisable / SpecialAppraisable / Teacher",
+        "statement": "Interface Appraisable has default appraisal(Teacher) adding (stuPassPer/100)\\*5000 to salary, and abstract checkAndUpdateSalary().\n\nInterface SpecialAppraisable extends Appraisable with default spAppraisal adding (stuPassPer/100)\\*10000 to salary.\n\nTeacher implements SpecialAppraisable.\n\nImplement checkAndUpdateSalary() in Teacher based on the teacher's stuPassPer (student pass percentage):\n\n* If stuPassPer is 60 or more but less than 75, call appraisal().\n* If stuPassPer is 75 or more, call spAppraisal() instead.\n* If stuPassPer is below 60, the salary is left unchanged.",
+        "topic": "Interfaces",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n \n// Define interface Appraisable\n// YOUR CODE HERE\n\n// Define interface SpecialAppraisable\n// YOUR CODE HERE\n \nclass Teacher implements SpecialAppraisable {\n    private String name; private double salary; private double stuPassPer;\n    public Teacher(String n, double s, double p) { name=n; salary=s; stuPassPer=p; }\n    public double getSalary() { return salary; }\n    public void setSalary(double s) { this.salary = s; }\n    public double getstuPassPer() { return stuPassPer; }\n    public String toString() { return name+\", \"+salary+\", \"+stuPassPer; }\n \n    // Implement checkAndUpdateSalary() (see statement for the thresholds)\n    // YOUR CODE HERE\n}\n \npublic class InterfaceTest {\n    // Implement printUpdatedTeachList()\n    // YOUR CODE HERE\n \n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Teacher[] tArr = new Teacher[3];\n        for (int i=0; i<3; i++) tArr[i] = new Teacher(sc.next(), sc.nextDouble(), sc.nextDouble());\n        InterfaceTest.printUpdatedTeachList(tArr);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n \n// █ FILLED BY STUDENT: Define interface Appraisable\ninterface Appraisable {\n    default void appraisal(Teacher t) { t.setSalary(t.getSalary()+(t.getstuPassPer()/100)*5000); }\n    void checkAndUpdateSalary();\n}\n\n// █ FILLED BY STUDENT: Define interface SpecialAppraisable\ninterface SpecialAppraisable extends Appraisable {\n    default void spAppraisal(Teacher t) { t.setSalary(t.getSalary()+(t.getstuPassPer()/100)*10000); }\n}\n \nclass Teacher implements SpecialAppraisable {\n    private String name; private double salary; private double stuPassPer;\n    public Teacher(String n, double s, double p) { name=n; salary=s; stuPassPer=p; }\n    public double getSalary() { return salary; }\n    public void setSalary(double s) { this.salary = s; }\n    public double getstuPassPer() { return stuPassPer; }\n    public String toString() { return name+\", \"+salary+\", \"+stuPassPer; }\n \n    // █ FILLED BY STUDENT: Implement checkAndUpdateSalary() (see statement for the thresholds)\n    public void checkAndUpdateSalary() {\n        if(stuPassPer>=60 && stuPassPer<75) appraisal(this);\n        else if(stuPassPer>=75) spAppraisal(this);\n    }\n}\n \npublic class InterfaceTest {\n    // █ FILLED BY STUDENT: Implement printUpdatedTeachList()\n    public static void printUpdatedTeachList(Teacher[] tList) {\n        for (Teacher t : tList) { t.checkAndUpdateSalary(); System.out.println(t); }\n    }\n \n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Teacher[] tArr = new Teacher[3];\n        for (int i=0; i<3; i++) tArr[i] = new Teacher(sc.next(), sc.nextDouble(), sc.nextDouble());\n        InterfaceTest.printUpdatedTeachList(tArr);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/82",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "InterfaceTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "T1 40000 65\nT2 50000 80\nT3 60000 50\n",
+            "expected": "T1, 43250.0, 65.0\r\nT2, 58000.0, 80.0\r\nT3, 60000.0, 50.0\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-83",
+      "content": {
+        "title": "accountDetails + Account + Type_1 / Type_2",
+        "statement": "Interface accountDetails has abstract getters and default getInterestRate().\n\nAbstract class Account has deposit/withdraw and cautionMessage().\n\nType\\_1 and Type\\_2 implement specified rules.",
+        "topic": "Interfaces",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\ninterface accountDetails {\n    // abstract getters + default getInterestRate() returning 4.5\n    // YOUR CODE HERE\n}\n\nabstract class Account {\n    // abstract deposit(), abstract withdraw(), concrete cautionMessage()\n    // YOUR CODE HERE\n}\n\nclass Type_1 extends Account implements accountDetails {\n    private int Acc_No; private String Acc_Holder; private final double Rate = 4.67; private double Balance;\n    public Type_1(int n, String h, double b) { Acc_No=n; Acc_Holder=h; Balance=b; }\n    public String getAccHolder() { return Acc_Holder; }\n    public int getAccNo() { return Acc_No; }\n    public double getBalance() { return Balance; }\n    // deposit method\n    // YOUR CODE HERE\n    // withdraw method\n    // YOUR CODE HERE\n}\n\nclass Type_2 extends Account implements accountDetails {\n    private int Acc_No; private String Acc_Holder; private double Balance;\n    public Type_2(int n, String h, double b) { Acc_No=n; Acc_Holder=h; Balance=b; }\n    public String getAccHolder() { return Acc_Holder; }\n    public int getAccNo() { return Acc_No; }\n    public double getBalance() { return Balance; }\n    // deposit method\n    // YOUR CODE HERE\n    // withdraw method\n    // YOUR CODE HERE\n}\n\npublic class Test {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Type_1 t1 = new Type_1(sc.nextInt(), sc.next(), sc.nextDouble());\n        t1.deposit(sc.nextDouble());\n        t1.withdraw(sc.nextDouble());\n        System.out.println(\"Type_1 balance: \" + t1.getBalance());\n        Type_2 t2 = new Type_2(sc.nextInt(), sc.next(), sc.nextDouble());\n        t2.deposit(sc.nextDouble());\n        t2.withdraw(sc.nextDouble());\n        System.out.println(\"Type_2 balance: \" + t2.getBalance());\n        sc.close();\n    }\n}\n",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\ninterface accountDetails {\n    // █ FILLED BY STUDENT: abstract getters + default getInterestRate() returning 4.5\n    String getAccHolder(); int getAccNo(); double getBalance();\n    default double getInterestRate() { return 4.5; }\n}\n\nabstract class Account {\n    // █ FILLED BY STUDENT: abstract deposit(), abstract withdraw(), concrete cautionMessage()\n    public abstract void deposit(double a); public abstract void withdraw(double a);\n    public void cautionMessage() { System.out.println(\"If action not performed by you, inform bank immediately!\"); }\n}\n\nclass Type_1 extends Account implements accountDetails {\n    private int Acc_No; private String Acc_Holder; private final double Rate = 4.67; private double Balance;\n    public Type_1(int n, String h, double b) { Acc_No=n; Acc_Holder=h; Balance=b; }\n    public String getAccHolder() { return Acc_Holder; }\n    public int getAccNo() { return Acc_No; }\n    public double getBalance() { return Balance; }\n    // █ FILLED BY STUDENT: deposit method\n    public void deposit(double a) {\n        if(a>=1000) { Balance+=a; System.out.println(\"Amount deposited successfully!\"); }\n        else System.out.println(\"Insufficient funds to deposit! Deposit unsuccessful\");\n        cautionMessage();\n    }\n    // █ FILLED BY STUDENT: withdraw method\n    public void withdraw(double a) {\n        if(a>Balance) System.out.println(\"Insufficient funds! Withdraw unsuccessful\");\n        else { Balance-=a; System.out.println(\"Withdraw successful\"); }\n        cautionMessage();\n    }\n}\n\nclass Type_2 extends Account implements accountDetails {\n    private int Acc_No; private String Acc_Holder; private double Balance;\n    public Type_2(int n, String h, double b) { Acc_No=n; Acc_Holder=h; Balance=b; }\n    public String getAccHolder() { return Acc_Holder; }\n    public int getAccNo() { return Acc_No; }\n    public double getBalance() { return Balance; }\n    // █ FILLED BY STUDENT: deposit method\n    public void deposit(double a) {\n        if(a>=1000) { Balance+=a; System.out.println(\"Amount deposited successfully!\"); }\n        else System.out.println(\"Insufficient funds to deposit! Deposit unsuccessful\");\n        cautionMessage();\n    }\n    // █ FILLED BY STUDENT: withdraw method\n    public void withdraw(double a) {\n        if(a>Balance) System.out.println(\"Insufficient funds! Withdraw unsuccessful\");\n        else if(a<20000) { Balance-=a; System.out.println(\"Withdraw successful\"); }\n        else System.out.println(\"Fund requested exceeds limit! Withdraw unsuccessful\");\n        cautionMessage();\n    }\n}\n\npublic class Test {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Type_1 t1 = new Type_1(sc.nextInt(), sc.next(), sc.nextDouble());\n        t1.deposit(sc.nextDouble());\n        t1.withdraw(sc.nextDouble());\n        System.out.println(\"Type_1 balance: \" + t1.getBalance());\n        Type_2 t2 = new Type_2(sc.nextInt(), sc.next(), sc.nextDouble());\n        t2.deposit(sc.nextDouble());\n        t2.withdraw(sc.nextDouble());\n        System.out.println(\"Type_2 balance: \" + t2.getBalance());\n        sc.close();\n    }\n}\n",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/83",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Test",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "101 Amit 2000 1500 500 102 Sara 25000 500 22000\n",
+            "expected": "Amount deposited successfully!\r\nIf action not performed by you, inform bank immediately!\r\nWithdraw successful\r\nIf action not performed by you, inform bank immediately!\r\nType_1 balance: 3000.0\r\nInsufficient funds to deposit! Deposit unsuccessful\r\nIf action not performed by you, inform bank immediately!\r\nFund requested exceeds limit! Withdraw unsuccessful\r\nIf action not performed by you, inform bank immediately!\r\nType_2 balance: 25000.0\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-84",
+      "content": {
+        "title": "IResearchScholar / JuniorRS / SeniorRS",
+        "statement": "Interface IResearchScholar declares teaches() and studies().\n\nAbstract class JuniorRS implements IResearchScholar but only provides studies().\n\nClass SeniorRS extends JuniorRS and implements teaches().",
+        "topic": "Interfaces",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\ninterface IResearchScholar {\n    public void teaches(String str);\n    public void studies(String str);\n}\n\n// Define class JuniorRS\n// YOUR CODE HERE\n \n// Define class SeniorRS\n// YOUR CODE HERE\n \npublic class InterAbstrTest extends SeniorRS {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String str1 = sc.nextLine();  String str2 = sc.nextLine();\n        JuniorRS jrs = new InterAbstrTest();\n        SeniorRS srs = new InterAbstrTest();\n        jrs.studies(str1);  srs.studies(str2);  srs.teaches(str2);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\ninterface IResearchScholar {\n    public void teaches(String str);\n    public void studies(String str);\n}\n\n// █ FILLED BY STUDENT: Define class JuniorRS\nabstract class JuniorRS implements IResearchScholar {\n    public void studies(String str1) { System.out.println(\"TA studies \" + str1); }\n}\n \n// █ FILLED BY STUDENT: Define class SeniorRS\nclass SeniorRS extends JuniorRS {\n    public void teaches(String str) { System.out.println(\"TA teaches \" + str); }\n}\n \npublic class InterAbstrTest extends SeniorRS {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String str1 = sc.nextLine();  String str2 = sc.nextLine();\n        JuniorRS jrs = new InterAbstrTest();\n        SeniorRS srs = new InterAbstrTest();\n        jrs.studies(str1);  srs.studies(str2);  srs.teaches(str2);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/84",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "InterAbstrTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "Physics\nChemistry\n",
+            "expected": "TA studies Physics\r\nTA studies Chemistry\r\nTA teaches Chemistry\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-85",
+      "content": {
+        "title": "SpecialAppraisable / Employee — interface extends interface",
+        "statement": "Interface Appraisable has default increment(+5000) and abstract checkAndUpdateSalary().\n\nInterface SpecialAppraisable extends Appraisable, adds default spIncrement(+7000).\n\nEmployee implements SpecialAppraisable.",
+        "topic": "Interfaces",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\ninterface Appraisable {\n    default void increment(Employee e) { e.salary += 5000; }\n    void checkAndUpdateSalary();\n}\n\n// Define interface SpecialAppraisable\n// YOUR CODE HERE\n\nclass Employee implements SpecialAppraisable {\n    String name;  double salary;  int numLeaves;\n    public Employee(String n, double s, int l) { name=n; salary=s; numLeaves=l; }\n \n    // Implement checkAndUpdateSalary()\n    // YOUR CODE HERE\n\n    public String toString() { return name + \" \" + salary; }\n}\n\npublic class InterfaceTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Employee[] eList = new Employee[3];\n        for (int i = 0; i < 3; i++)\n            eList[i] = new Employee(sc.next(), sc.nextDouble(), sc.nextInt());\n        for (Employee e : eList) { e.checkAndUpdateSalary(); System.out.println(e); }\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\ninterface Appraisable {\n    default void increment(Employee e) { e.salary += 5000; }\n    void checkAndUpdateSalary();\n}\n\n// █ FILLED BY STUDENT: Define interface SpecialAppraisable\ninterface SpecialAppraisable extends Appraisable {\n    default void spIncrement(Employee e) { e.salary += 7000; }\n}\n\nclass Employee implements SpecialAppraisable {\n    String name;  double salary;  int numLeaves;\n    public Employee(String n, double s, int l) { name=n; salary=s; numLeaves=l; }\n \n    // █ FILLED BY STUDENT: Implement checkAndUpdateSalary()\n    public void checkAndUpdateSalary() {\n        if (salary >= 50000 && numLeaves <= 6) increment(this);\n        else if (salary < 50000 && numLeaves <= 6) spIncrement(this);\n        else if (salary < 50000 && numLeaves > 6) increment(this);\n    }\n\n    public String toString() { return name + \" \" + salary; }\n}\n\npublic class InterfaceTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Employee[] eList = new Employee[3];\n        for (int i = 0; i < 3; i++)\n            eList[i] = new Employee(sc.next(), sc.nextDouble(), sc.nextInt());\n        for (Employee e : eList) { e.checkAndUpdateSalary(); System.out.println(e); }\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/85",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "InterfaceTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "E1 40000 3\nE2 55000 8\nE3 45000 5\n",
+            "expected": "E1 47000.0\r\nE2 55000.0\r\nE3 52000.0\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-86",
+      "content": {
+        "title": "LoginSystem / LoginSuccessful / LoginFailed / AuthStatus",
+        "statement": "Interface AuthStatus has abstract showMessage().\n\nLoginSystem has boolean isValidUser.\n\nIt has two private inner classes: LoginSuccessful and LoginFailed.\n\nDEFINE authenticate().",
+        "topic": "Private Inner Classes",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "interface AuthStatus { void showMessage(); }\n \nclass LoginSystem {\n    private boolean isValidUser;\n    public LoginSystem(boolean isValid) { isValidUser = isValid; }\n \n    // Implement authenticate()\n    // YOUR CODE HERE\n\n    private class LoginSuccessful implements AuthStatus {\n        public void showMessage() { System.out.println(\"Login Successful\"); }\n    }\n    private class LoginFailed implements AuthStatus {\n        public void showMessage() { System.out.println(\"Login Failed\"); }\n    }\n}\n \npublic class Test {\n    public static void main(String[] args) {\n        LoginSystem user1 = new LoginSystem(false);\n        LoginSystem user2 = new LoginSystem(true);\n        user2.authenticate().showMessage();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "interface AuthStatus { void showMessage(); }\n \nclass LoginSystem {\n    private boolean isValidUser;\n    public LoginSystem(boolean isValid) { isValidUser = isValid; }\n \n    // █ FILLED BY STUDENT: Implement authenticate()\n    public AuthStatus authenticate() {\n        if (isValidUser) return new LoginSuccessful();\n        return new LoginFailed();\n    }\n\n    private class LoginSuccessful implements AuthStatus {\n        public void showMessage() { System.out.println(\"Login Successful\"); }\n    }\n    private class LoginFailed implements AuthStatus {\n        public void showMessage() { System.out.println(\"Login Failed\"); }\n    }\n}\n \npublic class Test {\n    public static void main(String[] args) {\n        LoginSystem user1 = new LoginSystem(false);\n        LoginSystem user2 = new LoginSystem(true);\n        user2.authenticate().showMessage();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/86",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Test",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "(none)",
+            "expected": "Login Successful\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-87",
+      "content": {
+        "title": "PowerBill / Domestic / Commercial / BillingTest — tiered billing",
+        "statement": "Interface Generatable has abstract double billGenerate(int units).\n\nClass PowerBill has two private inner classes: Domestic and Commercial.\n\nFactory methods return Generatable.\n\nBillingTest.getBill() computes output.",
+        "topic": "Private Inner Classes",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\ninterface Generatable {\n    double billGenerate(int units);\n}\n\nclass PowerBill {\n    // Define class Domestic\n    // YOUR CODE HERE\n\n    // Define class Commercial\n    // YOUR CODE HERE\n\n    public Generatable getDomesticBill() { return new Domestic(); }\n    public Generatable getCommercialBill() { return new Commercial(); }\n}\n\npublic class BillingTest {\n    public static double getBill(int units, String type) {\n        // create PowerBill, call correct factory, call billGenerate\n        // YOUR CODE HERE\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int units = sc.nextInt();  String type = sc.next();\n        System.out.println(getBill(units, type));\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\ninterface Generatable {\n    double billGenerate(int units);\n}\n\nclass PowerBill {\n    // █ FILLED BY STUDENT: Define class Domestic\n    private class Domestic implements Generatable {\n        public double billGenerate(int units) {\n            if (units <= 100) return units * 1.6;\n            else if (units <= 200) return units * 2.5;\n            else return units * 5.6;\n        }\n    }\n\n    // █ FILLED BY STUDENT: Define class Commercial\n    private class Commercial implements Generatable {\n        public double billGenerate(int units) {\n            if (units <= 100) return units * 5.6;\n            else if (units <= 200) return units * 7.5;\n            else return units * 20.0;\n        }\n    }\n\n    public Generatable getDomesticBill() { return new Domestic(); }\n    public Generatable getCommercialBill() { return new Commercial(); }\n}\n\npublic class BillingTest {\n    public static double getBill(int units, String type) {\n        // █ FILLED BY STUDENT: create PowerBill, call correct factory, call billGenerate\n        PowerBill pb = new PowerBill();\n        if (type.equals(\"home\")) return pb.getDomesticBill().billGenerate(units);\n        else if (type.equals(\"shop\")) return pb.getCommercialBill().billGenerate(units);\n        else return -1;\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int units = sc.nextInt();  String type = sc.next();\n        System.out.println(getBill(units, type));\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/87",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "BillingTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "300 home\n",
+            "expected": "1680.0\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-88",
+      "content": {
+        "title": "Pair / PairTest — add() returning Pair",
+        "statement": "Generic class Pair<T extends Number> has private T first and T second.\n\nConstructor + getters + setters.\n\nMethod add(Pair<?> p) returns new Pair<Double> by summing values.",
+        "topic": "Generics",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass Pair<T extends Number> {\n    private T first;\n    private T second;\n \n    public Pair(T f, T s) { first = f; second = s; }\n    public T getFirst() { return first; }\n    public T getSecond() { return second; }\n    public void setFirst(T f) { first = f; }\n    public void setSecond(T s) { second = s; }\n \n    // Implement add()\n    // YOUR CODE HERE\n\n    // Implement toString()\n    // YOUR CODE HERE\n}\n\npublic class PairTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Pair<Integer> p1 = new Pair<Integer>(sc.nextInt(), sc.nextInt());\n        Pair<Double> p2 = new Pair<Double>(sc.nextDouble(), sc.nextDouble());\n        Pair<Double> p3 = p1.add(p2);\n        System.out.println(p3);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass Pair<T extends Number> {\n    private T first;\n    private T second;\n \n    public Pair(T f, T s) { first = f; second = s; }\n    public T getFirst() { return first; }\n    public T getSecond() { return second; }\n    public void setFirst(T f) { first = f; }\n    public void setSecond(T s) { second = s; }\n \n    // █ FILLED BY STUDENT: Implement add()\n    public Pair<Double> add(Pair<?> p) {\n        double f = this.first.doubleValue() + p.getFirst().doubleValue();\n        double s = this.second.doubleValue() + p.getSecond().doubleValue();\n        return new Pair<Double>(f, s);\n    }\n\n    // █ FILLED BY STUDENT: Implement toString()\n    public String toString() { return first + \",\" + second; }\n}\n\npublic class PairTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Pair<Integer> p1 = new Pair<Integer>(sc.nextInt(), sc.nextInt());\n        Pair<Double> p2 = new Pair<Double>(sc.nextDouble(), sc.nextDouble());\n        Pair<Double> p3 = p1.add(p2);\n        System.out.println(p3);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/88",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "PairTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3 5 2.5 4.5\n",
+            "expected": "5.5,9.5\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-89",
+      "content": {
+        "title": "Team / FClass — Map<String,ArrayList>, filter players ≥80",
+        "statement": "Class Team holds Map<String,ArrayList<Integer>> playerMap.\n\nFClass defines static getFinalList(Team t) returning ArrayList<String> of player names who scored ≥80 in ALL 3 matches.",
+        "topic": "Collections — Maps",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass Team {\n    private Map<String, ArrayList<Integer>> playerMap;\n    public Team(Map<String, ArrayList<Integer>> m) { playerMap = m; }\n    public Map<String, ArrayList<Integer>> getPlayerMap() { return playerMap; }\n}\n\npublic class FClass {\n    public static ArrayList<String> getFinalList(Team t) {\n        ArrayList<String> pList = new ArrayList<String>();\n        Map<String, ArrayList<Integer>> pmap = t.getPlayerMap();\n        // Implement the filtering loop in getFinalList()\n        // YOUR CODE HERE\n        return pList;\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Map<String, ArrayList<Integer>> pmap = new LinkedHashMap<String, ArrayList<Integer>>();\n        for (int i = 0; i < 3; i++) {\n            ArrayList<Integer> pruns = new ArrayList<Integer>();\n            String name = sc.next();\n            for (int j = 0; j < 3; j++) pruns.add(sc.nextInt());\n            pmap.put(name, pruns);\n        }\n        Team t = new Team(pmap);\n        System.out.println(getFinalList(t));\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass Team {\n    private Map<String, ArrayList<Integer>> playerMap;\n    public Team(Map<String, ArrayList<Integer>> m) { playerMap = m; }\n    public Map<String, ArrayList<Integer>> getPlayerMap() { return playerMap; }\n}\n\npublic class FClass {\n    public static ArrayList<String> getFinalList(Team t) {\n        ArrayList<String> pList = new ArrayList<String>();\n        Map<String, ArrayList<Integer>> pmap = t.getPlayerMap();\n        // █ FILLED BY STUDENT: Implement the filtering loop in getFinalList()\n        for (String p : pmap.keySet()) {\n            boolean flag = true;\n            for (Integer i : pmap.get(p)) {\n                if (i < 80) { flag = false; break; }\n            }\n            if (flag) pList.add(p);\n        }\n        return pList;\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Map<String, ArrayList<Integer>> pmap = new LinkedHashMap<String, ArrayList<Integer>>();\n        for (int i = 0; i < 3; i++) {\n            ArrayList<Integer> pruns = new ArrayList<Integer>();\n            String name = sc.next();\n            for (int j = 0; j < 3; j++) pruns.add(sc.nextInt());\n            pmap.put(name, pruns);\n        }\n        Team t = new Team(pmap);\n        System.out.println(getFinalList(t));\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/89",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "FClass",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "P1 85 90 95\nP2 70 60 80\nP3 88 92 81\n",
+            "expected": "[P1, P3]\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-90",
+      "content": {
+        "title": "Company / FClass — Map<String,ArrayList>, filter employees ≥10",
+        "statement": "Class Company wraps Map<String,ArrayList<Integer>> employeeMap.\n\nFClass.getFinalList(Company c) returns ArrayList<String> of employees who hit ≥10 in ALL 3 months.",
+        "topic": "Collections — Maps",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass Company {\n    private Map<String, ArrayList<Integer>> employeeMap;\n    public Company(Map<String, ArrayList<Integer>> e) { employeeMap = e; }\n    public Map<String, ArrayList<Integer>> getEmployeeMap() { return employeeMap; }\n}\n\npublic class FClass {\n    public static ArrayList<String> getFinalList(Company c) {\n        Map<String, ArrayList<Integer>> eMap = c.getEmployeeMap();\n        ArrayList<String> out = new ArrayList<>();\n        // Implement the filtering loop in getFinalList()\n        // YOUR CODE HERE\n        return out;\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Map<String, ArrayList<Integer>> emap = new LinkedHashMap<>();\n        for (int i = 0; i < 3; i++) {\n            ArrayList<Integer> sales = new ArrayList<>();\n            String name = sc.next();\n            for (int j = 0; j < 3; j++) sales.add(sc.nextInt());\n            emap.put(name, sales);\n        }\n        Company c = new Company(emap);\n        System.out.println(getFinalList(c));\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass Company {\n    private Map<String, ArrayList<Integer>> employeeMap;\n    public Company(Map<String, ArrayList<Integer>> e) { employeeMap = e; }\n    public Map<String, ArrayList<Integer>> getEmployeeMap() { return employeeMap; }\n}\n\npublic class FClass {\n    public static ArrayList<String> getFinalList(Company c) {\n        Map<String, ArrayList<Integer>> eMap = c.getEmployeeMap();\n        ArrayList<String> out = new ArrayList<>();\n        // █ FILLED BY STUDENT: Implement the filtering loop in getFinalList()\n        for (Map.Entry<String, ArrayList<Integer>> entry : eMap.entrySet()) {\n            boolean flag = true;\n            for (Integer sale : entry.getValue()) {\n                if (sale < 10) { flag = false; break; }\n            }\n            if (flag) out.add(entry.getKey());\n        }\n        return out;\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Map<String, ArrayList<Integer>> emap = new LinkedHashMap<>();\n        for (int i = 0; i < 3; i++) {\n            ArrayList<Integer> sales = new ArrayList<>();\n            String name = sc.next();\n            for (int j = 0; j < 3; j++) sales.add(sc.nextInt());\n            emap.put(name, sales);\n        }\n        Company c = new Company(emap);\n        System.out.println(getFinalList(c));\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/90",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "FClass",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "E1 12 15 8\nE2 5 6 9\nE3 20 25 30\n",
+            "expected": "[E3]\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-91",
+      "content": {
+        "title": "Student / RemoveStudent — iterator remove from ArrayList",
+        "statement": "Student has name and attendance.\n\nRemoveStudent has: property(double) returning true if value < 65, and detained(ArrayList<Student>) using an Iterator to remove students where property(attendance) is true.",
+        "topic": "Iterators & ArrayList",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass Student {\n    String name; double attendance;\n    public Student(String n, double a) { name=n; attendance=a; }\n    public String toString() { return name+\", \"+attendance; }\n}\n\nclass RemoveStudent {\n    public boolean property(double value) {\n        if (value < 65) return true;\n        return false;\n    }\n    public void detained(ArrayList<Student> sList) {\n        // Iterator, it.remove() when property() is true, else print student\n        // YOUR CODE HERE\n    }\n}\n\npublic class IteratorTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Student> list = new ArrayList<>();\n        for(int i=0;i<6;i++) list.add(new Student(sc.next(), sc.nextDouble()));\n        new RemoveStudent().detained(list);\n        System.out.println(list);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass Student {\n    String name; double attendance;\n    public Student(String n, double a) { name=n; attendance=a; }\n    public String toString() { return name+\", \"+attendance; }\n}\n\nclass RemoveStudent {\n    public boolean property(double value) {\n        if (value < 65) return true;\n        return false;\n    }\n    public void detained(ArrayList<Student> sList) {\n        // █ FILLED BY STUDENT: Iterator, it.remove() when property() is true, else print student\n        java.util.Iterator<Student> it = sList.iterator();\n        while (it.hasNext()) {\n            Student s = it.next();\n            if (property(s.attendance)) {\n                it.remove(); \n            } else {\n                System.out.println(s);\n            }\n        }\n    }\n}\n\npublic class IteratorTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Student> list = new ArrayList<>();\n        for(int i=0;i<6;i++) list.add(new Student(sc.next(), sc.nextDouble()));\n        new RemoveStudent().detained(list);\n        System.out.println(list);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/91",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "IteratorTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "S1 70\nS2 50\nS3 80\nS4 60\nS5 90\nS6 40\n",
+            "expected": "S1, 70.0\r\nS3, 80.0\r\nS5, 90.0\r\n[S1, 70.0, S3, 80.0, S5, 90.0]\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-92",
+      "content": {
+        "title": "MusicPlaylist / Song — iterator remove from LinkedHashMap",
+        "statement": "Song has details and toString().\n\nMusicPlaylist has: isLongDuration(), removeLongDurationSongs() using an Iterator over entrySet(), and displayPlaylist().",
+        "topic": "Iterators & ArrayList",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass Song {\n    private String title, artist, genre; private int duration;\n    public Song(String t, String a, int d, String g) { title=t; artist=a; duration=d; genre=g; }\n    public int getDuration() { return duration; }\n    public String toString() { return \"Title: \"+title+\", Artist: \"+artist+\", Duration: \"+duration+\"s, Genre: \"+genre; }\n}\n\nclass MusicPlaylist {\n    public boolean isLongDuration(int duration) { return duration > 300; }\n \n    // Iterator over entrySet(), it.remove() if isLongDuration\n    // YOUR CODE HERE\n\n    // print 'ID: key, toString()'\n    // YOUR CODE HERE\n}\n\npublic class MusicPlayer {\n    public static void main(String[] args) {\n        LinkedHashMap<Integer,Song> playlist = new LinkedHashMap<>();\n        Scanner sc = new Scanner(System.in);\n        for(int i=1;i<=5;i++) playlist.put(i, new Song(sc.next(), sc.next(), sc.nextInt(), sc.next()));\n        MusicPlaylist mp = new MusicPlaylist();\n        mp.removeLongDurationSongs(playlist);\n        System.out.println(\"\\nPlaylist after removing long duration songs:\");\n        mp.displayPlaylist(playlist);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass Song {\n    private String title, artist, genre; private int duration;\n    public Song(String t, String a, int d, String g) { title=t; artist=a; duration=d; genre=g; }\n    public int getDuration() { return duration; }\n    public String toString() { return \"Title: \"+title+\", Artist: \"+artist+\", Duration: \"+duration+\"s, Genre: \"+genre; }\n}\n\nclass MusicPlaylist {\n    public boolean isLongDuration(int duration) { return duration > 300; }\n \n    // █ FILLED BY STUDENT: Iterator over entrySet(), it.remove() if isLongDuration\n    public void removeLongDurationSongs(LinkedHashMap<Integer,Song> playlist) {\n        Iterator<Map.Entry<Integer,Song>> it = playlist.entrySet().iterator();\n        while (it.hasNext()) {\n            Map.Entry<Integer,Song> entry = it.next();\n            if (isLongDuration(entry.getValue().getDuration())) it.remove();\n        }\n    }\n\n    // █ FILLED BY STUDENT: print 'ID: key, toString()'\n    public void displayPlaylist(LinkedHashMap<Integer,Song> playlist) {\n        for (Map.Entry<Integer,Song> e : playlist.entrySet())\n            System.out.println(\"ID: \"+e.getKey()+\", \"+e.getValue());\n    }\n}\n\npublic class MusicPlayer {\n    public static void main(String[] args) {\n        LinkedHashMap<Integer,Song> playlist = new LinkedHashMap<>();\n        Scanner sc = new Scanner(System.in);\n        for(int i=1;i<=5;i++) playlist.put(i, new Song(sc.next(), sc.next(), sc.nextInt(), sc.next()));\n        MusicPlaylist mp = new MusicPlaylist();\n        mp.removeLongDurationSongs(playlist);\n        System.out.println(\"\\nPlaylist after removing long duration songs:\");\n        mp.displayPlaylist(playlist);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/92",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "MusicPlayer",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "Song1 ArtistA 200 Pop\nSong2 ArtistB 400 Rock\nSong3 ArtistC 180 Pop\nSong4 ArtistD 500 Jazz\nSong5 ArtistE 150 Pop\n",
+            "expected": "\nPlaylist after removing long duration songs:\r\nID: 1, Title: Song1, Artist: ArtistA, Duration: 200s, Genre: Pop\r\nID: 3, Title: Song3, Artist: ArtistC, Duration: 180s, Genre: Pop\r\nID: 5, Title: Song5, Artist: ArtistE, Duration: 150s, Genre: Pop\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-93",
+      "content": {
+        "title": "Student / CollectionTest — remove backlogs>5, set status",
+        "statement": "Student has name, backlogs, cgpa, status.\n\nCollectionTest.property(Student s) returns true if backlogs > 5.\n\ngetUpdatedStuList(ArrayList<Student>) uses Iterator to filter or update status.",
+        "topic": "Iterators & ArrayList",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass Student {\n    String name;  int backlogs;  double cgpa;  String status;\n    public Student(String n, int b, double c) { name=n; backlogs=b; cgpa=c; }\n    public String toString() { return name + \" \" + status; }\n}\n\nclass CollectionTest {\n    // return true if backlogs > 5\n    // YOUR CODE HERE\n    // Implement getUpdatedStuList()\n    // YOUR CODE HERE\n}\n\npublic class StudentTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Student> list = new ArrayList<>();\n        for (int i = 0; i < 4; i++) list.add(new Student(sc.next(), sc.nextInt(), sc.nextDouble()));\n        CollectionTest ct = new CollectionTest();\n        ArrayList<Student> result = ct.getUpdatedStuList(list);\n        System.out.println(result);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass Student {\n    String name;  int backlogs;  double cgpa;  String status;\n    public Student(String n, int b, double c) { name=n; backlogs=b; cgpa=c; }\n    public String toString() { return name + \" \" + status; }\n}\n\nclass CollectionTest {\n    // █ FILLED BY STUDENT: return true if backlogs > 5\n    public boolean property(Student s) { return s.backlogs > 5; }\n    // █ FILLED BY STUDENT: Implement getUpdatedStuList()\n    public ArrayList<Student> getUpdatedStuList(ArrayList<Student> sList) {\n        Iterator<Student> it = sList.iterator();\n        while (it.hasNext()) {\n            Student s = it.next();\n            if (property(s)) {\n                it.remove();\n            } else {\n                if (s.cgpa >= 9.0 && s.backlogs == 0)\n                    s.status = \"Promoted with vertical mobility\";\n                else\n                    s.status = \"Promoted without vertical mobility\";\n            }\n        }\n        return sList;\n    }\n}\n\npublic class StudentTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Student> list = new ArrayList<>();\n        for (int i = 0; i < 4; i++) list.add(new Student(sc.next(), sc.nextInt(), sc.nextDouble()));\n        CollectionTest ct = new CollectionTest();\n        ArrayList<Student> result = ct.getUpdatedStuList(list);\n        System.out.println(result);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/93",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "StudentTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "S1 6 8.0\nS2 3 9.5\nS3 0 7.0\nS4 8 6.0\n",
+            "expected": "[S2 Promoted without vertical mobility, S3 Promoted without vertical mobility]\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-94",
+      "content": {
+        "title": "Tourist / TravellerTest — deep copy ArrayList",
+        "statement": "Tourist has String tName and ArrayList<String> tPlaces.\n\nCopy constructor must deep copy tPlaces so t2 is independent of t1.",
+        "topic": "Copy Constructor — ArrayList",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass Tourist {\n    String tName;\n    ArrayList<String> tPlaces;\n \n    public Tourist(String vName, ArrayList<String> vPlaces) {\n        this.tName = vName; this.tPlaces = vPlaces;\n    }\n \n    // deep copy tName and tPlaces (ArrayList)\n    // YOUR CODE HERE\n \n    // Print the traveller's name and visited places\n    // YOUR CODE HERE\n}\n\npublic class TravellerTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<String> vp = new ArrayList<>();\n        String n = sc.next(); vp.add(sc.next()); vp.add(sc.next());\n        Tourist t1 = new Tourist(n, vp);\n        Tourist t2 = new Tourist(t1);\n        t2.tName = sc.next();\n        t2.tPlaces.add(sc.next());\n        System.out.println(t1+\"\\n\"+t2);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass Tourist {\n    String tName;\n    ArrayList<String> tPlaces;\n \n    public Tourist(String vName, ArrayList<String> vPlaces) {\n        this.tName = vName; this.tPlaces = vPlaces;\n    }\n \n    // █ FILLED BY STUDENT: deep copy tName and tPlaces (ArrayList)\n    public Tourist(Tourist t) {\n        this.tName = t.tName;\n        this.tPlaces = new ArrayList<String>();\n        for (String place : t.tPlaces) this.tPlaces.add(place);\n    }\n \n    // █ FILLED BY STUDENT: Print the traveller's name and visited places\n    public String toString() { return tName + \":\" + tPlaces; }\n}\n\npublic class TravellerTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<String> vp = new ArrayList<>();\n        String n = sc.next(); vp.add(sc.next()); vp.add(sc.next());\n        Tourist t1 = new Tourist(n, vp);\n        Tourist t2 = new Tourist(t1);\n        t2.tName = sc.next();\n        t2.tPlaces.add(sc.next());\n        System.out.println(t1+\"\\n\"+t2);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/94",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "TravellerTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "Raj CityA CityB Suresh CityC\n",
+            "expected": "Raj:[CityA, CityB]\nSuresh:[CityA, CityB, CityC]\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-252",
+      "content": {
+        "title": "Taxable Products — Electronics, Book, findMaxTax (PYQ Jan 2025)",
+        "statement": "Write a program that takes as input a list of Electronics objects and Book objects, and prints the highest tax among all the Electronics objects and Book objects.\n\nInterface Taxable has method public abstract double calculateTax().\n\nClass Product implements Taxable, and has: instance variables name, price;\n\na constructor to initialize them;\n\nand method public double calculateTax() that computes the tax on price and returns it.\n\nClass Electronics is a child class of Product.\n\nClass Book is a child class of Product.\n\nClass Test has: method findMaxTax that has a single parameter that can hold either a list of Electronics objects or Book objects at a time and returns the highest tax of the objects in the list;\n\nand method main() that takes as input two objects of Electronics and two objects of Book, stores them in eList and bList respectively, invokes findMaxTax using both eList and bList separately, and prints the values returned.\n\nWhat you have to do: define class Electronics, define class Book, and define method findMaxTax in class Test.\n\nNote: the source problem statement literally says calculateTax computes \"0.01 \\* price\", but the officially provided sample input/output (2 electronics: Laptop 50000, Smartphone 30000;\n\n2 books: Java Programming 1000, Data Structures 1500 -> expected output 5000.0 and 150.0) is only consistent with a 10% rate (0.1 \\* price), not 1%.\n\nVerified by direct calculation — this practice question uses the rate that matches the real expected output.",
+        "topic": "Generics",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.ArrayList;\nimport java.util.List;\nimport java.util.Scanner;\n\ninterface Taxable {\n    double calculateTax();\n}\n\nclass Product implements Taxable {\n    private String name;\n    private double price;\n\n    public Product(String name, double price) {\n        this.name = name;\n        this.price = price;\n    }\n\n    public double calculateTax() {\n        return 0.1 * price;\n    }\n}\n\n// define class Electronics as a child class of Product\n// YOUR CODE HERE\n\n// define class Book as a child class of Product\n// YOUR CODE HERE\n\npublic class Test {\n    // findMaxTax takes a list of Taxable objects and returns the highest tax among them\n    // YOUR CODE HERE\n\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n\n        int numElectronics = scanner.nextInt();\n        scanner.nextLine();\n        List<Electronics> eList = new ArrayList<>();\n        for (int i = 0; i < numElectronics; i++) {\n            String name = scanner.nextLine();\n            double price = scanner.nextDouble();\n            scanner.nextLine();\n            eList.add(new Electronics(name, price));\n        }\n\n        int numBooks = scanner.nextInt();\n        scanner.nextLine();\n\n        List<Book> bList = new ArrayList<>();\n        for (int i = 0; i < numBooks; i++) {\n            String name = scanner.nextLine();\n            double price = scanner.nextDouble();\n            scanner.nextLine();\n            bList.add(new Book(name, price));\n        }\n\n        System.out.println(findMaxTax(eList));\n        System.out.println(findMaxTax(bList));\n\n        scanner.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.ArrayList;\nimport java.util.List;\nimport java.util.Scanner;\n\ninterface Taxable {\n    double calculateTax();\n}\n\nclass Product implements Taxable {\n    private String name;\n    private double price;\n\n    public Product(String name, double price) {\n        this.name = name;\n        this.price = price;\n    }\n\n    public double calculateTax() {\n        return 0.1 * price;\n    }\n}\n\n// █ FILLED BY STUDENT: define class Electronics as a child class of Product\nclass Electronics extends Product {\n    public Electronics(String name, double price) {\n        super(name, price);\n    }\n}\n\n// █ FILLED BY STUDENT: define class Book as a child class of Product\nclass Book extends Product {\n    public Book(String name, double price) {\n        super(name, price);\n    }\n}\n\npublic class Test {\n    // █ FILLED BY STUDENT: findMaxTax takes a list of Taxable objects and returns the highest tax among them\n    public static <T extends Taxable> double findMaxTax(List<T> productList){\n        double maxTax = 0;\n        for (T product : productList){\n            double tax = product.calculateTax();\n            if (tax > maxTax){\n                maxTax = tax;\n            }\n        }\n        return maxTax;\n    }\n\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n\n        int numElectronics = scanner.nextInt();\n        scanner.nextLine();\n        List<Electronics> eList = new ArrayList<>();\n        for (int i = 0; i < numElectronics; i++) {\n            String name = scanner.nextLine();\n            double price = scanner.nextDouble();\n            scanner.nextLine();\n            eList.add(new Electronics(name, price));\n        }\n\n        int numBooks = scanner.nextInt();\n        scanner.nextLine();\n\n        List<Book> bList = new ArrayList<>();\n        for (int i = 0; i < numBooks; i++) {\n            String name = scanner.nextLine();\n            double price = scanner.nextDouble();\n            scanner.nextLine();\n            bList.add(new Book(name, price));\n        }\n\n        System.out.println(findMaxTax(eList));\n        System.out.println(findMaxTax(bList));\n\n        scanner.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/252",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Test",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "2\nLaptop\n50000\nSmartphone\n30000\n2\nJava Programming\n1000\nData Structures\n1500\n",
+            "expected": "5000.0\n150.0\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-253",
+      "content": {
+        "title": "Employee/Person/Address/Department — deep clone + updateEmp",
+        "statement": "Write a program to clone an object e1 of class Employee by implementing the interface Cloneable.\n\nAfter cloning, update the department and the address of e1.\n\nComplete the program as detailed below to achieve this functionality.\n\n1. Define classes Address and Department that implement the interface Cloneable, and have the following members: in both classes, an instance variable of String type (to store the address and the department respectively);\n\n   the required constructor(s) and accessors;\n\n   and an overridden method clone.\n2. Define a class Person that implements the interface Cloneable, and has: instance variables name of type String and addr of type Address;\n\n   the required constructor(s) and accessors;\n\n   and an overridden method clone.\n3. Define a class Employee that implements the interface Cloneable, extends the class Person, and has: instance variable dept of type Department;\n\n   the required constructor(s) and accessors;\n\n   an overridden method clone;\n\n   and a method updateEmp to update the dept and addr of an Employee object.\n\nNote: no official sample input/output was captured alongside this question's problem statement, so the toString format and exact sample below are a reasonable interpretation, verified by actually running the program - not transcribed from an official expected output.",
+        "topic": "Object Cloning (Week 8)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\n// define class Address, implements Cloneable, stores a String address\n// YOUR CODE HERE\n\n// define class Department, implements Cloneable, stores a String department\n// YOUR CODE HERE\n\n// define class Person, implements Cloneable, with name and addr (Address)\n// YOUR CODE HERE\n\n// define class Employee, implements Cloneable, extends Person, adds dept (Department) and updateEmp\n// YOUR CODE HERE\n\npublic class FClass {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String n = sc.next();\n        String a1 = sc.next();\n        String d1 = sc.next();\n        String a2 = sc.next();\n        String d2 = sc.next();\n        try {\n            Employee e1 = new Employee(n, new Address(a1), new Department(d1));\n            Employee e2 = e1.clone();\n            e1.updateEmp(a2, d2);\n            System.out.println(e1 + \", \" + e2);\n        }\n        catch(CloneNotSupportedException e) {\n            System.out.println(\"clone() not supported\");\n        }\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\n// █ FILLED BY STUDENT: define class Address, implements Cloneable, stores a String address\nclass Address implements Cloneable {\n    private String address;\n\n    public Address(String address) {\n        this.address = address;\n    }\n\n    public String getAddress() {\n        return address;\n    }\n\n    public Address clone() throws CloneNotSupportedException {\n        return (Address) super.clone();\n    }\n}\n\n// █ FILLED BY STUDENT: define class Department, implements Cloneable, stores a String department\nclass Department implements Cloneable {\n    private String department;\n\n    public Department(String department) {\n        this.department = department;\n    }\n\n    public String getDepartment() {\n        return department;\n    }\n\n    public Department clone() throws CloneNotSupportedException {\n        return (Department) super.clone();\n    }\n}\n\n// █ FILLED BY STUDENT: define class Person, implements Cloneable, with name and addr (Address)\nclass Person implements Cloneable {\n    private String name;\n    private Address addr;\n\n    public Person(String name, Address addr) {\n        this.name = name;\n        this.addr = addr;\n    }\n\n    public String getName() {\n        return name;\n    }\n\n    public Address getAddr() {\n        return addr;\n    }\n\n    public void setAddr(Address addr) {\n        this.addr = addr;\n    }\n\n    public Person clone() throws CloneNotSupportedException {\n        Person p = (Person) super.clone();\n        p.addr = this.addr.clone();\n        return p;\n    }\n\n    public String toString() {\n        return \"name=\" + name + \", address=\" + addr.getAddress();\n    }\n}\n\n// █ FILLED BY STUDENT: define class Employee, implements Cloneable, extends Person, adds dept (Department) and updateEmp\nclass Employee extends Person implements Cloneable {\n    private Department dept;\n\n    public Employee(String name, Address addr, Department dept) {\n        super(name, addr);\n        this.dept = dept;\n    }\n\n    public Department getDept() {\n        return dept;\n    }\n\n    public void updateEmp(String newAddr, String newDept) {\n        setAddr(new Address(newAddr));\n        this.dept = new Department(newDept);\n    }\n\n    public Employee clone() throws CloneNotSupportedException {\n        Employee e = (Employee) super.clone();\n        e.dept = this.dept.clone();\n        return e;\n    }\n\n    public String toString() {\n        return \"name=\" + getName() + \", address=\" + getAddr().getAddress() + \", department=\" + dept.getDepartment();\n    }\n}\n\npublic class FClass {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String n = sc.next();\n        String a1 = sc.next();\n        String d1 = sc.next();\n        String a2 = sc.next();\n        String d2 = sc.next();\n        try {\n            Employee e1 = new Employee(n, new Address(a1), new Department(d1));\n            Employee e2 = e1.clone();\n            e1.updateEmp(a2, d2);\n            System.out.println(e1 + \", \" + e2);\n        }\n        catch(CloneNotSupportedException e) {\n            System.out.println(\"clone() not supported\");\n        }\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/253",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "FClass",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "John Delhi Sales Mumbai Marketing\n",
+            "expected": "name=John, address=Mumbai, department=Marketing, name=John, address=Delhi, department=Sales\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-254",
+      "content": {
+        "title": "CarRental — ImproperHeadCountException + WrongDestinationException (chained)",
+        "statement": "Complete the following program which models a car rental kiosk, and handles user requests as detailed below.\n\nThe program should first accept the number of car rental requests, and then accept details of each request in the following format: total number of passengers in the group for the rental request, then the destination of the visit.\n\nThese values are used for initialization of fields inside the constructor of CarRental class.\n\nThere is a HashMap called available\\_destinations which contains a set of preassigned destinations and the fare for dropping at that destination.\n\nThis map is also initialized in the constructor of CarRental class.\n\nThe carBooker() method processes the booking requests, and should have the following functionality: it should retrieve the fare for the chosen destination from the available\\_destinations map and calculate the fare per head by dividing the fare for the destination by passenger\\_count.\n\nThen, it should print the destination and the fare per head.\n\nThe method should generate/handle the following exceptions:\n\n1. ImproperHeadCountException should be thrown when passenger\\_count is zero or negative. The catch block handling this exception should print the exception type along with the message: \"Head count should be positive non-zero value\".\n2. If the chosen\\_destination is not found in available\\_destinations, a NullPointerException is thrown. The catch block handling this should create a new exception called WrongDestinationException, set the new exception as the cause of the NullPointerException, and then re-throw it. The WrongDestinationException should be created with the message \"Wrong destination: \" followed by the chosen destination (for example, for destination \"Unknown Place\", the message would be \"Wrong destination: Unknown Place\").",
+        "topic": "Custom Exceptions (Week 7)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\n// define class WrongDestinationException\n// YOUR CODE HERE\n\n// define class ImproperHeadCountException\n// YOUR CODE HERE\n\nclass CarRental{\n    int passenger_count;\n    String chosen_destination;\n    HashMap<String,Double> available_destinations;\n\n    public CarRental(int pc, String dest) {\n        passenger_count = pc;\n        chosen_destination = dest;\n        //preassigned destinations and total car fare\n        //Leave the code below as it is\n        available_destinations = new HashMap<String,Double>();\n        available_destinations.put(\"Marina Beach\", 2000.0);\n        available_destinations.put(\"Elliot's Beach\", 5000.0);\n        available_destinations.put(\"Film City\", 8000.0);\n    }\n    public void carBooker(){\n        // define this method according to the problem description\n        // YOUR CODE HERE\n    }\n}\npublic class Test4{\n    public static void main(String args[]) {\n        Scanner s = new Scanner(System.in);\n        int num = s.nextInt(); //input the number of car rental requests\n        try {\n            for(int i=1;i<num;i++) {\n                int heads = s.nextInt(); //enter head count\n                s.nextLine();  //enter destination\n                String dest = s.nextLine();\n                CarRental obj = new CarRental(heads,dest);\n                obj.carBooker();\n            }\n        }catch(Exception e) {\n            System.out.println(e.getCause());\n        }\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\n// █ FILLED BY STUDENT: define class WrongDestinationException\nclass WrongDestinationException extends RuntimeException {\n    public WrongDestinationException(String message) {\n        super(message);\n    }\n}\n\n// █ FILLED BY STUDENT: define class ImproperHeadCountException\nclass ImproperHeadCountException extends RuntimeException {\n    public ImproperHeadCountException(String message) {\n        super(message);\n    }\n}\n\nclass CarRental{\n    int passenger_count;\n    String chosen_destination;\n    HashMap<String,Double> available_destinations;\n\n    public CarRental(int pc, String dest) {\n        passenger_count = pc;\n        chosen_destination = dest;\n        //preassigned destinations and total car fare\n        //Leave the code below as it is\n        available_destinations = new HashMap<String,Double>();\n        available_destinations.put(\"Marina Beach\", 2000.0);\n        available_destinations.put(\"Elliot's Beach\", 5000.0);\n        available_destinations.put(\"Film City\", 8000.0);\n    }\n    public void carBooker(){\n        // █ FILLED BY STUDENT: define this method according to the problem description\n        if (passenger_count <= 0) {\n            try {\n                throw new ImproperHeadCountException(\"Head count should be positive non-zero value\");\n            } catch (ImproperHeadCountException e) {\n                System.out.println(e);\n            }\n            return;\n        }\n        try {\n            double fare = available_destinations.get(chosen_destination);\n            double farePerHead = fare / passenger_count;\n            System.out.println(chosen_destination + \" \" + farePerHead);\n        } catch (NullPointerException e) {\n            WrongDestinationException wde = new WrongDestinationException(\"Wrong destination: \" + chosen_destination);\n            e.initCause(wde);\n            throw e;\n        }\n    }\n}\npublic class Test4{\n    public static void main(String args[]) {\n        Scanner s = new Scanner(System.in);\n        int num = s.nextInt(); //input the number of car rental requests\n        try {\n            for(int i=1;i<num;i++) {\n                int heads = s.nextInt(); //enter head count\n                s.nextLine();  //enter destination\n                String dest = s.nextLine();\n                CarRental obj = new CarRental(heads,dest);\n                obj.carBooker();\n            }\n        }catch(Exception e) {\n            System.out.println(e.getCause());\n        }\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/254",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Test4",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n4\nMarina Beach\n2\nElliot's Beach\n",
+            "expected": "Marina Beach 500.0\nElliot's Beach 2500.0\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-255",
+      "content": {
+        "title": "FClass — replace() with ArrayIndexOutOfBoundsException handling",
+        "statement": "Write a Java program that accepts a string, an integer i and a character c as input.\n\nThe character at position i in the given string has to be replaced by the value of c.\n\nIf the index is more than the length of the string, then it updates the last character of the given string with the value of c.\n\nIf the index i is negative, then it throws an appropriate error message.\n\nImplement the function replace such that it does the following:\n\n* It has three parameters - a character array (for the input string), an index and a character.\n* If the given index is in the range of the character array, it replaces the character at the given position; otherwise, catch ArrayIndexOutOfBoundsException.\n* In catch block (catches ArrayIndexOutOfBoundsException), if the index is beyond the length of the character array, it updates the last character of the given character array.\n* If the index is negative, then it rethrows the exception to forward the exception to the caller function main.\n\nNote: no official public test cases were visible in the captured screenshot.\n\nThe exact error message for the negative-index case below is the JVM's own default ArrayIndexOutOfBoundsException message, verified by actually running the program on the same JDK version this site uses (Java 17), not a custom-crafted message.",
+        "topic": "Custom Exceptions (Week 7)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\nclass FClass{\n\n    // implement function replace()\n    // YOUR CODE HERE\n\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String s1 = sc.next();\n        int i = sc.nextInt();\n        char c = sc.next().charAt(0);\n        try {\n            String s2 = new String(replace(s1.toCharArray(), i, c));\n            System.out.println(s2);\n        }\n        catch(Exception e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\nclass FClass{\n\n    // █ FILLED BY STUDENT: implement function replace()\n    public static char[] replace(char[] arr, int i, char c) {\n        try {\n            arr[i] = c;\n        } catch (ArrayIndexOutOfBoundsException e) {\n            if (i < 0) {\n                throw e;\n            } else {\n                arr[arr.length - 1] = c;\n            }\n        }\n        return arr;\n    }\n\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String s1 = sc.next();\n        int i = sc.nextInt();\n        char c = sc.next().charAt(0);\n        try {\n            String s2 = new String(replace(s1.toCharArray(), i, c));\n            System.out.println(s2);\n        }\n        catch(Exception e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/255",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Main",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "hello 1 a\n",
+            "expected": "hallo\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added.",
+          "Could not determine a single public Java class; review entry class."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-256",
+      "content": {
+        "title": "Account / Transaction — callback chaining",
+        "statement": "A banking application handles multiple account transactions using callbacks.\n\nClass Account tracks account\\_numbers, current\\_account\\_no and new\\_account (all static).\n\nClass Transaction tracks total\\_no\\_of\\_transactions and transaction\\_count (both static, transactions numbered from 1).\n\nEach transaction processed makes a callback to Transaction.makeNextTransaction(), which reports completion and, if more transactions remain, creates the next Account (via the private constructor, which increments current\\_account\\_no) and calls its processTransaction().\n\nfirstTransaction() (given) starts the chain for the first account.",
+        "topic": "Callbacks",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.Scanner;\n\nclass Account {\n    // declare the required static variables\n    // YOUR CODE HERE\n\n    private Account() {\n        // increment current_account_no\n        // YOUR CODE HERE\n    }\n\n    public static Account getAccount() {\n        // create and return the new account\n        // YOUR CODE HERE\n    }\n\n    public void firstTransaction() {\n        System.out.println(\"Transaction for account \" + account_numbers[0] + \" in process\");\n        Transaction.makeNextTransaction();\n    }\n\n    public void processTransaction() {\n        // print progress and trigger the callback\n        // YOUR CODE HERE\n    }\n}\n\nclass Transaction {\n    // declare the required static variables\n    // YOUR CODE HERE\n\n    public static void makeNextTransaction() {\n        // report completion and chain to the next transaction\n        // YOUR CODE HERE\n    }\n}\n\npublic class callback {\n    public static void main(String args[]) {\n        Scanner in = new Scanner(System.in);\n        Transaction.total_no_of_transactions = in.nextInt();\n        Account.account_numbers = new int[Transaction.total_no_of_transactions];\n\n        System.out.println(\"Enter account numbers:\");\n        for (int i = 0; i < Transaction.total_no_of_transactions; i++) {\n            Account.account_numbers[i] = in.nextInt();\n        }\n\n        Account a = Account.getAccount();\n        a.firstTransaction();\n\n        in.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.Scanner;\n\nclass Account {\n    // █ FILLED BY STUDENT: declare the required static variables\n    public static int[] account_numbers;\n    private static Account new_account;\n    private static int current_account_no = 0;\n\n    private Account() {\n        // █ FILLED BY STUDENT: increment current_account_no\n        current_account_no++;\n    }\n\n    public static Account getAccount() {\n        // █ FILLED BY STUDENT: create and return the new account\n        new_account = new Account();\n        return new_account;\n    }\n\n    public void firstTransaction() {\n        System.out.println(\"Transaction for account \" + account_numbers[0] + \" in process\");\n        Transaction.makeNextTransaction();\n    }\n\n    public void processTransaction() {\n        // █ FILLED BY STUDENT: print progress and trigger the callback\n        System.out.println(\"Transaction \" + current_account_no + \" for account \" + account_numbers[current_account_no - 1] + \" in process\");\n        Transaction.makeNextTransaction();\n    }\n}\n\nclass Transaction {\n    // █ FILLED BY STUDENT: declare the required static variables\n    public static int total_no_of_transactions;\n    private static int transaction_count = 1;\n\n    public static void makeNextTransaction() {\n        // █ FILLED BY STUDENT: report completion and chain to the next transaction\n        System.out.println(\"Transaction number \" + transaction_count + \" completed!\");\n\n        if (transaction_count < total_no_of_transactions) {\n            transaction_count++;\n            Account a = Account.getAccount();\n            a.processTransaction();\n        }\n    }\n}\n\npublic class callback {\n    public static void main(String args[]) {\n        Scanner in = new Scanner(System.in);\n        Transaction.total_no_of_transactions = in.nextInt();\n        Account.account_numbers = new int[Transaction.total_no_of_transactions];\n\n        System.out.println(\"Enter account numbers:\");\n        for (int i = 0; i < Transaction.total_no_of_transactions; i++) {\n            Account.account_numbers[i] = in.nextInt();\n        }\n\n        Account a = Account.getAccount();\n        a.firstTransaction();\n\n        in.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/256",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "callback",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n1001\n1002\n1003\n",
+            "expected": "Enter account numbers:\nTransaction for account 1001 in process\nTransaction number 1 completed!\nTransaction 2 for account 1002 in process\nTransaction number 2 completed!\nTransaction 3 for account 1003 in process\nTransaction number 3 completed!\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-257",
+      "content": {
+        "title": "Employee01 / TreeSet — compareTo (currentExp, totalExp)",
+        "statement": "Employee01 has currentExp and totalExp.\n\nStore 4 Employee01 objects in a TreeSet so they come out sorted by currentExp ascending, then by totalExp ascending for ties (duplicates removed automatically).\n\nImplement compareTo(Employee01) accordingly.",
+        "topic": "Collections — TreeSet & Comparable",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\nclass Employee01 implements Comparable<Employee01> {\n    private int currentExp;\n    private int totalExp;\n\n    public Employee01(int c, int t) {\n        currentExp = c;\n        totalExp = t;\n    }\n\n    public String toString() {\n        return \"CurrentExp:\" + currentExp + \" TotalExp:\" + totalExp;\n    }\n\n    // compareTo — currentExp first, then totalExp\n    // YOUR CODE HERE\n}\n\npublic class Employee01Test {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Set<Employee01> eset = new TreeSet<>();\n\n        for (int i = 0; i < 4; i++) {\n            int c = sc.nextInt();\n            int t = sc.nextInt();\n            eset.add(new Employee01(c, t));\n        }\n\n        for (var e : eset) {\n            System.out.println(e);\n        }\n        sc.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\nclass Employee01 implements Comparable<Employee01> {\n    private int currentExp;\n    private int totalExp;\n\n    public Employee01(int c, int t) {\n        currentExp = c;\n        totalExp = t;\n    }\n\n    public String toString() {\n        return \"CurrentExp:\" + currentExp + \" TotalExp:\" + totalExp;\n    }\n\n    // █ FILLED BY STUDENT: compareTo — currentExp first, then totalExp\n    public int compareTo(Employee01 o) {\n        if (this.currentExp != o.currentExp)\n            return this.currentExp - o.currentExp;\n        return this.totalExp - o.totalExp;\n    }\n}\n\npublic class Employee01Test {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Set<Employee01> eset = new TreeSet<>();\n\n        for (int i = 0; i < 4; i++) {\n            int c = sc.nextInt();\n            int t = sc.nextInt();\n            eset.add(new Employee01(c, t));\n        }\n\n        for (var e : eset) {\n            System.out.println(e);\n        }\n        sc.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/257",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Employee01Test",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3 7\n5 10\n3 6\n2 4\n",
+            "expected": "CurrentExp:2 TotalExp:4\nCurrentExp:3 TotalExp:6\nCurrentExp:3 TotalExp:7\nCurrentExp:5 TotalExp:10\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-258",
+      "content": {
+        "title": "Book / Library — compound-key Map + searchByGenre",
+        "statement": "Class Library stores unique Book records in a Map keyed by title+\"-\"+author (addBook is given).\n\nImplement the Library constructor (initialise the map) and searchByGenre(String) to return the list of books matching a given genre.\n\nImplement Book.toString() to match the required format.",
+        "topic": "Collections — Maps",
+        "category": "OPPE1",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\nclass Book {\n    private String title;\n    private String author;\n    private int publicationYear;\n    private String genre;\n\n    public Book(String title, String author, int publicationYear, String genre) {\n        this.title = title;\n        this.author = author;\n        this.publicationYear = publicationYear;\n        this.genre = genre;\n    }\n\n    public String getTitle() { return title; }\n    public String getAuthor() { return author; }\n    public int getPublicationYear() { return publicationYear; }\n    public String getGenre() { return genre; }\n\n    // toString — required output format\n    // YOUR CODE HERE\n}\n\nclass Library {\n    private HashMap<String, Book> books;\n\n    // initialise the books map\n    // YOUR CODE HERE\n\n    public void addBook(Book book) {\n        String key = book.getTitle() + \"-\" + book.getAuthor();\n        books.put(key, book);\n    }\n\n    // return the list of books in the given genre\n    // YOUR CODE HERE\n}\n\npublic class BooksQuestion {\n    public static void main(String[] args) {\n        Library library = new Library();\n\n        library.addBook(new Book(\"The Lord of the Rings\", \"J.R.R. Tolkien\", 1954, \"Fantasy\"));\n        library.addBook(new Book(\"The Hitchhiker's Guide to the Galaxy\", \"Douglas Adams\", 1979, \"Science Fiction\"));\n        library.addBook(new Book(\"The Lord of the Rings\", \"J.R.R. Tolkien\", 1954, \"Fantasy\"));\n        library.addBook(new Book(\"The Martian\", \"Andy Weir\", 2011, \"Science Fiction\"));\n        library.addBook(new Book(\"Pride and Prejudice\", \"Jane Austen\", 1813, \"Fiction\"));\n\n        List<Book> fantasyBooks = library.searchByGenre(\"Fantasy\");\n\n        System.out.println(\"\\nList of books in the Fantasy genre:\");\n        for (Book book : fantasyBooks) {\n            System.out.println(\"- \" + book);\n        }\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\nclass Book {\n    private String title;\n    private String author;\n    private int publicationYear;\n    private String genre;\n\n    public Book(String title, String author, int publicationYear, String genre) {\n        this.title = title;\n        this.author = author;\n        this.publicationYear = publicationYear;\n        this.genre = genre;\n    }\n\n    public String getTitle() { return title; }\n    public String getAuthor() { return author; }\n    public int getPublicationYear() { return publicationYear; }\n    public String getGenre() { return genre; }\n\n    // █ FILLED BY STUDENT: toString — required output format\n    public String toString() {\n        return \"Book{\" +\n                \"title='\" + title + '\\'' +\n                \", author='\" + author + '\\'' +\n                \", publicationYear=\" + publicationYear +\n                \", genre='\" + genre + '\\'' +\n                '}';\n    }\n}\n\nclass Library {\n    private HashMap<String, Book> books;\n\n    // █ FILLED BY STUDENT: initialise the books map\n    public Library() {\n        this.books = new LinkedHashMap<String, Book>();\n    }\n\n    public void addBook(Book book) {\n        String key = book.getTitle() + \"-\" + book.getAuthor();\n        books.put(key, book);\n    }\n\n    // █ FILLED BY STUDENT: return the list of books in the given genre\n    public List<Book> searchByGenre(String genre) {\n        List<Book> booksByGenre = new ArrayList<Book>();\n        for (Map.Entry<String, Book> entry : books.entrySet()) {\n            Book book = entry.getValue();\n            if (book.getGenre().equals(genre)) {\n                booksByGenre.add(book);\n            }\n        }\n        return booksByGenre;\n    }\n}\n\npublic class BooksQuestion {\n    public static void main(String[] args) {\n        Library library = new Library();\n\n        library.addBook(new Book(\"The Lord of the Rings\", \"J.R.R. Tolkien\", 1954, \"Fantasy\"));\n        library.addBook(new Book(\"The Hitchhiker's Guide to the Galaxy\", \"Douglas Adams\", 1979, \"Science Fiction\"));\n        library.addBook(new Book(\"The Lord of the Rings\", \"J.R.R. Tolkien\", 1954, \"Fantasy\"));\n        library.addBook(new Book(\"The Martian\", \"Andy Weir\", 2011, \"Science Fiction\"));\n        library.addBook(new Book(\"Pride and Prejudice\", \"Jane Austen\", 1813, \"Fiction\"));\n\n        List<Book> fantasyBooks = library.searchByGenre(\"Fantasy\");\n\n        System.out.println(\"\\nList of books in the Fantasy genre:\");\n        for (Book book : fantasyBooks) {\n            System.out.println(\"- \" + book);\n        }\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/258",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "BooksQuestion",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "(none)",
+            "expected": "\nList of books in the Fantasy genre:\n- Book{title='The Lord of the Rings', author='J.R.R. Tolkien', publicationYear=1954, genre='Fantasy'}\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-268",
+      "content": {
+        "title": "Car — SpeedLimitException on accelerate()",
+        "statement": "Write a Java program to simulate an automatic car with speed control.\n\nThe car should raise an exception in the following scenario:\n\n* The driver tries to accelerate beyond the maximum speed limit (120 km/h).\n\nThe program should have the following classes:\n\n* Class SpeedLimitException extends Exception and has/should have the following members:\n\n  + Constructor accepting an error message.\n* Class Car has/should have the following members:\n\n  + Instance variables String model and double speed\n  + Constructor to initialize the instance variables.\n  + Method void accelerate(double increment) throws SpeedLimitException.\n    - If the new speed (current speed + increment) exceeds the maximum speed limit of 120 km/h, the method throws a SpeedLimitException with the message \"Speed limit exceeded, Max allowed is 120 km/h.\"\n    - If the speed increase is within the allowed range, the method updates the speed of the car by adding the increment value to the current speed.\n  + Overridden method toString().\n* Class Q2 with the main method, which:\n\n  + Reads the car model and speed increments from user input.\n  + Creates a Car object and calls the accelerate method.\n  + Catches and handles the SpeedLimitException, printing the error message if the speed limit is exceeded.\n  + Prints the final state of the car.\n\nWhat you have to do:\n\n* Implement class SpeedLimitException.\n* Implement the accelerate() method in class Car.",
+        "topic": "Custom Exceptions (Week 7)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\n// define class SpeedLimitException\n// YOUR CODE HERE\n\nclass Car {\n    private String model;\n    private double speed;\n\n    public Car(String model) {\n        this.model = model;\n        this.speed = 0.0;\n    }\n\n    public void accelerate(double increment) throws SpeedLimitException {\n        // Implement the method\n        // YOUR CODE HERE\n    }\n\n    public String toString() {\n        return \"Car Model: \" + model + \", Speed: \" + speed + \" km/h\";\n    }\n}\n\npublic class Q2 {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Car myCar = new Car(sc.nextLine());\n        try {\n            myCar.accelerate(sc.nextDouble());\n            myCar.accelerate(sc.nextDouble());\n        } catch (SpeedLimitException e) {\n            System.out.println(e.getMessage());\n        }\n        System.out.println(myCar);\n        sc.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\n// █ FILLED BY STUDENT: define class SpeedLimitException\nclass SpeedLimitException extends Exception {\n    public SpeedLimitException(String message) {\n        super(message);\n    }\n}\n\nclass Car {\n    private String model;\n    private double speed;\n\n    public Car(String model) {\n        this.model = model;\n        this.speed = 0.0;\n    }\n\n    public void accelerate(double increment) throws SpeedLimitException {\n        // █ FILLED BY STUDENT: Implement the method\n        if (speed + increment > 120) {\n            throw new SpeedLimitException(\"Speed limit exceeded, Max allowed is 120 km/h.\");\n        }\n        speed = speed + increment;\n    }\n\n    public String toString() {\n        return \"Car Model: \" + model + \", Speed: \" + speed + \" km/h\";\n    }\n}\n\npublic class Q2 {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Car myCar = new Car(sc.nextLine());\n        try {\n            myCar.accelerate(sc.nextDouble());\n            myCar.accelerate(sc.nextDouble());\n        } catch (SpeedLimitException e) {\n            System.out.println(e.getMessage());\n        }\n        System.out.println(myCar);\n        sc.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/268",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Q2",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "Toyota\n50\n80\n",
+            "expected": "Speed limit exceeded, Max allowed is 120 km/h.\r\nCar Model: Toyota, Speed: 50.0 km/h\r\n",
+            "hidden": false,
+            "files": {}
+          },
+          {
+            "input": "Honda Civic\n40\n60\n",
+            "expected": "Car Model: Honda Civic, Speed: 100.0 km/h\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-271",
+      "content": {
+        "title": "Student — Scholarship Eligibility via Streams",
+        "statement": "Complete the Java program that, given a list of students, prints the list of students who are eligible for a scholarship.\n\nThese include the students with an average CGPA > 7.5 and whose annual family income is less than ₹1,00,000.\n\nThe program should also update the scholarship status of eligible students as \"grade-1 scholarship\" if their average CGPA > 9.0;\n\notherwise, the scholarship status should be updated as \"grade-2 scholarship\".\n\n* Class Student has the following members:\n\n  + Four instance variables: name, scholarshipStatus, avgCGPA, income\n  + A constructor to initialize these instance variables\n  + Mutator and accessor methods as needed\n  + Overridden method toString to print the object.\n* Class StreamsTest has / should have the following members:\n\n  + Method main that accepts the details of four students, calls method getEligibleStream and prints the output list.\n  + Method getEligibleStream that accepts a list of students, filters the students eligible for scholarship, and returns a stream of eligible students.\n  + Method updateScholarshipStatus that accepts the list of eligible students and update their scholarship status.\n\nWhat you have to do:\n\n* Define method getEligibleStream in class StreamsTest\n* Define method updateScholarshipStatus in class StreamsTest",
+        "topic": "Streams API (Week 8)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.ArrayList;\nimport java.util.Scanner;\nimport java.util.List;\nimport java.util.stream.*;\n\nclass Student {\n    private String name, scholarshipStatus;\n    private double avgCGPA, income;\n\n    public Student(String n, double a, double i){\n        name = n;\n        avgCGPA = a;\n        income = i;\n        scholarshipStatus = \"not eligible\";\n    }\n    public String toString(){\n        return name + \" : \" + avgCGPA + \" : \"\n            + income + \" : \" + scholarshipStatus;\n    }\n    public double getAvgCGPA(){\n        return avgCGPA;\n    }\n    public double getIncome(){\n        return income;\n    }\n    public void setScholarshipStatus(String ss){\n        scholarshipStatus = ss;\n    }\n}\npublic class StreamsTest{\n\n    // Define method getEligibleStream here\n    // YOUR CODE HERE\n\n    // Define method updateScholarshipStatus here\n    // YOUR CODE HERE\n\n    public static void main(String[] args){\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Student> sList = new ArrayList<Student>();\n        Student s;\n        for (int i = 0; i < 4; i++){\n            s = new Student(sc.next(), sc.nextDouble(), sc.nextDouble());\n            sList.add(s);\n        }\n        List<Student> eList =\n            getEligibleStream(sList).collect(Collectors.toList());\n        updateScholarshipStatus(eList);\n\n        for (Student es : eList)\n            System.out.println(es);\n\n        sc.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.ArrayList;\nimport java.util.Scanner;\nimport java.util.List;\nimport java.util.stream.*;\n\nclass Student {\n    private String name, scholarshipStatus;\n    private double avgCGPA, income;\n\n    public Student(String n, double a, double i){\n        name = n;\n        avgCGPA = a;\n        income = i;\n        scholarshipStatus = \"not eligible\";\n    }\n    public String toString(){\n        return name + \" : \" + avgCGPA + \" : \"\n            + income + \" : \" + scholarshipStatus;\n    }\n    public double getAvgCGPA(){\n        return avgCGPA;\n    }\n    public double getIncome(){\n        return income;\n    }\n    public void setScholarshipStatus(String ss){\n        scholarshipStatus = ss;\n    }\n}\npublic class StreamsTest{\n\n    // █ FILLED BY STUDENT: Define method getEligibleStream here\n    public static Stream<Student> getEligibleStream(List<Student> sList){\n        return sList.stream()\n            .filter(s -> s.getAvgCGPA() > 7.5 && s.getIncome() < 100000);\n    }\n\n    // █ FILLED BY STUDENT: Define method updateScholarshipStatus here\n    public static void updateScholarshipStatus(List<Student> eList){\n        for (Student s : eList){\n            if (s.getAvgCGPA() > 9.0){\n                s.setScholarshipStatus(\"grade-1 scholarship\");\n            } else {\n                s.setScholarshipStatus(\"grade-2 scholarship\");\n            }\n        }\n    }\n\n    public static void main(String[] args){\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Student> sList = new ArrayList<Student>();\n        Student s;\n        for (int i = 0; i < 4; i++){\n            s = new Student(sc.next(), sc.nextDouble(), sc.nextDouble());\n            sList.add(s);\n        }\n        List<Student> eList =\n            getEligibleStream(sList).collect(Collectors.toList());\n        updateScholarshipStatus(eList);\n\n        for (Student es : eList)\n            System.out.println(es);\n\n        sc.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/271",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "StreamsTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "geet 9.5 80000\npreet 8 90000\nravi 7 80000\nkumar 8.5 200000\n",
+            "expected": "geet : 9.5 : 80000.0 : grade-1 scholarship\r\npreet : 8.0 : 90000.0 : grade-2 scholarship\r\n",
+            "hidden": false,
+            "files": {}
+          },
+          {
+            "input": "anuska 7.9 70000\nram 9.8 250000\ngeetha 9.1 90000\nriya 8.5 90000\n",
+            "expected": "anuska : 7.9 : 70000.0 : grade-2 scholarship\r\ngeetha : 9.1 : 90000.0 : grade-1 scholarship\r\nriya : 8.5 : 90000.0 : grade-2 scholarship\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-278",
+      "content": {
+        "title": "Athlete — deep clone chain (dummy → a1 → a2) with ArrayList field",
+        "statement": "In an athletic meet, the athletes from each school should register for 1 relay event and 2 individual events.\n\nComplete the Java program that does the following: create a dummy athlete object, create object a1 of type Athlete by cloning the dummy athlete object, create another object a2 of type Athlete by cloning a1, and then update the chest number and individual events of a1 and a2.\n\nClass Athlete has/should have the following functionality:\n\n* Implements the interface Cloneable\n* Instance variables: `String athleteChestNum` to store the athlete chest number; `ArrayList<String> events` whose first element is the relay event (common for all athletes, defaults to \"Relay\"), second element is the first individual event (defaults to \"Ind Evt 1\"), third element is the second individual event (defaults to \"Ind Evt 2\").\n* No-arg constructor to initialize the instance variables to their defaults (chest number \"000\").\n* Mutator methods to update athleteChestNum and the individual events (index 1 and index 2 of events).\n* Overridden method toString() in the format `<chestNum> <events list>`.\n* Implement method clone() that deep-copies the events list.\n\nClass AthleteCloneTest contains the main method, which creates a dummy Athlete, clones it into a1 (updating a1's chest number and both individual events from input), then clones a1 into a2 (updating a2's chest number and both individual events from input), then prints \"a1 <a1>\" and \"a2 <a2>\".\n\nWhat you have to do:\n\n* Implement method clone() in class Athlete.",
+        "topic": "Object Cloning (Week 8)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.ArrayList;\nimport java.util.Scanner;\n\nclass Athlete implements Cloneable {\n    private String athleteChestNum;\n    private ArrayList<String> events;\n\n    public Athlete() {\n        athleteChestNum = \"000\";\n        events = new ArrayList<String>();\n        events.add(\"Relay\");\n        events.add(\"Ind Evt 1\");\n        events.add(\"Ind Evt 2\");\n    }\n\n    public void setAthleteChestNum(String num) {\n        this.athleteChestNum = num;\n    }\n\n    public void setIndividualEvt1(String evt1) {\n        events.set(1, evt1);\n    }\n\n    public void setIndividualEvt2(String evt2) {\n        events.set(2, evt2);\n    }\n\n    // Implement the deep-cloning method\n    // YOUR CODE HERE\n\n    public String toString() {\n        return athleteChestNum + \" \" + events;\n    }\n}\n\npublic class AthleteCloneTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Athlete dummyAthlete = new Athlete();\n\n        try {\n            Athlete a1 = (Athlete) dummyAthlete.clone();\n            a1.setAthleteChestNum(sc.next());\n            a1.setIndividualEvt1(sc.next());\n            a1.setIndividualEvt2(sc.next());\n\n            Athlete a2 = (Athlete) a1.clone();\n            a2.setAthleteChestNum(sc.next());\n            a2.setIndividualEvt1(sc.next());\n            a2.setIndividualEvt2(sc.next());\n\n            System.out.println(\"a1 \" + a1);\n            System.out.println(\"a2 \" + a2);\n        } catch (CloneNotSupportedException e) {\n            e.printStackTrace();\n        }\n\n        sc.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.ArrayList;\nimport java.util.Scanner;\n\nclass Athlete implements Cloneable {\n    private String athleteChestNum;\n    private ArrayList<String> events;\n\n    public Athlete() {\n        athleteChestNum = \"000\";\n        events = new ArrayList<String>();\n        events.add(\"Relay\");\n        events.add(\"Ind Evt 1\");\n        events.add(\"Ind Evt 2\");\n    }\n\n    public void setAthleteChestNum(String num) {\n        this.athleteChestNum = num;\n    }\n\n    public void setIndividualEvt1(String evt1) {\n        events.set(1, evt1);\n    }\n\n    public void setIndividualEvt2(String evt2) {\n        events.set(2, evt2);\n    }\n\n    // █ FILLED BY STUDENT: Implement the deep-cloning method\n    @Override\n    public Object clone() throws CloneNotSupportedException {\n        Athlete cloned = (Athlete) super.clone();\n        cloned.events = new ArrayList<String>(this.events);\n        return cloned;\n    }\n\n    public String toString() {\n        return athleteChestNum + \" \" + events;\n    }\n}\n\npublic class AthleteCloneTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        Athlete dummyAthlete = new Athlete();\n\n        try {\n            Athlete a1 = (Athlete) dummyAthlete.clone();\n            a1.setAthleteChestNum(sc.next());\n            a1.setIndividualEvt1(sc.next());\n            a1.setIndividualEvt2(sc.next());\n\n            Athlete a2 = (Athlete) a1.clone();\n            a2.setAthleteChestNum(sc.next());\n            a2.setIndividualEvt1(sc.next());\n            a2.setIndividualEvt2(sc.next());\n\n            System.out.println(\"a1 \" + a1);\n            System.out.println(\"a2 \" + a2);\n        } catch (CloneNotSupportedException e) {\n            e.printStackTrace();\n        }\n\n        sc.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/278",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "AthleteCloneTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "101 100m 200m\n205 400m Long-Jump\n",
+            "expected": "a1 101 [Relay, 100m, 200m]\r\na2 205 [Relay, 400m, Long-Jump]\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-279",
+      "content": {
+        "title": "Customer + Items — deep clone array field (Naresh/Suresh order)",
+        "statement": "Naresh (Customer c1) buys a set of items from a shop.\n\nSuresh (Customer c2) also buys all items bought by Naresh except the first item, in place of which Suresh buys another item.\n\nWrite a program that defines two classes Items and Customer, and clones the object of class Customer to model this scenario.\n\nClasses Items and Customer should be cloneable, with deep-copy cloning of c2 from c1.\n\nInput: the number of items bought by Naresh, the names of the items, and the new item that Suresh will be buying.\n\nDefine a class Items that implements Cloneable, with:\n\n* A public instance variable `item` of type `String[]` to store the item names.\n* Constructor to initialize `item` (copying the given array).\n* Override clone() (deep copy of the array).\n* Override toString() to print the items space-separated.\n\nDefine a class Customer that implements Cloneable, with:\n\n* Instance variable `name` of type String.\n* Instance variable of type Items to store the items purchased.\n* Constructor, accessor `getItems()`, and mutator `setName(String s)`.\n* Override clone() (deep copy of the Items field).\n* Override toString() as `<name> <items>`.\n\nClass Order has the main method: it reads the item count and item names, creates Customer c1 (\"naresh\") with those items, clones c1 into c2, updates c2's first item (from input) and sets c2's name to \"suresh\", then prints c1 and c2.\n\nWhat you have to do:\n\n* Implement method clone() in class Items.\n* Implement method clone() in class Customer.",
+        "topic": "Object Cloning (Week 8)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\nclass Items implements Cloneable {\n    public String[] item;\n\n    public Items(String[] item) {\n        this.item = new String[item.length];\n        for (int i = 0; i < item.length; i++) {\n            this.item[i] = item[i];\n        }\n    }\n\n    // Implement the deep-copy clone method\n    // YOUR CODE HERE\n\n    public String toString() {\n        return String.join(\" \", item);\n    }\n}\n\nclass Customer implements Cloneable {\n    private String name;\n    private Items items;\n\n    public Customer(String name, Items items) {\n        this.name = name;\n        this.items = items;\n    }\n\n    public Items getItems() {\n        return items;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    // Implement the deep-copy clone method\n    // YOUR CODE HERE\n\n    public String toString() {\n        return name + \" \" + items.toString();\n    }\n}\n\npublic class Order {\n    public static void main(String[] args) throws CloneNotSupportedException {\n        Scanner sc = new Scanner(System.in);\n\n        int n = sc.nextInt();\n        String[] itm = new String[n];\n        for (int i = 0; i < n; i++) {\n            itm[i] = sc.next();\n        }\n\n        Customer c1 = new Customer(\"naresh\", new Items(itm));\n        Customer c2 = c1.clone();\n\n        c2.getItems().item[0] = sc.next();\n        c2.setName(\"suresh\");\n\n        System.out.println(c1);\n        System.out.println(c2);\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\nclass Items implements Cloneable {\n    public String[] item;\n\n    public Items(String[] item) {\n        this.item = new String[item.length];\n        for (int i = 0; i < item.length; i++) {\n            this.item[i] = item[i];\n        }\n    }\n\n    // █ FILLED BY STUDENT: Implement the deep-copy clone method\n    public Items clone() throws CloneNotSupportedException {\n        Items cloned = (Items) super.clone();\n        cloned.item = this.item.clone();\n        return cloned;\n    }\n\n    public String toString() {\n        return String.join(\" \", item);\n    }\n}\n\nclass Customer implements Cloneable {\n    private String name;\n    private Items items;\n\n    public Customer(String name, Items items) {\n        this.name = name;\n        this.items = items;\n    }\n\n    public Items getItems() {\n        return items;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    // █ FILLED BY STUDENT: Implement the deep-copy clone method\n    public Customer clone() throws CloneNotSupportedException {\n        Customer cloned = (Customer) super.clone();\n        cloned.items = this.items.clone();\n        return cloned;\n    }\n\n    public String toString() {\n        return name + \" \" + items.toString();\n    }\n}\n\npublic class Order {\n    public static void main(String[] args) throws CloneNotSupportedException {\n        Scanner sc = new Scanner(System.in);\n\n        int n = sc.nextInt();\n        String[] itm = new String[n];\n        for (int i = 0; i < n; i++) {\n            itm[i] = sc.next();\n        }\n\n        Customer c1 = new Customer(\"naresh\", new Items(itm));\n        Customer c2 = c1.clone();\n\n        c2.getItems().item[0] = sc.next();\n        c2.setName(\"suresh\");\n\n        System.out.println(c1);\n        System.out.println(c2);\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/279",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Order",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\nrice sugar salt\nflour\n",
+            "expected": "naresh rice sugar salt\r\nsuresh flour sugar salt\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-280",
+      "content": {
+        "title": "Applicant — AgeOutOfBoundsException on checkAndGetName()",
+        "statement": "Complete the Java program that, given a list of four applicants for a job, raises an exception if any applicant's age is not within the prescribed age limit.\n\nFor each applicant a, if a's age is >= 18 and <= 30, then the program should print the name of a;\n\notherwise it should print a custom message.\n\nClass Applicant has/should have the following members:\n\n* Instance variables name and age.\n* Constructor to initialize these variables.\n* Method `checkAndGetName()` should return the name of the applicant if the age is within the given limits. Otherwise, it should throw AgeOutOfBoundsException.\n\nClass AgeOutOfBoundsException that defines a new checked exception:\n\n* Constructor `AgeOutOfBoundsException(String n)` that takes the name of the applicant as argument. The constructor initializes the error message as \"Age of <name of the applicant> is outside the limits\".\n\nClass ExceptionTest has the main method.\n\nIt takes the name and age of four applicants as input, and invokes checkAndGetName in class Applicant to produce the output as specified.\n\nWhat you have to do:\n\n* Define class AgeOutOfBoundsException.\n* Implement method checkAndGetName() in class Applicant.",
+        "topic": "Custom Exceptions (Week 7)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.Scanner;\nimport java.util.ArrayList;\n\nclass Applicant {\n    String name;\n    int age;\n\n    Applicant(String n, int a) {\n        name = n;\n        age = a;\n    }\n\n    // Complete definition of method checkAndGetName\n    // YOUR CODE HERE\n}\n\n// Define class AgeOutOfBoundsException\n// YOUR CODE HERE\n\npublic class ExceptionTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Applicant> aList = new ArrayList<Applicant>();\n\n        for (int i = 0; i < 4; i++) {\n            Applicant a = new Applicant(sc.next(), sc.nextInt());\n            aList.add(a);\n        }\n\n        for (Applicant a : aList) {\n            try {\n                String name = a.checkAndGetName();\n                System.out.println(name);\n            }\n            catch (AgeOutOfBoundsException oe) {\n                System.out.println(oe.getMessage());\n            }\n        }\n        sc.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.Scanner;\nimport java.util.ArrayList;\n\nclass Applicant {\n    String name;\n    int age;\n\n    Applicant(String n, int a) {\n        name = n;\n        age = a;\n    }\n\n    // █ FILLED BY STUDENT: Complete definition of method checkAndGetName\n    public String checkAndGetName() throws AgeOutOfBoundsException {\n        if (age >= 18 && age <= 30) {\n            return name;\n        } else {\n            throw new AgeOutOfBoundsException(name);\n        }\n    }\n}\n\n// █ FILLED BY STUDENT: Define class AgeOutOfBoundsException\nclass AgeOutOfBoundsException extends Exception {\n    public AgeOutOfBoundsException(String n) {\n        super(\"Age of \" + n + \" is outside the limits\");\n    }\n}\n\npublic class ExceptionTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        ArrayList<Applicant> aList = new ArrayList<Applicant>();\n\n        for (int i = 0; i < 4; i++) {\n            Applicant a = new Applicant(sc.next(), sc.nextInt());\n            aList.add(a);\n        }\n\n        for (Applicant a : aList) {\n            try {\n                String name = a.checkAndGetName();\n                System.out.println(name);\n            }\n            catch (AgeOutOfBoundsException oe) {\n                System.out.println(oe.getMessage());\n            }\n        }\n        sc.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/280",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "ExceptionTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "Alice 25\nBob 17\nCarol 30\nDave 45\n",
+            "expected": "Alice\r\nAge of Bob is outside the limits\r\nCarol\r\nAge of Dave is outside the limits\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-281",
+      "content": {
+        "title": "DivisionException — custom exception on divide-by-3",
+        "statement": "Recall that Java throws an ArithmeticException if there is an attempt to divide by zero.\n\nSimilarly, we can generate an exception if there is a division by three.\n\nGiven two integers as input, complete the Java code to generate such an exception.\n\n* Create a class DivisionException that extends the class Exception. Override the toString() method to return \"Division by 3 is not allowed\".\n* In the class Test, define `divide(int a, int b)` to return a/b, if the value of b is not equal to 3. If the value of b is 3, then throw an instance of DivisionException.\n* Inside the method main(), invoke divide(x, y), and handle any possible exception by printing it.\n\nWhat you have to do:\n\n* Define class DivisionException.\n* Implement method divide() in class Test.",
+        "topic": "Custom Exceptions (Week 7)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\n// Custom exception class\n// YOUR CODE HERE\n\npublic class Test {\n\n    // Define divide() method\n    // YOUR CODE HERE\n\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int x = sc.nextInt();\n        int y = sc.nextInt();\n        try {\n            int c = divide(x, y);\n            System.out.println(c);\n        } catch (DivisionException e) {\n            System.out.println(e);\n        }\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\n// █ FILLED BY STUDENT: Custom exception class\nclass DivisionException extends Exception {\n    public String toString() {\n        return \"Division by 3 is not allowed\";\n    }\n}\n\npublic class Test {\n\n    // █ FILLED BY STUDENT: Define divide() method\n    public static int divide(int a, int b) throws DivisionException {\n        if (b == 3) {\n            throw new DivisionException();\n        }\n        return a / b;\n    }\n\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int x = sc.nextInt();\n        int y = sc.nextInt();\n        try {\n            int c = divide(x, y);\n            System.out.println(c);\n        } catch (DivisionException e) {\n            System.out.println(e);\n        }\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/281",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Test",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "10 2\n",
+            "expected": "5\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-282",
+      "content": {
+        "title": "Employee Bills — merge two months' bill maps (17 Aug)",
+        "statement": "You are tasked with merging the bill data of employees from two different months.\n\nEach employee has at most one bill per month.\n\nThe goal is to merge the two sets of data and calculate the total bill amount for each employee.\n\nIf an employee appears in both months, their bill amounts should be summed.\n\nClass Employee has the following members:\n\n* Private instance variables `String name` and `int billAmount`.\n* Constructor to initialize the instance variables.\n* Method `addBillAmount(int additionalBill)` to add additional bill amounts.\n* Method toString() to display the employee's name and bill amount as `<name>:<billAmount>`.\n\nClass Test has the following members:\n\n* Method `mergeEmployeeBills` accepts two maps (billMap1 and billMap2) of employee data, where the key is the employee's ID (String) and the value is an Employee object. It merges the two maps into a single map, combining the bill amounts of employees who appear in both maps (in insertion order: first map's entries first, then any new IDs from the second map), and returns the merged map.\n* The main method reads 3 employees for month 1 (id, name, bill) then 3 for month 2, merges, and prints each entry as `<id> <employee>`.\n\nWhat you have to do:\n\n* Implement method mergeEmployeeBills.",
+        "topic": "Collections — Maps",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\nclass Employee {\n    String name;\n    int billAmount;\n\n    public Employee(String name, int billAmount) {\n        this.name = name;\n        this.billAmount = billAmount;\n    }\n\n    public void addBillAmount(int additionalBill) {\n        this.billAmount += additionalBill;\n    }\n\n    public String toString() {\n        return name + \":\" + billAmount;\n    }\n}\n\npublic class Test {\n\n    // Implement the method\n    // YOUR CODE HERE\n\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n\n        Map<String, Employee> billMarch = new LinkedHashMap<>();\n        Map<String, Employee> billApril = new LinkedHashMap<>();\n\n        for (int i = 1; i <= 3; i++) {\n            String id = scanner.next();\n            String name = scanner.next();\n            int billAmount = Integer.parseInt(scanner.next());\n            billMarch.put(id, new Employee(name, billAmount));\n        }\n\n        for (int i = 1; i <= 3; i++) {\n            String id = scanner.next();\n            String name = scanner.next();\n            int billAmount = Integer.parseInt(scanner.next());\n            billApril.put(id, new Employee(name, billAmount));\n        }\n\n        Map<String, Employee> totalBills = mergeEmployeeBills(billMarch, billApril);\n        for (Map.Entry<String, Employee> entry : totalBills.entrySet()) {\n            System.out.println(entry.getKey() + \" \" + entry.getValue());\n        }\n\n        scanner.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\nclass Employee {\n    String name;\n    int billAmount;\n\n    public Employee(String name, int billAmount) {\n        this.name = name;\n        this.billAmount = billAmount;\n    }\n\n    public void addBillAmount(int additionalBill) {\n        this.billAmount += additionalBill;\n    }\n\n    public String toString() {\n        return name + \":\" + billAmount;\n    }\n}\n\npublic class Test {\n\n    // █ FILLED BY STUDENT: Implement the method\n    public static Map<String, Employee> mergeEmployeeBills(Map<String, Employee> billMap1,\n                                                           Map<String, Employee> billMap2) {\n        Map<String, Employee> totalBills = new LinkedHashMap<>();\n\n        for (Map.Entry<String, Employee> entry : billMap1.entrySet()) {\n            Employee e = entry.getValue();\n            totalBills.put(entry.getKey(), new Employee(e.name, e.billAmount));\n        }\n\n        for (Map.Entry<String, Employee> entry : billMap2.entrySet()) {\n            String id = entry.getKey();\n            Employee e2 = entry.getValue();\n            if (totalBills.containsKey(id)) {\n                totalBills.get(id).addBillAmount(e2.billAmount);\n            } else {\n                totalBills.put(id, new Employee(e2.name, e2.billAmount));\n            }\n        }\n\n        return totalBills;\n    }\n\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n\n        Map<String, Employee> billMarch = new LinkedHashMap<>();\n        Map<String, Employee> billApril = new LinkedHashMap<>();\n\n        for (int i = 1; i <= 3; i++) {\n            String id = scanner.next();\n            String name = scanner.next();\n            int billAmount = Integer.parseInt(scanner.next());\n            billMarch.put(id, new Employee(name, billAmount));\n        }\n\n        for (int i = 1; i <= 3; i++) {\n            String id = scanner.next();\n            String name = scanner.next();\n            int billAmount = Integer.parseInt(scanner.next());\n            billApril.put(id, new Employee(name, billAmount));\n        }\n\n        Map<String, Employee> totalBills = mergeEmployeeBills(billMarch, billApril);\n        for (Map.Entry<String, Employee> entry : totalBills.entrySet()) {\n            System.out.println(entry.getKey() + \" \" + entry.getValue());\n        }\n\n        scanner.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/282",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "Test",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "E1 Alice 1000\nE2 Bob 2000\nE3 Carol 1500\nE1 Alice 500\nE4 Dave 800\nE2 Bob 300\n",
+            "expected": "E1 Alice:1500\r\nE2 Bob:2300\r\nE3 Carol:1500\r\nE4 Dave:800\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    },
+    {
+      "external_id": "rangalabs-question-283",
+      "content": {
+        "title": "StringToIntConverter — InvalidNumberFormatException (17 Aug)",
+        "statement": "Write a Java program that takes an array of strings as input and attempts to convert each string to an integer.\n\nIf any string cannot be converted to a valid integer (e.g.\n\n\"abc\", \"12a\"), a user-defined checked exception should be thrown.\n\nDefine a checked exception InvalidNumberFormatException:\n\n* Override method getMessage() to return the string \"Invalid number format\" (printed if the input contains any invalid number string).\n\nClass StringToIntConverter has the following members:\n\n* A private instance variable strArr of type String[].\n* A constructor that initializes the instance variable.\n* A method convertAll() that attempts to convert each string in strArr to an integer. If all strings represent valid integers, it prints \"All strings converted successfully\". Otherwise, it throws an InvalidNumberFormatException.\n\nClass ConversionTest has the main method: it reads an integer n followed by n strings (one per line), instantiates a StringToIntConverter and invokes convertAll().\n\nIf all conversions succeed, prints the success message.\n\nOtherwise, catches and prints the exception message.\n\nWhat you have to do:\n\n* Define class InvalidNumberFormatException.\n* Implement method convertAll().",
+        "topic": "Custom Exceptions (Week 7)",
+        "category": "OPPE2",
+        "difficulty": "Medium",
+        "starter_code": "import java.util.*;\n\n// Define class InvalidNumberFormatException\n// YOUR CODE HERE\n\nclass StringToIntConverter {\n    private String[] strArr;\n\n    public StringToIntConverter(String[] arr) {\n        this.strArr = arr;\n    }\n\n    // Implement method convertAll()\n    // YOUR CODE HERE\n}\n\npublic class ConversionTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        sc.nextLine();\n        String[] inputs = new String[n];\n        for (int i = 0; i < n; i++) {\n            inputs[i] = sc.nextLine();\n        }\n\n        try {\n            StringToIntConverter conv = new StringToIntConverter(inputs);\n            conv.convertAll();\n        } catch (InvalidNumberFormatException e) {\n            System.out.println(e.getMessage());\n        }\n\n        sc.close();\n    }\n}",
+        "prefix": "",
+        "suffix": "",
+        "reference_solution": "import java.util.*;\n\n// █ FILLED BY STUDENT: Define class InvalidNumberFormatException\nclass InvalidNumberFormatException extends Exception {\n    @Override\n    public String getMessage() {\n        return \"Invalid number format\";\n    }\n}\n\nclass StringToIntConverter {\n    private String[] strArr;\n\n    public StringToIntConverter(String[] arr) {\n        this.strArr = arr;\n    }\n\n    // █ FILLED BY STUDENT: Implement method convertAll()\n    public void convertAll() throws InvalidNumberFormatException {\n        for (String s : strArr) {\n            try {\n                Integer.parseInt(s.trim());\n            } catch (NumberFormatException e) {\n                throw new InvalidNumberFormatException();\n            }\n        }\n        System.out.println(\"All strings converted successfully\");\n    }\n}\n\npublic class ConversionTest {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        sc.nextLine();\n        String[] inputs = new String[n];\n        for (int i = 0; i < n; i++) {\n            inputs[i] = sc.nextLine();\n        }\n\n        try {\n            StringToIntConverter conv = new StringToIntConverter(inputs);\n            conv.convertAll();\n        } catch (InvalidNumberFormatException e) {\n            System.out.println(e.getMessage());\n        }\n\n        sc.close();\n    }\n}",
+        "explanation": "Imported reference code from the original site. A separate stepwise explanation has not yet been reviewed for this question.",
+        "source": "https://oppe.rangalabs.cloud/question/283",
+        "setup_sql": "",
+        "time_limit": 3,
+        "entrypoint": "ConversionTest",
+        "execution_mode": "stdin",
+        "entry_function": "",
+        "entry_functions": [],
+        "comparison": "text",
+        "tests": [
+          {
+            "input": "3\n12\n34\n56\n",
+            "expected": "All strings converted successfully\r\n",
+            "hidden": false,
+            "files": {}
+          }
+        ],
+        "import_notes": [
+          "Imported source content; hidden tests were not exposed in the source learner interface. Keep as DRAFT until real hidden tests and reference validation are added."
+        ]
+      }
+    }
+  ]
+}

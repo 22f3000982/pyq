@@ -7,6 +7,7 @@ import Catalog from './Catalog.vue';
 const ExamBrowser=defineAsyncComponent(()=>import('./ExamBrowser.vue'));
 const Exam=defineAsyncComponent(()=>import('./Exam.vue'));
 const Records=defineAsyncComponent(()=>import('./Records.vue'));
+const OPPE=defineAsyncComponent(()=>import('./OPPE.vue'));
 const Admin=defineAsyncComponent(()=>import('./Admin.vue'));
 const theme=ref(localStorage.getItem('pyq-theme')||(window.matchMedia?.('(prefers-color-scheme: dark)').matches?'dark':'light'));
 document.documentElement.dataset.theme=theme.value;document.documentElement.dataset.bsTheme=theme.value;
@@ -32,6 +33,7 @@ const nav=[['/','Home',BookOpen],['/progress','My progress',LayoutDashboard],['/
 <section v-else-if="route.startsWith('/admin')&&session.user?.role!=='ADMIN'" class="empty panel"><h1>Administrator access</h1><a href="/admin/login" class="btn btn-primary">Admin sign in</a></section>
 <Exam v-else-if="examPage" :id="Number(route.split('/')[2])" :key="route"/>
 <About v-else-if="route==='/about'"/>
+<OPPE v-else-if="route==='/admin/oppe'"/>
 <Admin v-else-if="route.startsWith('/admin')"/>
 <Records v-else-if="['/progress','/history','/dashboard','/bookmarks','/mistakes'].includes(route)||route.startsWith('/result/')" :route="route" :key="route"/>
 <ExamBrowser v-else-if="route.startsWith('/exam/')" :route="route" :key="route"/><Catalog v-else :route="route" :key="route"/>

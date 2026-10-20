@@ -1,0 +1,1605 @@
+{
+  "373": {
+    "title": "What is the total number of negative (invalid) values in the column `Age`?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/373",
+    "track": "mlp/oppe1",
+    "id": "373",
+    "statementHtml": "<h2>2. What is the total number of missing or unknown values in the column <code>Age</code>?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "374": {
+    "title": "What is the total number of negative (invalid) values in the column `GlucoseLevel`?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/374",
+    "track": "mlp/oppe1",
+    "id": "374",
+    "statementHtml": "<h2>3. What is the total number of missing or unknown values in the column <code>GlucoseLevel</code>?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "375": {
+    "title": "What is the total number of missing or unknown values in the column `Lives...\n\nPreprocessing\n\nunattempted",
+    "url": "/question/375",
+    "track": "mlp/oppe1",
+    "id": "375",
+    "statementHtml": "<h2>4. What is the total number of missing or unknown values in the column <code>LivesIn</code>?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "376": {
+    "title": "What is the total number of missing or unknown values in the column `BMI`?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/376",
+    "track": "mlp/oppe1",
+    "id": "376",
+    "statementHtml": "<h2>5. What is the total number of missing or unknown values in the column <code>BMI</code>?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "377": {
+    "title": "What is the total number of missing or unknown values in the column `Smoki...\n\nPreprocessing\n\nunattempted",
+    "url": "/question/377",
+    "track": "mlp/oppe1",
+    "id": "377",
+    "statementHtml": "<h2>6. What is the total number of missing or unknown values in the column <code>SmokingStatus</code>?</h2>\n<p>(Hint: carefully look at the values the feature takes and find out implausible value(s).)</p>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "378": {
+    "title": "What is the mean value of the `BMI` in the dataset? Ignore the missing val...\n\nPreprocessing\n\nunattempted",
+    "url": "/question/378",
+    "track": "mlp/oppe1",
+    "id": "378",
+    "statementHtml": "<h2>7. What is the mean value of the <code>BMI</code> in the dataset? Ignore the missing values if any</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "379": {
+    "title": "How many people live in city, smoked at least once in life and had a heart...\n\nPreprocessing\n\nunattempted",
+    "url": "/question/379",
+    "track": "mlp/oppe1",
+    "id": "379",
+    "statementHtml": "<h2>8. How many people live in city, smoked at least once in life and had a heartattack? Ignore records/rows with any missing values.</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "380": {
+    "title": "Which of the following categories have highest frequency? Ignore rows with...\n\nPreprocessing\n\nunattempted",
+    "url": "/question/380",
+    "track": "mlp/oppe1",
+    "id": "380",
+    "statementHtml": "<h2>9. Which of the following categories have highest frequency? Ignore rows with missing values.</h2>\n<ol>\n<li>female patients without tension, without any heart disease and never married</li>\n<li>female patients without tension, without any heart disease and either currently married or married before</li>\n<li>male patients without tension, without any heart disease and never married</li>\n<li>male patients with tension, with a heart disease and never married</li>\n<li>There is a tie between 2 or more options.</li>\n</ol>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "381": {
+    "title": "How many columns in the dataset have categorical values?\n\nData Analysis\n\nunattempted",
+    "url": "/question/381",
+    "track": "mlp/oppe1",
+    "id": "381",
+    "statementHtml": "<h2>10. How many columns in the dataset have categorical (non-numeric) values?</h2>\n<p>The columns are: Gender, Age, HasTension, AnyHeartDisease, NeverMarried, Occupation, LivesIn, GlucoseLevel, BMI, SmokingStatus, HeartAttack</p>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "382": {
+    "title": "How many data points have HeartAttack = Yes?\n\nData Analysis\n\nunattempted",
+    "url": "/question/382",
+    "track": "mlp/oppe1",
+    "id": "382",
+    "statementHtml": "<h2>11. <code>HeartAttack</code> is the target column. How many data points in the dataset have <code>HeartAttack = 'Yes'</code>?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "383": {
+    "title": "How many features are in X_train after preprocessing?\n\nData Analysis\n\nunattempted",
+    "url": "/question/383",
+    "track": "mlp/oppe1",
+    "id": "383",
+    "statementHtml": "<h2>12. <code>HeartAttack</code> is the target column. After preprocessing and splitting 80:20 (random_state=64), how many <strong>features (columns)</strong> are in the training feature matrix <code>X_train</code>?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "384": {
+    "title": "What is the mean of transformed test dataset?\n\nData Analysis\n\nunattempted",
+    "url": "/question/384",
+    "track": "mlp/oppe1",
+    "id": "384",
+    "statementHtml": "<h2>13. What is the mean of transformed test dataset?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "385": {
+    "title": "Eliminate 1 feature with recuvrsive feature elimination which feature wil...\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/385",
+    "track": "mlp/oppe1",
+    "id": "385",
+    "statementHtml": "<h2>14. Eliminate 1 feature with recuvrsive feature elimination which feature will be eliminated - <code>LogisticRegression Model (random_state = 1729)</code></h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "386": {
+    "title": "Break the dataset into features(`X`) and label (`y`), where the column `s...\n\nData Analysis\n\nunattempted",
+    "url": "/question/386",
+    "track": "mlp/oppe2",
+    "id": "386",
+    "statementHtml": "<p>##Q2 [Marks =3] Break the dataset into features(<code>X</code>) and label (<code>y</code>), where the column <code>satisfaction</code> goes to <code>y</code> and the rest of the columns go to <code>X</code>. How many data points belonging to <code>satisfaction</code> value 1 are there in the dataset ? [NAT]</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "387": {
+    "title": "Split the dataset into train and test dataset into the `80:20` ratio whil...\n\nData Analysis\n\nunattempted",
+    "url": "/question/387",
+    "track": "mlp/oppe2",
+    "id": "387",
+    "statementHtml": "<p>##Q3 [Marks : 3] Split the dataset into train and test dataset into the <code>80:20</code> ratio while keeping <code>random_state=64</code>. What is the shape of the training label vector (<code>y_train</code>)?</p>\n<p>(A) (20000,)\n(B) (16574,27)\n(C) (20024,14)\n(D) (4522,98)\n(E) (16574,)</p>\n<p>&gt; <strong>Submit the option number</strong> (A=1, B=2, C=3, D=4, E=5).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "388": {
+    "title": "Take `LogisticRegression` estimator with following parameters for training:\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/388",
+    "track": "mlp/oppe2",
+    "id": "388",
+    "statementHtml": "<p>##Q4 [4 marks][NAT] Take <code>LogisticRegression</code> estimator with the following parameters for training:</p>\n<ul>\n<li>Use <code>sag</code> as solver</li>\n<li>Set random_state = 64</li>\n<li>Tolerance for stopping criteria: 1e-3</li>\n<li>Maximum iterations: 100</li>\n</ul>\n<p>Enter the <strong>recall score</strong> for the given model using test set (<code>X_test</code>, <code>y_test</code>).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "389": {
+    "title": "Fit this perceptron model with the training dataset and write the accuracy...\n\nPerceptron\n\nunattempted",
+    "url": "/question/389",
+    "track": "mlp/oppe2",
+    "id": "389",
+    "statementHtml": "<h2>Q5 [4 marks][NAT] Fit the Perceptron model (<code>fit_intercept=True</code>, <code>warm_start=False</code>, <code>random_state=64</code>) with the training dataset. Enter the <strong>accuracy</strong> on the test data.</h2>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "390": {
+    "title": "What is the value of bias (intercept) for the perceptron model you got (...\n\nPerceptron\n\nunattempted",
+    "url": "/question/390",
+    "track": "mlp/oppe2",
+    "id": "390",
+    "statementHtml": "<h2>Q6[Marks : 4]  [NAT] What is the value of bias (intercept) for the perceptron model you got (upto 1 decimal point) ?</h2>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "391": {
+    "title": "Use `SGDClassifier` on the training dataset (`X_train` and `y_train`)...\n\nSGDClassifier\n\nunattempted",
+    "url": "/question/391",
+    "track": "mlp/oppe2",
+    "id": "391",
+    "statementHtml": "<p>##Q 7  [6 marks] [NAT] Use  <code>SGDClassifier</code> on the training dataset (<code>X_train</code> and <code>y_train</code>) to train the model. Use the following parameters:</p>\n<ol>\n<li><code>log_loss</code>is the loss function to be used</li>\n<li>apply ridge regularization,</li>\n<li>maximum number of passes over the training data is 10</li>\n<li>constant learning rate of 0.01,</li>\n<li>regularization rate value is 0.001,</li>\n<li>Take random_state=64.</li>\n<li>Set warm_start as False</li>\n</ol>\n<p>Note : Please ignore the convergence warning.</p>\n<p>Using above model, calculate and write the correct value of f1_score for the test set.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "392": {
+    "title": "Use Gridsearchcv with KNeighborsClassifier estimator, accuracy as scori...\n\nKNN\n\nunattempted",
+    "url": "/question/392",
+    "track": "mlp/oppe2",
+    "id": "392",
+    "statementHtml": "<h2>Q8. [4 marks] [MCQ] Use Gridsearchcv with KNeighborsClassifier estimator, accuracy as scoring parameter, cv= 5. Consider [1,3,7,11] as K values to be examined.</h2>\n<ul>\n<li>Consider following parameters for KNeighborsClassifier:</li>\n</ul>\n<ul>\n<li>\n<p>Take metric as 'minkowski',</p>\n</li>\n<li>\n<p>Set P value as 2</p>\n</li>\n<li>\n<p>Keep other parameter values as default values.</p>\n</li>\n</ul>\n<p>What is the best value of K you obtained using the above instructions?</p>\n<p>Options</p>\n<p>A) 1</p>\n<p>B) 3</p>\n<p>C) 7</p>\n<p>D) 11</p>\n<p>&gt; <strong>Submit the option number</strong> (A=1, B=2, C=3, D=4, E=5).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "393": {
+    "title": "Enter the value of the precision on the test set using the best model:\n\nData Analysis\n\nunattempted",
+    "url": "/question/393",
+    "track": "mlp/oppe2",
+    "id": "393",
+    "statementHtml": "<h2>Q9. [Marks: 4][NAT] Enter the value of the precision on the test set using the best model:</h2>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "394": {
+    "title": "Q10: Enter the value of max_depth of the best estimator you got after traini...\n\nData Analysis\n\nunattempted",
+    "url": "/question/394",
+    "track": "mlp/oppe2",
+    "id": "394",
+    "statementHtml": "<h2>Q10:[Marks: 4] [MCQ] Enter the value of max_depth of the best estimator you got after training with GridSearchCV.</h2>\n<p>A) 3</p>\n<p>B) 4</p>\n<p>C) 5</p>\n<p>D) 6</p>\n<p>&gt; <strong>Submit the option number</strong> (A=1, B=2, C=3, D=4, E=5).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "395": {
+    "title": "Enter the value of min_samples_leaf of the best estimator after training ...\n\nData Analysis\n\nunattempted",
+    "url": "/question/395",
+    "track": "mlp/oppe2",
+    "id": "395",
+    "statementHtml": "<h2>Q11[Marks: 4 ][NAT] Enter the value of min_samples_leaf of the best estimator after training with GridSearchCV.</h2>\n<p>A) 2</p>\n<p>B) 4</p>\n<p>C) 6</p>\n<p>D) 8</p>\n<p>E) 10</p>\n<p>&gt; <strong>Submit the option number</strong> (A=1, B=2, C=3, D=4, E=5).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "396": {
+    "title": "What is the number of nodes in the optimal decision tree?\n\nDecision Tree\n\nunattempted",
+    "url": "/question/396",
+    "track": "mlp/oppe2",
+    "id": "396",
+    "statementHtml": "<h2>Q12 [NAT] Using the best <code>DecisionTreeClassifier</code> model from GridSearchCV (same setup as Q10-Q11), what is the number of <strong>nodes</strong> in the optimal tree?</h2>\n<p>&gt; <strong>Submit a numeric value.</strong></p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_satisfaction.csv\"))\ndf.head()"
+    ]
+  },
+  "408": {
+    "title": "How many rows have the value \"Unknown\" in the `Gender` column?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/408",
+    "track": "mlp/oppe1",
+    "id": "408",
+    "statementHtml": "<p>The Heart Attack dataset contains some rows where categorical columns hold the string <strong>\"Unknown\"</strong> instead of a proper value. How many rows have <code>\"Unknown\"</code> in the <code>Gender</code> column?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_dataset.csv\"))\ndf.head()"
+    ]
+  },
+  "409": {
+    "title": "How many rows are there in the Bank Marketing dataset?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/409",
+    "track": "mlp/oppe1",
+    "id": "409",
+    "statementHtml": "<p>Load the Bank Marketing dataset.</p><p>What is the total number of rows?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "410": {
+    "title": "How many missing values are there in the `contact` column?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/410",
+    "track": "mlp/oppe1",
+    "id": "410",
+    "statementHtml": "<p>The Bank Marketing dataset has missing values in some columns. How many NaN values are in the <code>contact</code> column?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "411": {
+    "title": "How many missing values are there in the `education` column?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/411",
+    "track": "mlp/oppe1",
+    "id": "411",
+    "statementHtml": "<p>How many NaN values are in the <code>education</code> column of the Bank Marketing dataset?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "412": {
+    "title": "How many missing values are there in the `age` column?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/412",
+    "track": "mlp/oppe1",
+    "id": "412",
+    "statementHtml": "<p>How many NaN values are in the <code>age</code> column?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "413": {
+    "title": "How many clients subscribed to a term deposit (target = \"yes\")?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/413",
+    "track": "mlp/oppe1",
+    "id": "413",
+    "statementHtml": "<p>The <code>target</code> column indicates whether the client subscribed to a term deposit (\"yes\"/\"no\"). How many rows have <code>target = \"yes\"</code>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "414": {
+    "title": "What is the mean value of the `balance` column? (Round to 4 decimal places)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/414",
+    "track": "mlp/oppe1",
+    "id": "414",
+    "statementHtml": "<p>What is the mean of the <code>balance</code> column across all rows in the raw dataset?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "415": {
+    "title": "How many rows remain after dropping all rows with missing values (dropna)?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/415",
+    "track": "mlp/oppe1",
+    "id": "415",
+    "statementHtml": "<p>Apply <code>df.dropna()</code> to the Bank Marketing dataset. How many rows remain?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "417": {
+    "title": "After 80:20 split (random_state=64), what is the Logistic Regression accuracy on the test set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/417",
+    "track": "mlp/oppe2",
+    "id": "417",
+    "statementHtml": "<p>Using the model-building dataset (already encoded, no NaNs):</p>\n<ol>\n<li>Split features and <code>target</code> column 80:20 with <code>random_state=64</code></li>\n<li>Apply <code>StandardScaler</code></li>\n<li>Train <code>LogisticRegression(random_state=64, max_iter=1000)</code></li>\n</ol>\n<p>What is the accuracy on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "418": {
+    "title": "What is the Random Forest accuracy on the test set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+    "url": "/question/418",
+    "track": "mlp/oppe2",
+    "id": "418",
+    "statementHtml": "<p>Using the model-building dataset, split 80:20 (random_state=64), train <code>RandomForestClassifier(n_estimators=100, random_state=64)</code> <strong>without scaling</strong>.\nWhat is the accuracy on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "419": {
+    "title": "What is the index of the most important feature in the Random Forest model?\n\nRandom Forest\n\nunattempted",
+    "url": "/question/419",
+    "track": "mlp/oppe2",
+    "id": "419",
+    "statementHtml": "<p>Train <code>RandomForestClassifier(n_estimators=100, random_state=64)</code> on the model-building dataset (80:20 split, random_state=64, no scaling).\nWhat is the <strong>index</strong> (0-based) of the most important feature according to <code>feature_importances_</code>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "420": {
+    "title": "What is the Gradient Boosting accuracy on the test set? (Round to 4 decimal places)\n\nGradient Boosting\n\nunattempted",
+    "url": "/question/420",
+    "track": "mlp/oppe2",
+    "id": "420",
+    "statementHtml": "<p>Train <code>GradientBoostingClassifier(random_state=64)</code> on the model-building dataset (80:20 split, random_state=64, no scaling).\nWhat is the accuracy on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "421": {
+    "title": "Using GridSearchCV with KNN (k ∈ {1,3,7,11}), what is the best k?\n\nKNN\n\nunattempted",
+    "url": "/question/421",
+    "track": "mlp/oppe2",
+    "id": "421",
+    "statementHtml": "<p>After 80:20 split (random_state=64) and StandardScaler, run <code>GridSearchCV</code> on <code>KNeighborsClassifier(metric=\"minkowski\", p=2)</code> with <code>n_neighbors</code> in {1, 3, 7, 11}, cv=5, scoring=\"accuracy\".\nWhat is the best <code>n_neighbors</code> value?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "422": {
+    "title": "Using Decision Tree GridSearchCV, what is the best max_depth?\n\nDecision Tree\n\nunattempted",
+    "url": "/question/422",
+    "track": "mlp/oppe2",
+    "id": "422",
+    "statementHtml": "<p>Run <code>GridSearchCV</code> on <code>DecisionTreeClassifier()</code> with this param grid:</p>\n<ul>\n<li><code>criterion</code>: [\"entropy\", \"gini\"]</li>\n<li><code>splitter</code>: [\"random\", \"best\"]</li>\n<li><code>min_samples_leaf</code>: [2, 4, 6, 8, 10]</li>\n<li><code>max_depth</code>: [3, 4, 5, 6]</li>\n<li><code>cv=4</code></li>\n</ul>\n<p>Split 80:20 (random_state=64), no scaling. What is the best <code>max_depth</code>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "423": {
+    "title": "What is the ROC-AUC score of Logistic Regression on the test set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/423",
+    "track": "mlp/oppe2",
+    "id": "423",
+    "statementHtml": "<p>Train <code>LogisticRegression(random_state=64, max_iter=1000)</code> with <code>StandardScaler</code> (80:20 split, random_state=64).\nWhat is the <strong>ROC-AUC</strong> score on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "431": {
+    "title": "What is the Logistic Regression F1 score on the test set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/431",
+    "track": "mlp/oppe2",
+    "id": "431",
+    "statementHtml": "<p>Train <code>LogisticRegression(random_state=64, max_iter=1000)</code> with <code>StandardScaler</code> (80:20 split, random_state=64).\nWhat is the <strong>F1 score</strong> on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "432": {
+    "title": "What is the 5-fold cross-validation mean accuracy of Logistic Regression on the training set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/432",
+    "track": "mlp/oppe2",
+    "id": "432",
+    "statementHtml": "<p>After 80:20 split (random_state=64) and <code>StandardScaler</code>, run 5-fold cross-validation on <code>LogisticRegression(random_state=64, max_iter=1000)</code> using the training set.\nWhat is the mean accuracy?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "433": {
+    "title": "What is the 5-fold cross-validation mean accuracy of Random Forest on the training set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+    "url": "/question/433",
+    "track": "mlp/oppe2",
+    "id": "433",
+    "statementHtml": "<p>After 80:20 split (random_state=64), run 5-fold cross-validation on <code>RandomForestClassifier(n_estimators=100, random_state=64)</code> on the training set (no scaling).\nWhat is the mean accuracy?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_bank_model.csv\"))\ndf.head()"
+    ]
+  },
+  "437": {
+    "title": "How many rows are in the Used Cars dataset?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/437",
+    "track": "mlp/oppe2",
+    "id": "437",
+    "statementHtml": "<p>Load the Used Cars regression dataset.</p><p>How many rows does it have?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "438": {
+    "title": "How many features are available for training (excluding the target `Price`)?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/438",
+    "track": "mlp/oppe2",
+    "id": "438",
+    "statementHtml": "<p>How many feature columns are there after separating the <code>Price</code> target column?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "439": {
+    "title": "What is the mean value of the `Price` column? (Round to 4 decimal places)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/439",
+    "track": "mlp/oppe2",
+    "id": "439",
+    "statementHtml": "<p>What is the mean of the <code>Price</code> column across all rows?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "440": {
+    "title": "What is the median value of the `Price` column?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/440",
+    "track": "mlp/oppe2",
+    "id": "440",
+    "statementHtml": "<p>What is the median of the <code>Price</code> column?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "441": {
+    "title": "What is the R² score of Linear Regression on the test set? (Round to 4 decimal places)\n\nRegression\n\nunattempted",
+    "url": "/question/441",
+    "track": "mlp/oppe2",
+    "id": "441",
+    "statementHtml": "<p>Split the Used Cars dataset 80:20 with <code>random_state=64</code>, apply <code>StandardScaler</code>, train <code>LinearRegression()</code>.\nWhat is the R² score on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "442": {
+    "title": "What is the RMSE of Linear Regression on the test set? (Round to 4 decimal places)\n\nRegression\n\nunattempted",
+    "url": "/question/442",
+    "track": "mlp/oppe2",
+    "id": "442",
+    "statementHtml": "<p>Same setup as above (80:20, random_state=64, StandardScaler, LinearRegression).</p><p>What is the RMSE on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "443": {
+    "title": "What is the R² score of Ridge Regression (alpha=1.0) on the test set? (Round to 4 decimal places)\n\nRegression\n\nunattempted",
+    "url": "/question/443",
+    "track": "mlp/oppe2",
+    "id": "443",
+    "statementHtml": "<p>Same split and scaler (80:20, random_state=64, StandardScaler). Train <code>Ridge(alpha=1.0)</code>.\nWhat is the R² score on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "444": {
+    "title": "What is the R² score of Random Forest Regressor on the test set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+    "url": "/question/444",
+    "track": "mlp/oppe2",
+    "id": "444",
+    "statementHtml": "<p>Split 80:20 (random_state=64), train <code>RandomForestRegressor(n_estimators=100, random_state=64)</code> <strong>without scaling</strong>.\nWhat is the R² score on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "445": {
+    "title": "What is the index of the most important feature in the Random Forest Regressor?\n\nRandom Forest\n\nunattempted",
+    "url": "/question/445",
+    "track": "mlp/oppe2",
+    "id": "445",
+    "statementHtml": "<p>Train <code>RandomForestRegressor(n_estimators=100, random_state=64)</code> (80:20 split, random_state=64, no scaling).\nWhat is the 0-based index of the most important feature according to <code>feature_importances_</code>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "446": {
+    "title": "What is the R² score of Gradient Boosting Regressor on the test set? (Round to 4 decimal places)\n\nGradient Boosting\n\nunattempted",
+    "url": "/question/446",
+    "track": "mlp/oppe2",
+    "id": "446",
+    "statementHtml": "<p>Split 80:20 (random_state=64), train <code>GradientBoostingRegressor(random_state=64)</code> without scaling.\nWhat is the R² score on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "447": {
+    "title": "Using Decision Tree Regressor GridSearchCV, what is the best max_depth?\n\nDecision Tree\n\nunattempted",
+    "url": "/question/447",
+    "track": "mlp/oppe2",
+    "id": "447",
+    "statementHtml": "<p>Run <code>GridSearchCV</code> on <code>DecisionTreeRegressor(random_state=64)</code> with this param grid:</p>\n<ul>\n<li><code>criterion</code>: [\"squared_error\", \"friedman_mse\"]</li>\n<li><code>max_depth</code>: [3, 5, 7, 10]</li>\n<li><code>min_samples_leaf</code>: [2, 5, 10]</li>\n<li><code>cv=4</code>, scoring=\"r2\"</li>\n</ul>\n<p>Split 80:20 (random_state=64), no scaling. What is the best <code>max_depth</code>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "448": {
+    "title": "What is the 5-fold cross-validation mean R² of Linear Regression on the training set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/448",
+    "track": "mlp/oppe2",
+    "id": "448",
+    "statementHtml": "<p>After 80:20 split (random_state=64) and <code>StandardScaler</code>, run 5-fold CV on <code>LinearRegression()</code> using only the training set.\nWhat is the mean R²?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "449": {
+    "title": "What is the 5-fold cross-validation mean R² of Random Forest Regressor on the training set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+    "url": "/question/449",
+    "track": "mlp/oppe2",
+    "id": "449",
+    "statementHtml": "<p>After 80:20 split (random_state=64), run 5-fold CV on <code>RandomForestRegressor(n_estimators=100, random_state=64)</code> using the training set (no scaling).\nWhat is the mean R²?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_cars_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "450": {
+    "title": "How many rows are in the NPPE1 Housing dataset?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/450",
+    "track": "mlp/oppe1",
+    "id": "450",
+    "statementHtml": "<p>Load the NPPE1 Housing preprocessing dataset.</p><p>How many rows does it have?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "452": {
+    "title": "How many missing/unknown values in the RIVERSIDE feature?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/452",
+    "track": "mlp/oppe1",
+    "id": "452",
+    "statementHtml": "<p>The RIVERSIDE feature uses the string <code>\"UNKNOWN\"</code> to indicate missing values. How many rows have <code>RIVERSIDE == \"UNKNOWN\"</code>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "453": {
+    "title": "What is the mean value of the `PRICE` column? (Round to 4 decimal places)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/453",
+    "track": "mlp/oppe1",
+    "id": "453",
+    "statementHtml": "<p>What is the mean of the <code>PRICE</code> column across all 4000 rows?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "483": {
+    "title": "How many houses have 5 or more rooms (RM >= 5)?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/483",
+    "track": "mlp/oppe1",
+    "id": "483",
+    "statementHtml": "<p>Using the NPPE1 Housing preprocessing dataset, how many houses have a room count (RM) of 5 or more?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "484": {
+    "title": "What is the mean price of the top 10 most expensive houses?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/484",
+    "track": "mlp/oppe1",
+    "id": "484",
+    "statementHtml": "<p>Find the 10 houses with the highest PRICE and compute their mean price.</p><p>Round to 4 decimal places.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "485": {
+    "title": "How many missing/invalid values in the RM (number of rooms) feature?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/485",
+    "track": "mlp/oppe1",
+    "id": "485",
+    "statementHtml": "<p>The RM feature uses -1 as a sentinel for missing/implausible values.</p><p>How many rows have RM == -1?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "486": {
+    "title": "How many missing/invalid values in the AGE (property age) feature?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/486",
+    "track": "mlp/oppe1",
+    "id": "486",
+    "statementHtml": "<p>The AGE feature uses -2 as a sentinel for missing/implausible values.</p><p>How many rows have AGE == -2?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "487": {
+    "title": "How many houses are on riverside and 50 years old or younger (valid values only)?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/487",
+    "track": "mlp/oppe1",
+    "id": "487",
+    "statementHtml": "<p>Count houses where RIVERSIDE == \"YES\" AND AGE &lt;= 50.</p><p>Ignore rows with missing values in RIVERSIDE (== \"UNKNOWN\") or AGE (== -2).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "488": {
+    "title": "How many houses are near exactly 6, 7, or 8 highways?\n\nPreprocessing\n\nunattempted",
+    "url": "/question/488",
+    "track": "mlp/oppe1",
+    "id": "488",
+    "statementHtml": "<p>Count rows where HIGHWAYCOUNT is exactly 6, 7, or 8 (all three inclusive).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "489": {
+    "title": "Mean of all values in the transformed test feature matrix (NPPE1 preprocessing)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/489",
+    "track": "mlp/oppe1",
+    "id": "489",
+    "statementHtml": "<p>After replacing invalid values with NaN, splitting 70/30 (random_state=0), and applying the ColumnTransformer (MinMaxScaler on 9 cols, StandardScaler on INDUS, median-impute+MinMax on RM, mean-impute+MinMax on AGE, most_frequent-impute+OneHotEncode on RIVERSIDE), what is the mean of ALL values in the transformed test feature matrix?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_preproc.csv\"))\ndf.head()"
+    ]
+  },
+  "490": {
+    "title": "NPPE1 Part2: R2 of Ridge(alpha=10, saga, tol=1e-4, rs=42)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/490",
+    "track": "mlp/oppe1",
+    "id": "490",
+    "statementHtml": "<p>Load nppe1_model.csv (last column \"14\" is target, columns 0-13 are features).</p><p>Split: test_size=0.3, random_state=42.</p><p>Train Ridge(alpha=10, solver=\"saga\", tol=1e-4, random_state=42).</p><p>What is the R2 score on the test set?</p><p>(round to 4 dp)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "491": {
+    "title": "NPPE1 Part2: Index of most important feature in Ridge model (largest |coefficient|)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/491",
+    "track": "mlp/oppe1",
+    "id": "491",
+    "statementHtml": "<p>Using the Ridge model (alpha=10, solver=\"saga\", tol=1e-4, random_state=42), what is the 0-based index of the most important feature?</p><p>(Largest absolute coefficient;</p><p>ignore intercept)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "492": {
+    "title": "NPPE1 Part2: Index of least important feature in Ridge model (smallest |coefficient|)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/492",
+    "track": "mlp/oppe1",
+    "id": "492",
+    "statementHtml": "<p>Using the Ridge model (alpha=10, solver=\"saga\", tol=1e-4, random_state=42), what is the 0-based index of the least important feature?</p><p>(Smallest absolute coefficient;</p><p>ignore intercept)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "493": {
+    "title": "NPPE1 Part2: MAE of best SGDRegressor (GridSearchCV with penalty, alpha, tol)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/493",
+    "track": "mlp/oppe1",
+    "id": "493",
+    "statementHtml": "<p>GridSearchCV(SGDRegressor(random_state=42), penalty=[\"l1\",\"l2\"], alpha=[1e-5,1e-4,1e-3,1e-2,0.1], tol=[1e-4,1e-3,1e-2,0.1], cv=5, scoring=\"neg_mean_absolute_error\").</p><p>What is the MAE of the best model on the test set?</p><p>(round to 4 dp)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "494": {
+    "title": "NPPE1 Part2: R2 of PCA+Lasso pipeline (GridSearchCV)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/494",
+    "track": "mlp/oppe1",
+    "id": "494",
+    "statementHtml": "<p>Pipeline([(\"PCA\", PCA()), (\"estimator\", Lasso())]).</p><p>GridSearchCV: PCA__n_components=[0.9,0.95], estimator__alpha=[10,1,0.01,0.001], scoring=\"neg_mean_absolute_error\", cv=5, n_jobs=-1.</p><p>What is the R2 score on the test set?</p><p>(round to 4 dp)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "495": {
+    "title": "NPPE1 Part2: Eigenvalue of first principal component from PCA+Lasso best model\n\nPreprocessing\n\nunattempted",
+    "url": "/question/495",
+    "track": "mlp/oppe1",
+    "id": "495",
+    "statementHtml": "<p>Using the best PCA+Lasso pipeline from GridSearchCV above, what is the variance (eigenvalue) explained by the first principal component?</p><p>(Use explained_variance_[0], round to 4 dp)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "496": {
+    "title": "NPPE1 Part2: R2 of PolynomialFeatures(degree=2) + Lasso pipeline\n\nPreprocessing\n\nunattempted",
+    "url": "/question/496",
+    "track": "mlp/oppe1",
+    "id": "496",
+    "statementHtml": "<p>Pipeline([(\"poly\", PolynomialFeatures(degree=2, interaction_only=False)), (\"lasso\", Lasso(alpha=1, warm_start=True, random_state=0))]).</p><p>Fit on training data.</p><p>What is the R2 score on the test set?</p><p>(round to 4 dp)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "497": {
+    "title": "NPPE1 Part2: Feature index eliminated by RFE (n_features_to_select=13)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/497",
+    "track": "mlp/oppe1",
+    "id": "497",
+    "statementHtml": "<p>Using RFE(LinearRegression(), n_features_to_select=13) on the training data, which feature index (0-based) is eliminated?</p><p>(The feature with the highest ranking value)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/nppe1_model.csv\"))\ndf.head()"
+    ]
+  },
+  "498": {
+    "title": "2022 Greenwich >3 rooms facing North/East\n\nPreprocessing\n\nunattempted",
+    "url": "/question/498",
+    "track": "mlp/oppe1",
+    "id": "498",
+    "statementHtml": "<p>In the Year 2022, how many houses (rows) are located in the <strong>Greenwich</strong> Locality, have more than 3 <code>num_rooms</code>, and face towards either the <strong>North</strong> or <strong>East</strong>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "499": {
+    "title": "Test dataset row count (Year >= 2021)\n\nPreprocessing\n\nunattempted",
+    "url": "/question/499",
+    "track": "mlp/oppe1",
+    "id": "499",
+    "statementHtml": "<p>Split the dataset so that rows where Year &lt; 2021 form the <strong>train</strong> set and rows where Year &gt;= 2021 (both 2021 and 2022) form the <strong>test</strong> set. Features (X) exclude <code>Sale Price</code>; label (y) is <code>Sale Price</code>.\\n\\nHow many rows are in the <strong>feature matrix of the test dataset</strong>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "500": {
+    "title": "Feature count after OHE + MinMaxScaler\n\nPreprocessing\n\nunattempted",
+    "url": "/question/500",
+    "track": "mlp/oppe1",
+    "id": "500",
+    "statementHtml": "<p>Apply the following preprocessing on the <strong>train</strong> split (Year &lt; 2021):</p>\n<ol>\n<li>Replace <code>\"?\"</code> with NaN.</li>\n<li>Impute: <code>Locality</code> → most frequent; <code>Estimated Value</code> → median; <code>carpet_area</code> → mean; <code>Property</code> → most frequent.</li>\n<li>Drop the <code>Date</code> column.</li>\n<li>Apply <code>MinMaxScaler</code> on numerical features: <code>Year, num_rooms, num_bathrooms, Estimated Value, carpet_area, property_tax_rate</code>.</li>\n<li>Apply <code>OneHotEncoder</code> on categorical features: <code>Locality, Property, Residential, Face</code>.</li>\n</ol>\n<p>How many total features (columns) are in <code>X_train</code> after preprocessing?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "501": {
+    "title": "LinearRegression R² on test set\n\nRegression\n\nunattempted",
+    "url": "/question/501",
+    "track": "mlp/oppe1",
+    "id": "501",
+    "statementHtml": "<p>After the preprocessing pipeline in Q9, apply <code>LinearRegression()</code> on the training set.</p>\n<p>What is the <strong>R² score</strong> on the <strong>test set</strong>? (Round to 4 decimal places.)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "502": {
+    "title": "Max R² across 5-fold CV (LinearRegression, training set)\n\nRegression\n\nunattempted",
+    "url": "/question/502",
+    "track": "mlp/oppe1",
+    "id": "502",
+    "statementHtml": "<p>Using the preprocessed training set from Q9, run <code>cross_val_score</code> on <code>LinearRegression()</code> with <strong>5 folds</strong> and <code>scoring=\"r2\"</code>.</p>\n<p>What is the <strong>maximum</strong> R² value across the 5 folds? (Round to 4 decimal places.)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "503": {
+    "title": "SGDRegressor R² on test set\n\nRegression\n\nunattempted",
+    "url": "/question/503",
+    "track": "mlp/oppe1",
+    "id": "503",
+    "statementHtml": "<p>Using the preprocessed train/test sets from Q9, train <code>SGDRegressor(random_state=27, warm_start=True, max_iter=100)</code> on the training set.</p>\n<p>What is the <strong>R² score</strong> on the <strong>test set</strong>? (Round to 4 decimal places.)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "504": {
+    "title": "PolyFeatures + Lasso GridSearch — best alpha\n\nRegression\n\nunattempted",
+    "url": "/question/504",
+    "track": "mlp/oppe1",
+    "id": "504",
+    "statementHtml": "<p>Build a <code>Pipeline([(\"poly\", PolynomialFeatures(interaction_only=True)), (\"las\", Lasso())])</code> and tune with <code>GridSearchCV</code> on the <strong>training set</strong> (preprocessed as in Q9):</p>\n<ul>\n<li><code>poly__degree</code>: [1, 2]</li>\n<li><code>las__alpha</code>: [10, 100, 1000, 10000]</li>\n<li><code>scoring</code>: neg_mean_absolute_error, <code>cv=5</code>, <code>n_jobs=-1</code></li>\n</ul>\n<p>What is the <strong>best alpha</strong> value?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "505": {
+    "title": "PolyFeatures + Lasso GridSearch — best degree\n\nRegression\n\nunattempted",
+    "url": "/question/505",
+    "track": "mlp/oppe1",
+    "id": "505",
+    "statementHtml": "<p>Using the same <code>Pipeline</code> and <code>GridSearchCV</code> as Q14 (same param grid, <code>cv=5</code>, <code>n_jobs=-1</code>, <code>scoring=neg_mean_absolute_error</code>):</p>\n<p>What is the <strong>best polynomial degree</strong>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "506": {
+    "title": "SelectKBest max p-value (f_regression, k=10)\n\nRegression\n\nunattempted",
+    "url": "/question/506",
+    "track": "mlp/oppe1",
+    "id": "506",
+    "statementHtml": "<p>Build a <code>Pipeline([(\"skb\", SelectKBest(f_regression, k=10)), (\"estimator\", Lasso(random_state=27))])</code> and fit it on the <strong>training set</strong> (preprocessed as in Q9).</p>\n<p>Fit a <strong>separate</strong> <code>SelectKBest(f_regression, k=10)</code> on the same training data.\nWhat is the <strong>maximum p-value</strong> across all features? (Round to 4 decimal places.)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "507": {
+    "title": "SelectKBest + Lasso pipeline R² on test set\n\nRegression\n\nunattempted",
+    "url": "/question/507",
+    "track": "mlp/oppe1",
+    "id": "507",
+    "statementHtml": "<p>Fit the <code>Pipeline([(\"skb\", SelectKBest(f_regression, k=10)), (\"estimator\", Lasso(random_state=27))])</code> on the training set (preprocessed as in Q9).</p>\n<p>What is the <strong>R² score</strong> on the <strong>test set</strong>? (Round to 4 decimal places.)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "508": {
+    "title": "SelectKBest max F-statistic (f_regression, k=10)\n\nRegression\n\nunattempted",
+    "url": "/question/508",
+    "track": "mlp/oppe1",
+    "id": "508",
+    "statementHtml": "<p>Using the same <code>SelectKBest(f_regression, k=10)</code> fitted on the training set (as in Q18):</p>\n<p>What is the <strong>maximum F-statistic</strong> across all features? (Round to 2 decimal places.)</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe1_regression.csv\"))\ndf.head()"
+    ]
+  },
+  "509": {
+    "title": "Heart Disease: Proportion of Positive Class\n\nData Analysis\n\nunattempted",
+    "url": "/question/509",
+    "track": "mlp/oppe2",
+    "id": "509",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset from the URL provided.</p>\n<p>The target column is <strong>HeartAttack</strong> (0 = No, 1 = Yes).</p>\n<p>Compute the <strong>proportion of samples with label = 1</strong> (i.e., number of rows where HeartAttack == 1 divided by total rows).</p>\n<p>Round your answer to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "510": {
+    "title": "Heart Disease: Training Set Size\n\nData Analysis\n\nunattempted",
+    "url": "/question/510",
+    "track": "mlp/oppe2",
+    "id": "510",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset. The target column is <strong>HeartAttack</strong>.</p>\n<p>Split the data using:</p>\n<ul>\n<li><code>test_size=0.2</code></li>\n<li><code>random_state=64</code></li>\n</ul>\n<p>How many samples are in the <strong>training set</strong>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "511": {
+    "title": "Heart Disease: Logistic Regression F1 Score\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/511",
+    "track": "mlp/oppe2",
+    "id": "511",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Train a <strong>Logistic Regression</strong> model with:</p>\n<ul>\n<li><code>solver='lbfgs'</code></li>\n<li><code>random_state=64</code></li>\n<li><code>tol=1e-4</code></li>\n<li><code>C=0.1</code></li>\n<li><code>max_iter=100</code></li>\n</ul>\n<p>Compute the <strong>f1 score</strong> on the test set (default <code>average='binary'</code>).</p>\n<p>Round to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "512": {
+    "title": "Heart Disease: Logistic Regression Intercept\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/512",
+    "track": "mlp/oppe2",
+    "id": "512",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Using the same Logistic Regression model from Q4 (solver=lbfgs, C=0.1, tol=1e-4, max_iter=100, random_state=64, 80:20 split random_state=64).</p>\n<p>What is the <strong>intercept</strong> of the trained model?</p>\n<p>Access it via <code>lr.intercept_[0]</code>. Round to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "513": {
+    "title": "Heart Disease: LR GridSearch Precision\n\nLogistic Regression\n\nunattempted",
+    "url": "/question/513",
+    "track": "mlp/oppe2",
+    "id": "513",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Run <strong>GridSearchCV</strong> on Logistic Regression with:</p>\n<ul>\n<li><code>param_grid = {\"solver\": [\"lbfgs\", \"sag\"], \"max_iter\": [100, 200, 500], \"C\": [0.01, 0.1, 1, 10]}</code></li>\n<li><code>cv=4</code></li>\n<li><code>random_state=64</code> in the estimator</li>\n</ul>\n<p>Compute <strong>precision score</strong> of the best estimator on the test set.</p>\n<p>Round to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "514": {
+    "title": "Heart Disease: SGD Classifier F1 Score\n\nSGDClassifier\n\nunattempted",
+    "url": "/question/514",
+    "track": "mlp/oppe2",
+    "id": "514",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Train an <strong>SGDClassifier</strong> with:</p>\n<ul>\n<li><code>loss='log_loss'</code></li>\n<li><code>penalty='l2'</code></li>\n<li><code>max_iter=10</code></li>\n<li><code>learning_rate='constant'</code></li>\n<li><code>eta0=0.01</code></li>\n<li><code>alpha=0.001</code></li>\n<li><code>random_state=64</code></li>\n</ul>\n<p>Compute <strong>f1 score</strong> on the test set. Round to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "515": {
+    "title": "Heart Disease: KNN Best K\n\nKNN\n\nunattempted",
+    "url": "/question/515",
+    "track": "mlp/oppe2",
+    "id": "515",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Use <strong>GridSearchCV</strong> on KNeighborsClassifier with:</p>\n<ul>\n<li><code>param_grid = {\"n_neighbors\": [5, 7, 9, 11]}</code></li>\n<li><code>cv=5</code></li>\n<li><code>scoring='f1'</code></li>\n</ul>\n<p>What is the <strong>best value of K</strong> (n_neighbors) found?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "516": {
+    "title": "Heart Disease: Decision Tree GridSearch Accuracy\n\nDecision Tree\n\nunattempted",
+    "url": "/question/516",
+    "track": "mlp/oppe2",
+    "id": "516",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Run <strong>GridSearchCV</strong> on DecisionTreeClassifier (<code>random_state=64</code>) with:</p>\n<pre><code class=\"language-python\">param_grid = {\n    \"criterion\": [\"gini\", \"entropy\"],\n    \"splitter\": [\"random\", \"best\"],\n    \"min_samples_leaf\": [6, 8, 10, 12, 14],\n    \"max_depth\": [5, 6, 7, 8],\n    \"min_samples_split\": [16, 18, 20, 22]\n}\n</code></pre>\n<p><code>cv=3</code></p>\n<p>Compute the <strong>accuracy</strong> of the best estimator on the test set. Round to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()",
+      "param_grid = {\n    \"criterion\": [\"gini\", \"entropy\"],\n    \"splitter\": [\"random\", \"best\"],\n    \"min_samples_leaf\": [6, 8, 10, 12, 14],\n    \"max_depth\": [5, 6, 7, 8],\n    \"min_samples_split\": [16, 18, 20, 22]\n}\n"
+    ]
+  },
+  "517": {
+    "title": "Heart Disease: Decision Tree Number of Leaves\n\nDecision Tree\n\nunattempted",
+    "url": "/question/517",
+    "track": "mlp/oppe2",
+    "id": "517",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Using the same GridSearchCV result from Q10 (DecisionTreeClassifier, cv=3).</p>\n<p>How many <strong>leaf nodes</strong> does the best estimator have?</p>\n<p>Use <code>gs.best_estimator_.get_n_leaves()</code>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "518": {
+    "title": "Heart Disease: DT Approach 2 (CCP Alpha Pruning) Accuracy\n\nDecision Tree\n\nunattempted",
+    "url": "/question/518",
+    "track": "mlp/oppe2",
+    "id": "518",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Train <strong>Approach 2</strong>: DecisionTreeClassifier with:</p>\n<ul>\n<li><code>criterion='entropy'</code></li>\n<li><code>ccp_alpha=0.01</code></li>\n<li><code>random_state=64</code></li>\n</ul>\n<p>Compute <strong>accuracy</strong> on the test set. Round to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "519": {
+    "title": "Heart Disease: DT |TP Difference| Between Approaches\n\nDecision Tree\n\nunattempted",
+    "url": "/question/519",
+    "track": "mlp/oppe2",
+    "id": "519",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Train two Decision Trees on the training set:</p>\n<ul>\n<li><strong>Approach 1</strong>: <code>criterion='entropy'</code>, <code>max_depth=10</code>, <code>min_samples_split=50</code>, <code>random_state=64</code></li>\n<li><strong>Approach 2</strong>: <code>criterion='entropy'</code>, <code>ccp_alpha=0.01</code>, <code>random_state=64</code></li>\n</ul>\n<p>Compute the confusion matrix for each on the test set.</p>\n<p>Let TP1 = true positives from approach 1, TP2 = true positives from approach 2.</p>\n<p>What is <strong>|TP1 - TP2|</strong>?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "520": {
+    "title": "Heart Disease: Sum of Tree Node Counts\n\nDecision Tree\n\nunattempted",
+    "url": "/question/520",
+    "track": "mlp/oppe2",
+    "id": "520",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Using the same two DT approaches from Q13:</p>\n<ul>\n<li><strong>Approach 1</strong>: <code>criterion='entropy'</code>, <code>max_depth=10</code>, <code>min_samples_split=50</code>, <code>random_state=64</code></li>\n<li><strong>Approach 2</strong>: <code>criterion='entropy'</code>, <code>ccp_alpha=0.01</code>, <code>random_state=64</code></li>\n</ul>\n<p>What is the <strong>sum of node counts</strong> of both trees?</p>\n<p>Use <code>app1.tree_.node_count + app2.tree_.node_count</code>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "521": {
+    "title": "Heart Disease: Random Forest Misclassified Count\n\nRandom Forest\n\nunattempted",
+    "url": "/question/521",
+    "track": "mlp/oppe2",
+    "id": "521",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Run <strong>GridSearchCV</strong> on RandomForestClassifier (<code>random_state=64</code>) with:</p>\n<pre><code class=\"language-python\">param_grid = {\n    \"n_estimators\": [10, 20, 30],\n    \"max_features\": [\"sqrt\", \"log2\"],\n    \"min_impurity_decrease\": [0.001, 0.01, 0.1]\n}\n</code></pre>\n<p><code>cv=5</code></p>\n<p>How many samples are <strong>misclassified</strong> by the best estimator on the test set?</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()",
+      "param_grid = {\n    \"n_estimators\": [10, 20, 30],\n    \"max_features\": [\"sqrt\", \"log2\"],\n    \"min_impurity_decrease\": [0.001, 0.01, 0.1]\n}\n"
+    ]
+  },
+  "522": {
+    "title": "Heart Disease: RF GridSearch Best min_impurity_decrease\n\nRandom Forest\n\nunattempted",
+    "url": "/question/522",
+    "track": "mlp/oppe2",
+    "id": "522",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Using the same RandomForest GridSearchCV from Q15.</p>\n<p>What is the <strong>best value of <code>min_impurity_decrease</code></strong> found by GridSearchCV?</p>\n<p>Enter the exact float value (e.g.</p><p>0.001).</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  },
+  "523": {
+    "title": "Heart Disease: AdaBoost GridSearch Accuracy\n\nGradient Boosting\n\nunattempted",
+    "url": "/question/523",
+    "track": "mlp/oppe2",
+    "id": "523",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Load the dataset, split 80:20 with <code>random_state=64</code>.</p>\n<p>Run <strong>GridSearchCV</strong> on AdaBoostClassifier (<code>random_state=64</code>) with:</p>\n<pre><code class=\"language-python\">param_grid = {\n    \"n_estimators\": [20, 30, 50],\n    \"learning_rate\": [0.1, 0.5, 1, 2]\n}\n</code></pre>\n<p><code>cv=5</code></p>\n<p>Compute <strong>accuracy</strong> of the best estimator on the test set. Round to <strong>6 decimal places</strong>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()",
+      "param_grid = {\n    \"n_estimators\": [20, 30, 50],\n    \"learning_rate\": [0.1, 0.5, 1, 2]\n}\n"
+    ]
+  },
+  "524": {
+    "title": "Heart Disease: AdaBoost Class 0 Correct Predictions (TN)\n\nGradient Boosting\n\nunattempted",
+    "url": "/question/524",
+    "track": "mlp/oppe2",
+    "id": "524",
+    "statementHtml": "<h2>Heart Disease Classification</h2>\n<p>Using the same AdaBoost GridSearchCV from Q17.</p>\n<p>How many <strong>class 0 samples are correctly classified</strong> (True Negatives) by the best estimator on the test set?</p>\n<p>Compute the confusion matrix and read <code>cm[0, 0]</code>.</p>",
+    "datasetLinks": [
+      {
+        "text": "↓ Download CSV",
+        "url": "https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv"
+      }
+    ],
+    "starter": [
+      "import pandas as pd\nfrom pyodide.http import open_url\ndf = pd.read_csv(open_url(\"https://oppe.rangalabs.cloud/static/datasets/mlp_oppe2_heart_balanced.csv\"))\ndf.head()"
+    ]
+  }
+}

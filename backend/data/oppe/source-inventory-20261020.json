@@ -1,0 +1,1532 @@
+{
+  "java/oppe1": [
+    {
+      "title": "Student / Test — findTotal & getMax\n\nConstructor, Getters & Aggregation\n\nunattempted",
+      "url": "/question/12"
+    },
+    {
+      "title": "Student / Admission — deep copy courses[]\n\nCopy Constructor — String[]\n\nunattempted",
+      "url": "/question/13"
+    },
+    {
+      "title": "Player / Event — deep copy games[]\n\nCopy Constructor — String[]\n\nunattempted",
+      "url": "/question/14"
+    },
+    {
+      "title": "Employee / Test — deep copy projects[]\n\nCopy Constructor — String[]\n\nunattempted",
+      "url": "/question/15"
+    },
+    {
+      "title": "Vowels / MClass — copy constructor with String + int count\n\nCopy Constructor — String[]\n\nunattempted",
+      "url": "/question/16"
+    },
+    {
+      "title": "Stock / BrokerageStock / InvestmentApp\n\nInheritance, Overriding & Overloading\n\nunattempted",
+      "url": "/question/17"
+    },
+    {
+      "title": "StringOperations / StringReverse / UpdatedStrings\n\nAbstract Classes\n\nunattempted",
+      "url": "/question/18"
+    },
+    {
+      "title": "Searchable / CharArray / FrequencyCounter\n\nInterfaces\n\nunattempted",
+      "url": "/question/19"
+    },
+    {
+      "title": "Point<T extends Number> — midpoint with wildcard\n\nGenerics\n\nunattempted",
+      "url": "/question/20"
+    },
+    {
+      "title": "ComplexNum<T extends Number> — add with wildcard\n\nGenerics\n\nunattempted",
+      "url": "/question/21"
+    },
+    {
+      "title": "Shop / MapTest — aggregate sold count + find max\n\nCollections — Maps\n\nunattempted",
+      "url": "/question/22"
+    },
+    {
+      "title": "Doctor / Surgeon / HospitalSystem\n\nInheritance, Overriding & Overloading\n\nunattempted",
+      "url": "/question/60"
+    },
+    {
+      "title": "Faculty / Hod — bonus override + getDetails overloading\n\nInheritance, Overriding & Overloading\n\nunattempted",
+      "url": "/question/61"
+    },
+    {
+      "title": "UPIPayment / PhonePay / Paytm / UPIUser\n\nAbstract Classes\n\nunattempted",
+      "url": "/question/62"
+    },
+    {
+      "title": "MobileDevice / Camera / Smartphone\n\nInterfaces\n\nunattempted",
+      "url": "/question/63"
+    },
+    {
+      "title": "Design / Poster / DesignApp — bounded generic method\n\nGenerics\n\nunattempted",
+      "url": "/question/64"
+    },
+    {
+      "title": "Asset / ITAsset / EAMApp — bounded generic method\n\nGenerics\n\nunattempted",
+      "url": "/question/65"
+    },
+    {
+      "title": "ArrayExample<T> — generic array class with display and elementCount\n\nGenerics\n\nunattempted",
+      "url": "/question/66"
+    },
+    {
+      "title": "Person / Employee / Student — printAll(List<? extends Person>)\n\nGenerics with Wildcards\n\nunattempted",
+      "url": "/question/67"
+    },
+    {
+      "title": "Product / Electronics / Book — findMaxTax(List<? extends Product>)\n\nGenerics with Wildcards\n\nunattempted",
+      "url": "/question/68"
+    },
+    {
+      "title": "ApiResponse / ResponseProcessor — aggregate status counts\n\nCollections — Maps\n\nunattempted",
+      "url": "/question/69"
+    },
+    {
+      "title": "RequestRecord / EmployeePortal — aggregate request counts\n\nCollections — Maps\n\nunattempted",
+      "url": "/question/70"
+    },
+    {
+      "title": "Employee / Appraisable — default increment, checkAndUpdateSalary\n\nInterfaces\n\nunattempted",
+      "url": "/question/71"
+    },
+    {
+      "title": "PaymentApp / Account / Transferable\n\nPrivate Inner Classes\n\nunattempted",
+      "url": "/question/72"
+    },
+    {
+      "title": "Department / DeptEnquiry / Registerable\n\nPrivate Inner Classes\n\nunattempted",
+      "url": "/question/73"
+    },
+    {
+      "title": "ExamBranch / Regular / Supple / Generatable\n\nPrivate Inner Classes\n\nunattempted",
+      "url": "/question/74"
+    },
+    {
+      "title": "Rectangle / Point — simple private inner class\n\nPrivate Inner Classes\n\nunattempted",
+      "url": "/question/75"
+    },
+    {
+      "title": "ComplexList / ComplexIterator — custom has_next()/get_next()\n\nIterators & ArrayList\n\nunattempted",
+      "url": "/question/76"
+    },
+    {
+      "title": "Bills / Main — deep copy items[] + static discount\n\nCopy Constructor — String[]\n\nunattempted",
+      "url": "/question/77"
+    },
+    {
+      "title": "Library / Books / Special_Books — static counter + dependency\n\nInheritance, Overriding & Overloading\n\nunattempted",
+      "url": "/question/78"
+    },
+    {
+      "title": "Vehicle / Car / Bicycle / DispatchExample — dynamic dispatch\n\nInheritance, Overriding & Overloading\n\nunattempted",
+      "url": "/question/79"
+    },
+    {
+      "title": "Employee / Manager / Director — abstract printBonus()\n\nAbstract Classes\n\nunattempted",
+      "url": "/question/80"
+    },
+    {
+      "title": "Shopping / Amazon / Flipkart / User — abstract offers()\n\nAbstract Classes\n\nunattempted",
+      "url": "/question/81"
+    },
+    {
+      "title": "Appraisable / SpecialAppraisable / Teacher\n\nInterfaces\n\nunattempted",
+      "url": "/question/82"
+    },
+    {
+      "title": "accountDetails + Account + Type_1 / Type_2\n\nInterfaces\n\nunattempted",
+      "url": "/question/83"
+    },
+    {
+      "title": "IResearchScholar / JuniorRS / SeniorRS\n\nInterfaces\n\nunattempted",
+      "url": "/question/84"
+    },
+    {
+      "title": "SpecialAppraisable / Employee — interface extends interface\n\nInterfaces\n\nunattempted",
+      "url": "/question/85"
+    },
+    {
+      "title": "LoginSystem / LoginSuccessful / LoginFailed / AuthStatus\n\nPrivate Inner Classes\n\nunattempted",
+      "url": "/question/86"
+    },
+    {
+      "title": "PowerBill / Domestic / Commercial / BillingTest — tiered billing\n\nPrivate Inner Classes\n\nunattempted",
+      "url": "/question/87"
+    },
+    {
+      "title": "Pair / PairTest — add() returning Pair\n\nGenerics\n\nunattempted",
+      "url": "/question/88"
+    },
+    {
+      "title": "Team / FClass — Map<String,ArrayList>, filter players ≥80\n\nCollections — Maps\n\nunattempted",
+      "url": "/question/89"
+    },
+    {
+      "title": "Company / FClass — Map<String,ArrayList>, filter employees ≥10\n\nCollections — Maps\n\nunattempted",
+      "url": "/question/90"
+    },
+    {
+      "title": "Student / RemoveStudent — iterator remove from ArrayList\n\nIterators & ArrayList\n\nunattempted",
+      "url": "/question/91"
+    },
+    {
+      "title": "MusicPlaylist / Song — iterator remove from LinkedHashMap\n\nIterators & ArrayList\n\nunattempted",
+      "url": "/question/92"
+    },
+    {
+      "title": "Student / CollectionTest — remove backlogs>5, set status\n\nIterators & ArrayList\n\nunattempted",
+      "url": "/question/93"
+    },
+    {
+      "title": "Tourist / TravellerTest — deep copy ArrayList\n\nCopy Constructor — ArrayList\n\nunattempted",
+      "url": "/question/94"
+    },
+    {
+      "title": "Taxable Products — Electronics, Book, findMaxTax (PYQ Jan 2025)\n\nGenerics\n\nunattempted",
+      "url": "/question/252"
+    },
+    {
+      "title": "Account / Transaction — callback chaining\n\nCallbacks\n\nunattempted",
+      "url": "/question/256"
+    },
+    {
+      "title": "Employee01 / TreeSet — compareTo (currentExp, totalExp)\n\nCollections — TreeSet & Comparable\n\nunattempted",
+      "url": "/question/257"
+    },
+    {
+      "title": "Book / Library — compound-key Map + searchByGenre\n\nCollections — Maps\n\nunattempted",
+      "url": "/question/258"
+    }
+  ],
+  "java/oppe2": [
+    {
+      "title": "OddNumberException — checked exception + ArrayChecker\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/41"
+    },
+    {
+      "title": "InvalidAgeException — isEligibletoVote + isEligibletoWriteUPSC\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/42"
+    },
+    {
+      "title": "PublicationYearOutOfBoundsException — Book.checkAndGetTitle()\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/43"
+    },
+    {
+      "title": "NoTeamMemberException — Project.hasTeamMembers() + updateProjectList()\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/44"
+    },
+    {
+      "title": "InvalidInputEx — wrapping ArrayIndexOutOfBoundsException (chained)\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/45"
+    },
+    {
+      "title": "VoterValidation — 4 exceptions + initCause chaining + finally\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/46"
+    },
+    {
+      "title": "Airplane + Engine — deep clone via Cloneable\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/47"
+    },
+    {
+      "title": "Book + Author — deep clone (nested object)\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/48"
+    },
+    {
+      "title": "Movie + Director — deep clone (PYQ Jan 2025)\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/49"
+    },
+    {
+      "title": "StudentRecords + Marks — deep clone (nested object)\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/50"
+    },
+    {
+      "title": "Employee + String[] projects — deep clone array\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/51"
+    },
+    {
+      "title": "ResearchArticle — articleProcessor filter (PYQ Jan 2025)\n\nStreams API (Week 8)\n\nunattempted",
+      "url": "/question/52"
+    },
+    {
+      "title": "Patient — patientProcessor (age < 30 AND chronicCondition = Diabetes)\n\nStreams API (Week 8)\n\nunattempted",
+      "url": "/question/53"
+    },
+    {
+      "title": "Product — productProcessor (price > 5000 AND stock > 10)\n\nStreams API (Week 8)\n\nunattempted",
+      "url": "/question/54"
+    },
+    {
+      "title": "Citizen — geFilteredStream (age >= 60 AND numDoses >= 1)\n\nStreams API (Week 8)\n\nunattempted",
+      "url": "/question/55"
+    },
+    {
+      "title": "Employee — getFilteredList (LinkedList, filter rating>6 AND salary<20000, sort desc)\n\nStreams API (Week 9)\n\nunattempted",
+      "url": "/question/56"
+    },
+    {
+      "title": "Player — getBatsmenCenturies (Collectors.toMap + merge function + TreeMap)\n\nStreams API (Week 9)\n\nunattempted",
+      "url": "/question/57"
+    },
+    {
+      "title": "FClass — Employee query by department AND salary threshold\n\nStreams API (Week 9)\n\nunattempted",
+      "url": "/question/58"
+    },
+    {
+      "title": "SecondDose — vaccination eligibility stream + isEmpty (date diff >= 28 days)\n\nStreams API (Week 9)\n\nunattempted",
+      "url": "/question/59"
+    },
+    {
+      "title": "Employee/Person/Address/Department — deep clone + updateEmp\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/253"
+    },
+    {
+      "title": "CarRental — ImproperHeadCountException + WrongDestinationException (chained)\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/254"
+    },
+    {
+      "title": "FClass — replace() with ArrayIndexOutOfBoundsException handling\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/255"
+    },
+    {
+      "title": "Car — SpeedLimitException on accelerate()\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/268"
+    },
+    {
+      "title": "Student — Scholarship Eligibility via Streams\n\nStreams API (Week 8)\n\nunattempted",
+      "url": "/question/271"
+    },
+    {
+      "title": "Athlete — deep clone chain (dummy → a1 → a2) with ArrayList field\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/278"
+    },
+    {
+      "title": "Customer + Items — deep clone array field (Naresh/Suresh order)\n\nObject Cloning (Week 8)\n\nunattempted",
+      "url": "/question/279"
+    },
+    {
+      "title": "Applicant — AgeOutOfBoundsException on checkAndGetName()\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/280"
+    },
+    {
+      "title": "DivisionException — custom exception on divide-by-3\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/281"
+    },
+    {
+      "title": "Employee Bills — merge two months' bill maps (17 Aug)\n\nCollections — Maps\n\nunattempted",
+      "url": "/question/282"
+    },
+    {
+      "title": "StringToIntConverter — InvalidNumberFormatException (17 Aug)\n\nCustom Exceptions (Week 7)\n\nunattempted",
+      "url": "/question/283"
+    }
+  ],
+  "python/oppe2": [
+    {
+      "title": "Check If Even Two-Digit Number\n\nArithmetic\n\nunattempted",
+      "url": "/question/189"
+    },
+    {
+      "title": "Check If Domain is .com or .in\n\nStrings\n\nunattempted",
+      "url": "/question/190"
+    },
+    {
+      "title": "Check If Element is Present in Opposite Halves\n\nLists\n\nunattempted",
+      "url": "/question/191"
+    },
+    {
+      "title": "Count Odd 3-Digit Numbers (Ignore None)\n\nLists\n\nunattempted",
+      "url": "/question/192"
+    },
+    {
+      "title": "Abbreviate Initials and Sort\n\nStrings\n\nunattempted",
+      "url": "/question/193"
+    },
+    {
+      "title": "Shopping List\n\nDictionaries\n\nunattempted",
+      "url": "/question/194"
+    },
+    {
+      "title": "Ubbi Dubbi - Add ub/dub Alternately Before Vowels\n\nFile Handling\n\nunattempted",
+      "url": "/question/195"
+    },
+    {
+      "title": "Check If a Number Divides Two Other Numbers\n\nArithmetic\n\nunattempted",
+      "url": "/question/196"
+    },
+    {
+      "title": "Check String Rotation\n\nStrings\n\nunattempted",
+      "url": "/question/197"
+    },
+    {
+      "title": "Find Missing Number in a Range\n\nSets\n\nunattempted",
+      "url": "/question/198"
+    },
+    {
+      "title": "Merge Two Dictionaries and Sum on Conflicts\n\nDictionaries\n\nunattempted",
+      "url": "/question/199"
+    },
+    {
+      "title": "Most Frequent Numbers from Input\n\nDictionaries\n\nunattempted",
+      "url": "/question/200"
+    },
+    {
+      "title": "Employee Data Analysis\n\nDictionaries\n\nunattempted",
+      "url": "/question/201"
+    },
+    {
+      "title": "Reorder the Jumbled Lines\n\nFile Handling\n\nunattempted",
+      "url": "/question/202"
+    },
+    {
+      "title": "Product of Sum and Absolute Difference of Digits\n\nArithmetic\n\nunattempted",
+      "url": "/question/203"
+    },
+    {
+      "title": "Check Divisibility by Last Two Digits\n\nArithmetic\n\nunattempted",
+      "url": "/question/204"
+    },
+    {
+      "title": "Swap the Last Chars in Dictionary Values\n\nDictionaries\n\nunattempted",
+      "url": "/question/205"
+    },
+    {
+      "title": "Get Words That Come After \"the\"\n\nLists\n\nunattempted",
+      "url": "/question/206"
+    },
+    {
+      "title": "Ceil Marks to Nearest Tens if Close\n\nConditionals\n\nunattempted",
+      "url": "/question/207"
+    },
+    {
+      "title": "Cartesian Points Processing\n\nSets\n\nunattempted",
+      "url": "/question/208"
+    },
+    {
+      "title": "Fill the First n Blanks with 1 to n\n\nFile Handling\n\nunattempted",
+      "url": "/question/209"
+    },
+    {
+      "title": "Check if Either of Two Numbers is a Multiple of the Other\n\nArithmetic\n\nunattempted",
+      "url": "/question/210"
+    },
+    {
+      "title": "Starts and Ends with the Same Vowel\n\nStrings\n\nunattempted",
+      "url": "/question/211"
+    },
+    {
+      "title": "Rearrange Even-Length Tuple by Placing Middle Elements at Ends\n\nTuples\n\nunattempted",
+      "url": "/question/212"
+    },
+    {
+      "title": "Count Strings with Length Divisible by 3 or 5\n\nLists\n\nunattempted",
+      "url": "/question/213"
+    },
+    {
+      "title": "Thresholding a 2D Array with * and @\n\nLoops\n\nunattempted",
+      "url": "/question/214"
+    },
+    {
+      "title": "Railway Ticket Booking Analysis\n\nDictionaries\n\nunattempted",
+      "url": "/question/215"
+    },
+    {
+      "title": "String Rearrangement\n\nFile Handling\n\nunattempted",
+      "url": "/question/216"
+    },
+    {
+      "title": "Extract Middle Elements from a List\n\nLists\n\nunattempted",
+      "url": "/question/217"
+    },
+    {
+      "title": "Shuffle a Three-Word Sentence\n\nStrings\n\nunattempted",
+      "url": "/question/218"
+    },
+    {
+      "title": "Check If Both Numbers Have the Same Sign\n\nConditionals\n\nunattempted",
+      "url": "/question/219"
+    },
+    {
+      "title": "Check Palindrome (Advanced)\n\nStrings\n\nunattempted",
+      "url": "/question/220"
+    },
+    {
+      "title": "Abbreviate Initials and Sort (Last, F.M. Format)\n\nStrings\n\nunattempted",
+      "url": "/question/221"
+    },
+    {
+      "title": "Employee Task Analysis\n\nDictionaries\n\nunattempted",
+      "url": "/question/222"
+    },
+    {
+      "title": "Simple Stemmer\n\nFile Handling\n\nunattempted",
+      "url": "/question/223"
+    },
+    {
+      "title": "Extract Border Elements from a List\n\nLists\n\nunattempted",
+      "url": "/question/224"
+    },
+    {
+      "title": "Absolute Time Difference Between Two Times\n\nArithmetic\n\nunattempted",
+      "url": "/question/225"
+    },
+    {
+      "title": "Transfer Amount Between Accounts\n\nDictionaries\n\nunattempted",
+      "url": "/question/226"
+    },
+    {
+      "title": "Words with Consecutive Identical Letters\n\nStrings\n\nunattempted",
+      "url": "/question/227"
+    },
+    {
+      "title": "Hand Cricket Match Runs\n\nI/O Processing\n\nunattempted",
+      "url": "/question/228"
+    },
+    {
+      "title": "Polygon Analysis\n\nData Aggregation & Multi-Function Programs\n\nunattempted",
+      "url": "/question/229"
+    },
+    {
+      "title": "Total Size of Image Files\n\nFile Handling\n\nunattempted",
+      "url": "/question/230"
+    },
+    {
+      "title": "Compute Electricity Bill\n\nConditionals\n\nunattempted",
+      "url": "/question/231"
+    },
+    {
+      "title": "Is Reverse Combined Palindrome\n\nStrings\n\nunattempted",
+      "url": "/question/232"
+    },
+    {
+      "title": "Pangram Check\n\nSets\n\nunattempted",
+      "url": "/question/233"
+    },
+    {
+      "title": "Check for Arithmetic Progression\n\nLists\n\nunattempted",
+      "url": "/question/234"
+    },
+    {
+      "title": "Rotate Matrix Clockwise 90 Degrees\n\nLists\n\nunattempted",
+      "url": "/question/235"
+    },
+    {
+      "title": "Book Data Analysis\n\nTuples\n\nunattempted",
+      "url": "/question/236"
+    },
+    {
+      "title": "File Content Zigzag Shift\n\nFile Handling\n\nunattempted",
+      "url": "/question/237"
+    },
+    {
+      "title": "Check If Multiple of 5 but Not 3\n\nArithmetic\n\nunattempted",
+      "url": "/question/238"
+    }
+  ],
+  "python/oppe1": [
+    {
+      "title": "Sum of Squares and Absolute Difference of Squares\n\nTuples\n\nunattempted",
+      "url": "/question/95"
+    },
+    {
+      "title": "Is Odd-Length Palindrome\n\nStrings\n\nunattempted",
+      "url": "/question/96"
+    },
+    {
+      "title": "Remove Elements at Two Given Indices\n\nLists\n\nunattempted",
+      "url": "/question/97"
+    },
+    {
+      "title": "Sum of Squares of Even Numbers\n\nLists\n\nunattempted",
+      "url": "/question/98"
+    },
+    {
+      "title": "Uppercase Only Vowels\n\nStrings\n\nunattempted",
+      "url": "/question/99"
+    },
+    {
+      "title": "Student Marks Filter\n\nDictionaries\n\nunattempted",
+      "url": "/question/100"
+    },
+    {
+      "title": "Print Pattern — V Shape\n\nLoops & Pattern Printing\n\nunattempted",
+      "url": "/question/101"
+    },
+    {
+      "title": "Check Positive Odd or Negative Even\n\nConditionals\n\nunattempted",
+      "url": "/question/102"
+    },
+    {
+      "title": "Check if String is Within Quotes and Has Quotes Inside\n\nStrings\n\nunattempted",
+      "url": "/question/103"
+    },
+    {
+      "title": "Replace Middle with N Times Middle\n\nTuples\n\nunattempted",
+      "url": "/question/104"
+    },
+    {
+      "title": "Count Positive Integers Ignoring None\n\nLists\n\nunattempted",
+      "url": "/question/105"
+    },
+    {
+      "title": "Find Sum and Absolute Difference Alternately\n\nLoops\n\nunattempted",
+      "url": "/question/106"
+    },
+    {
+      "title": "Matrix Walk\n\nLists\n\nunattempted",
+      "url": "/question/107"
+    },
+    {
+      "title": "Print Pattern — X Shape\n\nLoops & Pattern Printing\n\nunattempted",
+      "url": "/question/108"
+    },
+    {
+      "title": "Check if a Number is Divisible by Exactly One of Two Numbers\n\nConditionals\n\nunattempted",
+      "url": "/question/109"
+    },
+    {
+      "title": "Convert Date from mm-dd-yy to yy-dd-mm\n\nStrings\n\nunattempted",
+      "url": "/question/110"
+    },
+    {
+      "title": "Increment Dict Value with Max Limit\n\nDictionaries\n\nunattempted",
+      "url": "/question/111"
+    },
+    {
+      "title": "Last Word Starting with Uppercase Letter\n\nLoops\n\nunattempted",
+      "url": "/question/112"
+    },
+    {
+      "title": "Swap Every Alternate Line and Reverse Odd Lines\n\nLists\n\nunattempted",
+      "url": "/question/113"
+    },
+    {
+      "title": "Word Filters\n\nDictionaries\n\nunattempted",
+      "url": "/question/114"
+    },
+    {
+      "title": "Print Pattern — N Shape\n\nLoops & Pattern Printing\n\nunattempted",
+      "url": "/question/115"
+    },
+    {
+      "title": "Check Even or Divisible by 5\n\nConditionals\n\nunattempted",
+      "url": "/question/116"
+    },
+    {
+      "title": "Deinterleave Even and Odd Indices in String\n\nStrings\n\nunattempted",
+      "url": "/question/117"
+    },
+    {
+      "title": "Make Dictionary from Elements in Index of Lists\n\nDictionaries\n\nunattempted",
+      "url": "/question/118"
+    },
+    {
+      "title": "Count Unique Even and Odd Numbers\n\nSets\n\nunattempted",
+      "url": "/question/119"
+    },
+    {
+      "title": "Vowel Count of Words\n\nStrings\n\nunattempted",
+      "url": "/question/120"
+    },
+    {
+      "title": "Student Score Filter\n\nDictionaries\n\nunattempted",
+      "url": "/question/121"
+    },
+    {
+      "title": "Pattern Printing — W Pattern\n\nLoops & Pattern Printing\n\nunattempted",
+      "url": "/question/122"
+    },
+    {
+      "title": "Pattern Printing — Z Pattern\n\nLoops & Pattern Printing\n\nunattempted",
+      "url": "/question/129"
+    },
+    {
+      "title": "Check Even Number and Second Last Digit is Two\n\nConditionals\n\nunattempted",
+      "url": "/question/130"
+    },
+    {
+      "title": "Capitalize nth Character\n\nStrings\n\nunattempted",
+      "url": "/question/131"
+    },
+    {
+      "title": "Merge and Remove Duplicates\n\nSets\n\nunattempted",
+      "url": "/question/132"
+    },
+    {
+      "title": "Replace Vowels with Next Alphabet\n\nStrings\n\nunattempted",
+      "url": "/question/133"
+    },
+    {
+      "title": "Max Column Sum and Max Column Sum Index\n\nLists\n\nunattempted",
+      "url": "/question/134"
+    },
+    {
+      "title": "Analyze Sentences\n\nSets\n\nunattempted",
+      "url": "/question/135"
+    },
+    {
+      "title": "Centered Triangle of Zeroes\n\nLoops & Pattern Printing\n\nunattempted",
+      "url": "/question/136"
+    },
+    {
+      "title": "Describe Number Based on Divisibility\n\nConditionals\n\nunattempted",
+      "url": "/question/137"
+    },
+    {
+      "title": "Card to Value Tuple\n\nStrings\n\nunattempted",
+      "url": "/question/138"
+    },
+    {
+      "title": "Rotate Even Indices\n\nLists\n\nunattempted",
+      "url": "/question/139"
+    },
+    {
+      "title": "Unique Sum Pairs\n\nSets\n\nunattempted",
+      "url": "/question/140"
+    },
+    {
+      "title": "Replace Consonants with Hash\n\nI/O Processing\n\nunattempted",
+      "url": "/question/141"
+    },
+    {
+      "title": "Text Frequency Analysis\n\nData Aggregation & Multi-Function Programs\n\nunattempted",
+      "url": "/question/142"
+    },
+    {
+      "title": "Draw Arrow Trail from Movement Deltas\n\nStrings\n\nunattempted",
+      "url": "/question/143"
+    },
+    {
+      "title": "Check If a Number is a Decreasing 4-Digit Number\n\nArithmetic\n\nunattempted",
+      "url": "/question/144"
+    },
+    {
+      "title": "Parse Equation and Solve for x\n\nStrings\n\nunattempted",
+      "url": "/question/145"
+    },
+    {
+      "title": "Divide Number Into Almost Equal Parts\n\nArithmetic\n\nunattempted",
+      "url": "/question/146"
+    },
+    {
+      "title": "Compute Polynomial Value\n\nArithmetic\n\nunattempted",
+      "url": "/question/147"
+    },
+    {
+      "title": "Update Todo List Based on Given Indices\n\nSets\n\nunattempted",
+      "url": "/question/148"
+    },
+    {
+      "title": "Batsman Performance Analysis\n\nLists\n\nunattempted",
+      "url": "/question/149"
+    },
+    {
+      "title": "Horizontal Bar Chart\n\nI/O Processing\n\nunattempted",
+      "url": "/question/150"
+    }
+  ],
+  "sc/oppe1": [
+    {
+      "title": "sc oppe1 jan26 - Question 1\n\nfilesystems\n\nunattempted",
+      "url": "/question/295"
+    },
+    {
+      "title": "sc oppe1 jan26 - Question 2\n\narithmetic\n\nunattempted",
+      "url": "/question/296"
+    },
+    {
+      "title": "sc oppe1 jan26 - Question 3\n\nhashing\n\nunattempted",
+      "url": "/question/297"
+    },
+    {
+      "title": "sc oppe1 jan26 - Question 4\n\nsed\n\nunattempted",
+      "url": "/question/298"
+    },
+    {
+      "title": "sc oppe1 jan26 - Question 5\n\nawk\n\nunattempted",
+      "url": "/question/299"
+    },
+    {
+      "title": "ROT13 Decryption\n\nsed\n\nunattempted",
+      "url": "/question/300"
+    },
+    {
+      "title": "CSV Column Header Listing\n\nawk\n\nunattempted",
+      "url": "/question/301"
+    },
+    {
+      "title": "Reconstruct Flat Delimited Records\n\nawk\n\nunattempted",
+      "url": "/question/302"
+    },
+    {
+      "title": "Run Script and Check Exit Status\n\nbash\n\nunattempted",
+      "url": "/question/307"
+    },
+    {
+      "title": "Count Poem Lines Without Articles\n\ngrep\n\nunattempted",
+      "url": "/question/308"
+    },
+    {
+      "title": "Convert Windows Line Endings to Unix\n\nawk\n\nunattempted",
+      "url": "/question/310"
+    }
+  ],
+  "sc/oppe2": [
+    {
+      "title": "sc oppe2 jan26 - Question 2\n\npermissions\n\nunattempted",
+      "url": "/question/286"
+    },
+    {
+      "title": "sc oppe2 jan26 - Question 4\n\nsed\n\nunattempted",
+      "url": "/question/287"
+    },
+    {
+      "title": "sc oppe2 jan26 - Question 1\n\nstrings\n\nunattempted",
+      "url": "/question/288"
+    },
+    {
+      "title": "sc oppe2 jan26 - Question 3\n\nencoding\n\nunattempted",
+      "url": "/question/289"
+    },
+    {
+      "title": "sc oppe2 jan26 - Question 5\n\nawk\n\nunattempted",
+      "url": "/question/290"
+    },
+    {
+      "title": "sc oppe2 dec25 - Question 2\n\nstrings\n\nunattempted",
+      "url": "/question/291"
+    },
+    {
+      "title": "sc oppe2 dec25 - Question 3\n\narithmetic\n\nunattempted",
+      "url": "/question/292"
+    },
+    {
+      "title": "sc oppe2 dec25 - Question 4\n\nsed\n\nunattempted",
+      "url": "/question/293"
+    },
+    {
+      "title": "sc oppe2 dec25 - Question 5\n\nawk\n\nunattempted",
+      "url": "/question/294"
+    },
+    {
+      "title": "Check for Exact Words in Input\n\nbash\n\nunattempted",
+      "url": "/question/303"
+    },
+    {
+      "title": "Deduplicate ls -li Output by Inode\n\nbash\n\nunattempted",
+      "url": "/question/304"
+    },
+    {
+      "title": "Common and Unique Lines Between Two Inputs\n\nbash\n\nunattempted",
+      "url": "/question/305"
+    },
+    {
+      "title": "Organise Photos into Month Directories\n\nfilesystems\n\nunattempted",
+      "url": "/question/306"
+    },
+    {
+      "title": "Extract href Links from HTML\n\ngrep\n\nunattempted",
+      "url": "/question/309"
+    },
+    {
+      "title": "grep-1: Print Markdown Headings\n\ngrep\n\nunattempted",
+      "url": "/question/535"
+    },
+    {
+      "title": "grep-2: Count Unique IPs in access.log\n\ngrep\n\nunattempted",
+      "url": "/question/536"
+    },
+    {
+      "title": "grep-3: Count OS Requests in access.log\n\ngrep\n\nunattempted",
+      "url": "/question/537"
+    },
+    {
+      "title": "grep-4: Count HTTP Verbs in access.log\n\ngrep\n\nunattempted",
+      "url": "/question/538"
+    },
+    {
+      "title": "grep-5: Count Requests per Hour (10+)\n\ngrep\n\nunattempted",
+      "url": "/question/539"
+    },
+    {
+      "title": "sed-2: Unfold Continuation Lines\n\nsed\n\nunattempted",
+      "url": "/question/540"
+    },
+    {
+      "title": "sed-3: Multi-Transform (copyright, word replace, function markers, line numbers)\n\nsed\n\nunattempted",
+      "url": "/question/541"
+    },
+    {
+      "title": "sed-4: Unfold Multi-line CSV Address Fields\n\nsed\n\nunattempted",
+      "url": "/question/542"
+    },
+    {
+      "title": "sed-5: Pretty-print Minified JSON\n\nsed\n\nunattempted",
+      "url": "/question/544"
+    },
+    {
+      "title": "awk-1: DJ Filter by Year, Mode and BPM\n\nawk\n\nunattempted",
+      "url": "/question/545"
+    },
+    {
+      "title": "awk-2: Student Exam Statistics\n\nawk\n\nunattempted",
+      "url": "/question/546"
+    },
+    {
+      "title": "bash-1: Parse /etc/passwd Regular Users\n\nbash\n\nunattempted",
+      "url": "/question/547"
+    },
+    {
+      "title": "bash-2: Heart Attack IQR Outliers\n\nbash\n\nunattempted",
+      "url": "/question/548"
+    },
+    {
+      "title": "practice-3: Parent of Parent Directory\n\nbash\n\nunattempted",
+      "url": "/question/549"
+    },
+    {
+      "title": "practice-7: Three-Argument Script\n\nbash\n\nunattempted",
+      "url": "/question/550"
+    },
+    {
+      "title": "practice-10: Rectangle Transformation\n\nbash\n\nunattempted",
+      "url": "/question/551"
+    },
+    {
+      "title": "practice-11: Word Frequency Ranks 6-10\n\nbash\n\nunattempted",
+      "url": "/question/552"
+    },
+    {
+      "title": "practice-12: HTML Color Extraction\n\nbash\n\nunattempted",
+      "url": "/question/553"
+    },
+    {
+      "title": "SC: Log Severity Counter\n\nbash\n\nunattempted",
+      "url": "/question/555"
+    },
+    {
+      "title": "SC: Phone Number Masker\n\nbash\n\nunattempted",
+      "url": "/question/556"
+    },
+    {
+      "title": "SC: INI to YAML Converter\n\nbash\n\nunattempted",
+      "url": "/question/557"
+    },
+    {
+      "title": "SC: SQL Transaction Filter\n\nbash\n\nunattempted",
+      "url": "/question/558"
+    },
+    {
+      "title": "SC: HTTP Error Log Analyzer\n\nbash\n\nunattempted",
+      "url": "/question/559"
+    }
+  ],
+  "pdsa/oppe1": [
+    {
+      "title": "Findpeak\n\nBinary Search\n\nunattempted",
+      "url": "/question/312"
+    },
+    {
+      "title": "Find Common Elements\n\nLists\n\nunattempted",
+      "url": "/question/313"
+    },
+    {
+      "title": "BestFare\n\nGraph / Shortest Path\n\nunattempted",
+      "url": "/question/315"
+    },
+    {
+      "title": "Shuffle\n\nLists\n\nunattempted",
+      "url": "/question/316"
+    },
+    {
+      "title": "FindPair\n\nLists\n\nunattempted",
+      "url": "/question/317"
+    },
+    {
+      "title": "MinTransmissionTime\n\nGraph / Shortest Path\n\nunattempted",
+      "url": "/question/318"
+    },
+    {
+      "title": "FindRedundantEdges\n\nGraph / MST\n\nunattempted",
+      "url": "/question/319"
+    },
+    {
+      "title": "Shortest Path to Camp\n\nGraph / BFS\n\nunattempted",
+      "url": "/question/320"
+    },
+    {
+      "title": "Remove Duplicates from Unsorted Linked List\n\nLinked List\n\nunattempted",
+      "url": "/question/321"
+    },
+    {
+      "title": "Back-and-Forth Routes\n\nGraph / BFS\n\nunattempted",
+      "url": "/question/322"
+    },
+    {
+      "title": "Break Points\n\nBinary Search\n\nunattempted",
+      "url": "/question/323"
+    },
+    {
+      "title": "Coding Competition Teams\n\nGreedy\n\nunattempted",
+      "url": "/question/324"
+    },
+    {
+      "title": "Coin Change Ways\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/325"
+    },
+    {
+      "title": "BST Comparison Count\n\nBST\n\nunattempted",
+      "url": "/question/326"
+    },
+    {
+      "title": "Find Minimum in a Rotated Sorted List\n\nBinary Search\n\nunattempted",
+      "url": "/question/327"
+    },
+    {
+      "title": "Find Number of Occurrence in Sorted List\n\nBinary Search\n\nunattempted",
+      "url": "/question/328"
+    },
+    {
+      "title": "Find Number of Occurrence in Unsorted List\n\nLists\n\nunattempted",
+      "url": "/question/329"
+    },
+    {
+      "title": "Intersection of Two Sorted Linked Lists\n\nLinked List\n\nunattempted",
+      "url": "/question/330"
+    },
+    {
+      "title": "MaxvalueSelection\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/331"
+    },
+    {
+      "title": "Minimize Cost to Reach the Destination\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/332"
+    },
+    {
+      "title": "Journey through Indian Railways\n\nGraph / BFS\n\nunattempted",
+      "url": "/question/333"
+    },
+    {
+      "title": "Minimum Semester\n\nGraph / Topological Sort\n\nunattempted",
+      "url": "/question/334"
+    },
+    {
+      "title": "Minimize the Maximum Allocation\n\nBinary Search\n\nunattempted",
+      "url": "/question/335"
+    },
+    {
+      "title": "Tall Tower\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/336"
+    },
+    {
+      "title": "Teleport\n\nGraph / BFS\n\nunattempted",
+      "url": "/question/337"
+    },
+    {
+      "title": "Domino Solitaire\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/338"
+    },
+    {
+      "title": "Prime Product\n\nNumber Theory\n\nunattempted",
+      "url": "/question/339"
+    },
+    {
+      "title": "Del Char\n\nStrings\n\nunattempted",
+      "url": "/question/340"
+    },
+    {
+      "title": "Expanding\n\nLists\n\nunattempted",
+      "url": "/question/341"
+    },
+    {
+      "title": "Sum Square\n\nLists\n\nunattempted",
+      "url": "/question/342"
+    },
+    {
+      "title": "Histogram\n\nLists\n\nunattempted",
+      "url": "/question/343"
+    },
+    {
+      "title": "Min X\n\nLists\n\nunattempted",
+      "url": "/question/344"
+    },
+    {
+      "title": "Max Amount\n\nGreedy\n\nunattempted",
+      "url": "/question/345"
+    },
+    {
+      "title": "Subordinates\n\nTrees\n\nunattempted",
+      "url": "/question/346"
+    },
+    {
+      "title": "Remove Duplicate\n\nLinked List\n\nunattempted",
+      "url": "/question/347"
+    },
+    {
+      "title": "Merge Two Sorted Linked Lists\n\nLinked List\n\nunattempted",
+      "url": "/question/348"
+    },
+    {
+      "title": "Shortest Path\n\nGraph / BFS\n\nunattempted",
+      "url": "/question/349"
+    },
+    {
+      "title": "Stack Queue\n\nStack / Queue\n\nunattempted",
+      "url": "/question/350"
+    },
+    {
+      "title": "Cool Worker\n\nGreedy\n\nunattempted",
+      "url": "/question/351"
+    },
+    {
+      "title": "Airport\n\nGraph / MST\n\nunattempted",
+      "url": "/question/352"
+    },
+    {
+      "title": "Typeof Heap\n\nHeap\n\nunattempted",
+      "url": "/question/353"
+    },
+    {
+      "title": "Findmedian\n\nHeap\n\nunattempted",
+      "url": "/question/354"
+    },
+    {
+      "title": "Kth Element\n\nHeap\n\nunattempted",
+      "url": "/question/355"
+    },
+    {
+      "title": "Picking Numbers\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/356"
+    },
+    {
+      "title": "Min Cost\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/357"
+    },
+    {
+      "title": "Count Subsequence\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/358"
+    },
+    {
+      "title": "Knap Sack\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/359"
+    },
+    {
+      "title": "Cut Rod\n\nDynamic Programming\n\nunattempted",
+      "url": "/question/360"
+    },
+    {
+      "title": "Swapping Min Max\n\nLists\n\nunattempted",
+      "url": "/question/361"
+    },
+    {
+      "title": "Remove Duplicate From Sorted Linked List\n\nLinked List\n\nunattempted",
+      "url": "/question/362"
+    }
+  ],
+  "mlp/oppe2": [
+    {
+      "title": "Break the dataset into features(`X`) and label (`y`), where the column `s...\n\nData Analysis\n\nunattempted",
+      "url": "/question/386"
+    },
+    {
+      "title": "Split the dataset into train and test dataset into the `80:20` ratio whil...\n\nData Analysis\n\nunattempted",
+      "url": "/question/387"
+    },
+    {
+      "title": "Take `LogisticRegression` estimator with following parameters for training:\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/388"
+    },
+    {
+      "title": "Fit this perceptron model with the training dataset and write the accuracy...\n\nPerceptron\n\nunattempted",
+      "url": "/question/389"
+    },
+    {
+      "title": "What is the value of bias (intercept) for the perceptron model you got (...\n\nPerceptron\n\nunattempted",
+      "url": "/question/390"
+    },
+    {
+      "title": "Use `SGDClassifier` on the training dataset (`X_train` and `y_train`)...\n\nSGDClassifier\n\nunattempted",
+      "url": "/question/391"
+    },
+    {
+      "title": "Use Gridsearchcv with KNeighborsClassifier estimator, accuracy as scori...\n\nKNN\n\nunattempted",
+      "url": "/question/392"
+    },
+    {
+      "title": "Enter the value of the precision on the test set using the best model:\n\nData Analysis\n\nunattempted",
+      "url": "/question/393"
+    },
+    {
+      "title": "Q10: Enter the value of max_depth of the best estimator you got after traini...\n\nData Analysis\n\nunattempted",
+      "url": "/question/394"
+    },
+    {
+      "title": "Enter the value of min_samples_leaf of the best estimator after training ...\n\nData Analysis\n\nunattempted",
+      "url": "/question/395"
+    },
+    {
+      "title": "What is the number of nodes in the optimal decision tree?\n\nDecision Tree\n\nunattempted",
+      "url": "/question/396"
+    },
+    {
+      "title": "Heart Disease: Proportion of Positive Class\n\nData Analysis\n\nunattempted",
+      "url": "/question/509"
+    },
+    {
+      "title": "Heart Disease: Training Set Size\n\nData Analysis\n\nunattempted",
+      "url": "/question/510"
+    },
+    {
+      "title": "Heart Disease: Logistic Regression F1 Score\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/511"
+    },
+    {
+      "title": "Heart Disease: Logistic Regression Intercept\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/512"
+    },
+    {
+      "title": "Heart Disease: LR GridSearch Precision\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/513"
+    },
+    {
+      "title": "Heart Disease: SGD Classifier F1 Score\n\nSGDClassifier\n\nunattempted",
+      "url": "/question/514"
+    },
+    {
+      "title": "Heart Disease: KNN Best K\n\nKNN\n\nunattempted",
+      "url": "/question/515"
+    },
+    {
+      "title": "Heart Disease: Decision Tree GridSearch Accuracy\n\nDecision Tree\n\nunattempted",
+      "url": "/question/516"
+    },
+    {
+      "title": "Heart Disease: Decision Tree Number of Leaves\n\nDecision Tree\n\nunattempted",
+      "url": "/question/517"
+    },
+    {
+      "title": "Heart Disease: DT Approach 2 (CCP Alpha Pruning) Accuracy\n\nDecision Tree\n\nunattempted",
+      "url": "/question/518"
+    },
+    {
+      "title": "Heart Disease: DT |TP Difference| Between Approaches\n\nDecision Tree\n\nunattempted",
+      "url": "/question/519"
+    },
+    {
+      "title": "Heart Disease: Sum of Tree Node Counts\n\nDecision Tree\n\nunattempted",
+      "url": "/question/520"
+    },
+    {
+      "title": "Heart Disease: Random Forest Misclassified Count\n\nRandom Forest\n\nunattempted",
+      "url": "/question/521"
+    },
+    {
+      "title": "Heart Disease: RF GridSearch Best min_impurity_decrease\n\nRandom Forest\n\nunattempted",
+      "url": "/question/522"
+    },
+    {
+      "title": "Heart Disease: AdaBoost GridSearch Accuracy\n\nGradient Boosting\n\nunattempted",
+      "url": "/question/523"
+    },
+    {
+      "title": "Heart Disease: AdaBoost Class 0 Correct Predictions (TN)\n\nGradient Boosting\n\nunattempted",
+      "url": "/question/524"
+    },
+    {
+      "title": "How many rows are in the Used Cars dataset?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/437"
+    },
+    {
+      "title": "How many features are available for training (excluding the target `Price`)?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/438"
+    },
+    {
+      "title": "What is the mean value of the `Price` column? (Round to 4 decimal places)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/439"
+    },
+    {
+      "title": "What is the median value of the `Price` column?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/440"
+    },
+    {
+      "title": "What is the R² score of Linear Regression on the test set? (Round to 4 decimal places)\n\nRegression\n\nunattempted",
+      "url": "/question/441"
+    },
+    {
+      "title": "What is the RMSE of Linear Regression on the test set? (Round to 4 decimal places)\n\nRegression\n\nunattempted",
+      "url": "/question/442"
+    },
+    {
+      "title": "What is the R² score of Ridge Regression (alpha=1.0) on the test set? (Round to 4 decimal places)\n\nRegression\n\nunattempted",
+      "url": "/question/443"
+    },
+    {
+      "title": "What is the R² score of Random Forest Regressor on the test set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+      "url": "/question/444"
+    },
+    {
+      "title": "After 80:20 split (random_state=64), what is the Logistic Regression accuracy on the test set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/417"
+    },
+    {
+      "title": "What is the index of the most important feature in the Random Forest Regressor?\n\nRandom Forest\n\nunattempted",
+      "url": "/question/445"
+    },
+    {
+      "title": "What is the Random Forest accuracy on the test set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+      "url": "/question/418"
+    },
+    {
+      "title": "What is the R² score of Gradient Boosting Regressor on the test set? (Round to 4 decimal places)\n\nGradient Boosting\n\nunattempted",
+      "url": "/question/446"
+    },
+    {
+      "title": "What is the index of the most important feature in the Random Forest model?\n\nRandom Forest\n\nunattempted",
+      "url": "/question/419"
+    },
+    {
+      "title": "Using Decision Tree Regressor GridSearchCV, what is the best max_depth?\n\nDecision Tree\n\nunattempted",
+      "url": "/question/447"
+    },
+    {
+      "title": "What is the Gradient Boosting accuracy on the test set? (Round to 4 decimal places)\n\nGradient Boosting\n\nunattempted",
+      "url": "/question/420"
+    },
+    {
+      "title": "What is the 5-fold cross-validation mean R² of Linear Regression on the training set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/448"
+    },
+    {
+      "title": "Using GridSearchCV with KNN (k ∈ {1,3,7,11}), what is the best k?\n\nKNN\n\nunattempted",
+      "url": "/question/421"
+    },
+    {
+      "title": "What is the 5-fold cross-validation mean R² of Random Forest Regressor on the training set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+      "url": "/question/449"
+    },
+    {
+      "title": "Using Decision Tree GridSearchCV, what is the best max_depth?\n\nDecision Tree\n\nunattempted",
+      "url": "/question/422"
+    },
+    {
+      "title": "What is the ROC-AUC score of Logistic Regression on the test set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/423"
+    },
+    {
+      "title": "What is the Logistic Regression F1 score on the test set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/431"
+    },
+    {
+      "title": "What is the 5-fold cross-validation mean accuracy of Logistic Regression on the training set? (Round to 4 decimal places)\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/432"
+    },
+    {
+      "title": "What is the 5-fold cross-validation mean accuracy of Random Forest on the training set? (Round to 4 decimal places)\n\nRandom Forest\n\nunattempted",
+      "url": "/question/433"
+    }
+  ],
+  "mlp/oppe1": [
+    {
+      "title": "What is the total number of negative (invalid) values in the column `Age`?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/373"
+    },
+    {
+      "title": "What is the total number of negative (invalid) values in the column `GlucoseLevel`?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/374"
+    },
+    {
+      "title": "What is the total number of missing or unknown values in the column `Lives...\n\nPreprocessing\n\nunattempted",
+      "url": "/question/375"
+    },
+    {
+      "title": "What is the total number of missing or unknown values in the column `BMI`?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/376"
+    },
+    {
+      "title": "What is the total number of missing or unknown values in the column `Smoki...\n\nPreprocessing\n\nunattempted",
+      "url": "/question/377"
+    },
+    {
+      "title": "What is the mean value of the `BMI` in the dataset? Ignore the missing val...\n\nPreprocessing\n\nunattempted",
+      "url": "/question/378"
+    },
+    {
+      "title": "How many people live in city, smoked at least once in life and had a heart...\n\nPreprocessing\n\nunattempted",
+      "url": "/question/379"
+    },
+    {
+      "title": "Which of the following categories have highest frequency? Ignore rows with...\n\nPreprocessing\n\nunattempted",
+      "url": "/question/380"
+    },
+    {
+      "title": "How many columns in the dataset have categorical values?\n\nData Analysis\n\nunattempted",
+      "url": "/question/381"
+    },
+    {
+      "title": "How many data points have HeartAttack = Yes?\n\nData Analysis\n\nunattempted",
+      "url": "/question/382"
+    },
+    {
+      "title": "How many features are in X_train after preprocessing?\n\nData Analysis\n\nunattempted",
+      "url": "/question/383"
+    },
+    {
+      "title": "What is the mean of transformed test dataset?\n\nData Analysis\n\nunattempted",
+      "url": "/question/384"
+    },
+    {
+      "title": "Eliminate 1 feature with recuvrsive feature elimination which feature wil...\n\nLogistic Regression\n\nunattempted",
+      "url": "/question/385"
+    },
+    {
+      "title": "How many rows have the value \"Unknown\" in the `Gender` column?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/408"
+    },
+    {
+      "title": "How many houses have 5 or more rooms (RM >= 5)?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/483"
+    },
+    {
+      "title": "What is the mean price of the top 10 most expensive houses?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/484"
+    },
+    {
+      "title": "How many missing/invalid values in the RM (number of rooms) feature?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/485"
+    },
+    {
+      "title": "How many missing/invalid values in the AGE (property age) feature?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/486"
+    },
+    {
+      "title": "How many houses are on riverside and 50 years old or younger (valid values only)?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/487"
+    },
+    {
+      "title": "How many houses are near exactly 6, 7, or 8 highways?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/488"
+    },
+    {
+      "title": "Mean of all values in the transformed test feature matrix (NPPE1 preprocessing)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/489"
+    },
+    {
+      "title": "NPPE1 Part2: R2 of Ridge(alpha=10, saga, tol=1e-4, rs=42)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/490"
+    },
+    {
+      "title": "NPPE1 Part2: Index of most important feature in Ridge model (largest |coefficient|)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/491"
+    },
+    {
+      "title": "NPPE1 Part2: Index of least important feature in Ridge model (smallest |coefficient|)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/492"
+    },
+    {
+      "title": "NPPE1 Part2: MAE of best SGDRegressor (GridSearchCV with penalty, alpha, tol)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/493"
+    },
+    {
+      "title": "NPPE1 Part2: R2 of PCA+Lasso pipeline (GridSearchCV)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/494"
+    },
+    {
+      "title": "NPPE1 Part2: Eigenvalue of first principal component from PCA+Lasso best model\n\nPreprocessing\n\nunattempted",
+      "url": "/question/495"
+    },
+    {
+      "title": "NPPE1 Part2: R2 of PolynomialFeatures(degree=2) + Lasso pipeline\n\nPreprocessing\n\nunattempted",
+      "url": "/question/496"
+    },
+    {
+      "title": "NPPE1 Part2: Feature index eliminated by RFE (n_features_to_select=13)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/497"
+    },
+    {
+      "title": "2022 Greenwich >3 rooms facing North/East\n\nPreprocessing\n\nunattempted",
+      "url": "/question/498"
+    },
+    {
+      "title": "Test dataset row count (Year >= 2021)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/499"
+    },
+    {
+      "title": "Feature count after OHE + MinMaxScaler\n\nPreprocessing\n\nunattempted",
+      "url": "/question/500"
+    },
+    {
+      "title": "LinearRegression R² on test set\n\nRegression\n\nunattempted",
+      "url": "/question/501"
+    },
+    {
+      "title": "Max R² across 5-fold CV (LinearRegression, training set)\n\nRegression\n\nunattempted",
+      "url": "/question/502"
+    },
+    {
+      "title": "SGDRegressor R² on test set\n\nRegression\n\nunattempted",
+      "url": "/question/503"
+    },
+    {
+      "title": "PolyFeatures + Lasso GridSearch — best alpha\n\nRegression\n\nunattempted",
+      "url": "/question/504"
+    },
+    {
+      "title": "PolyFeatures + Lasso GridSearch — best degree\n\nRegression\n\nunattempted",
+      "url": "/question/505"
+    },
+    {
+      "title": "SelectKBest max p-value (f_regression, k=10)\n\nRegression\n\nunattempted",
+      "url": "/question/506"
+    },
+    {
+      "title": "SelectKBest + Lasso pipeline R² on test set\n\nRegression\n\nunattempted",
+      "url": "/question/507"
+    },
+    {
+      "title": "SelectKBest max F-statistic (f_regression, k=10)\n\nRegression\n\nunattempted",
+      "url": "/question/508"
+    },
+    {
+      "title": "How many rows are there in the Bank Marketing dataset?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/409"
+    },
+    {
+      "title": "How many rows are in the NPPE1 Housing dataset?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/450"
+    },
+    {
+      "title": "How many missing values are there in the `contact` column?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/410"
+    },
+    {
+      "title": "How many missing values are there in the `education` column?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/411"
+    },
+    {
+      "title": "How many missing/unknown values in the RIVERSIDE feature?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/452"
+    },
+    {
+      "title": "How many missing values are there in the `age` column?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/412"
+    },
+    {
+      "title": "What is the mean value of the `PRICE` column? (Round to 4 decimal places)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/453"
+    },
+    {
+      "title": "How many clients subscribed to a term deposit (target = \"yes\")?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/413"
+    },
+    {
+      "title": "What is the mean value of the `balance` column? (Round to 4 decimal places)\n\nPreprocessing\n\nunattempted",
+      "url": "/question/414"
+    },
+    {
+      "title": "How many rows remain after dropping all rows with missing values (dropna)?\n\nPreprocessing\n\nunattempted",
+      "url": "/question/415"
+    }
+  ]
+}

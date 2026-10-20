@@ -53,7 +53,7 @@ def paginate(query,mapper):
     return {'items':[mapper(x) for x in query.limit(size).offset((page-1)*size).all()],'total':total,'page':page,'limit':size}
 
 def _paper_content_rows(papers):
-    """Batch catalog counts and user progress; never materialize question bodies."""
+    """Batch cached catalog counts and current published solution coverage."""
     if not papers:return []
     ids=[p.id for p in papers];effective_ids={p.canonical_paper_id or p.id for p in papers}
     effective={p.id:p for p in papers}
@@ -61,10 +61,12 @@ def _paper_content_rows(papers):
     if missing:effective.update({p.id:p for p in Paper.query.filter(Paper.id.in_(missing))})
     totals={r[0]:r[1:] for r in db.session.query(Question.paper_id,func.count(Question.id),func.count(Question.marks),func.sum(Question.marks),func.sum(case((Question.answer_status=='ANSWER_AVAILABLE',0),else_=1))).filter(Question.paper_id.in_(effective_ids),Question.status=='AVAILABLE').group_by(Question.paper_id)}
     downloads={r[0] for r in db.session.query(IngestionFile.paper_id).filter(IngestionFile.paper_id.in_(effective_ids),IngestionFile.path.isnot(None)).distinct()}
+    from .study_pages import solution_coverage
+    coverage=solution_coverage(list(effective_ids))
     out=[]
     for p in papers:
         e=effective[p.canonical_paper_id or p.id];count,marked,total,unknown=totals.get(e.id,(0,0,None,0))
-        out.append({'progress':None,'id':p.id,'name':p.name,'course_id':p.course_id,'course':p.course.name,'code':p.course.code,'exam':p.exam_type.name,'exam_type_id':p.exam_type_id,'term':p.term.name,'term_id':p.term_id,'year':p.term.year,'session':p.session,'source_url':p.source_url,'status':p.status,'warnings':p.warnings,'question_count':count,'practice_available':count>0,'duration_seconds':e.duration_seconds,'source_metadata':e.source_metadata,'canonical_paper_id':p.canonical_paper_id,'total_marks':total if count and marked==count else None,'unknown_keys':unknown,'download_url':'/api/papers/'+str(p.id)+'/source' if e.id in downloads else None})
+        out.append({'progress':None,'id':p.id,'name':p.name,'course_id':p.course_id,'course':p.course.name,'code':p.course.code,'exam':p.exam_type.name,'exam_type_id':p.exam_type_id,'term':p.term.name,'term_id':p.term_id,'year':p.term.year,'session':p.session,'source_url':p.source_url,'status':p.status,'warnings':p.warnings,'question_count':count,'solution_coverage':coverage.get(e.id,{'total':count,'published':0}),'practice_available':count>0,'duration_seconds':e.duration_seconds,'source_metadata':e.source_metadata,'canonical_paper_id':p.canonical_paper_id,'total_marks':total if count and marked==count else None,'unknown_keys':unknown,'download_url':'/api/papers/'+str(p.id)+'/source' if e.id in downloads else None})
     return out
 
 def paper_rows(papers):

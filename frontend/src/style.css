@@ -148,3 +148,5 @@
 .sync-row-detail>div{display:grid;gap:4px;min-width:0}
 .batch-error{display:block;color:#b33a3a;max-width:680px;white-space:normal;word-break:break-word;line-height:1.35}
 [data-theme="dark"] .batch-error{color:#ff9e9e}
+
+@media(min-width:1100px){.exam-type-cards.oppe-home-cards{grid-template-columns:repeat(4,minmax(0,1fr))}}

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from .performance import count
 
 CONTENT_TABLES = {'course', 'term', 'exam_type', 'paper', 'question', 'question_option',
-                  'question_image', 'ingestion_file', 'source_entry'}
+                  'question_image', 'ingestion_file', 'source_entry', 'ai_solution'}
 
 # A small per-process fallback matters on Render even before Redis is provisioned:
 # the same paper should not be rebuilt from PostgreSQL for every student. Redis
