@@ -192,7 +192,9 @@ def questions():
 def detail(qid):
     q=question_or_404(qid);d=q.content;c=course_or_404(q.course_id)
     # Author data uses a separate endpoint; practice never receives hidden tests/answers.
-    public={k:d[k] for k in ('title','statement','topic','category','difficulty','starter_code','prefix','suffix','source','time_limit','format','entrypoint','execution_mode','entry_function','entry_functions','comparison','import_notes')}
+    public={k:d[k] for k in ('title','statement','topic','category','difficulty','starter_code','prefix','suffix','source','time_limit','entrypoint','execution_mode','entry_function','entry_functions','comparison','import_notes')}
+    # Seed bundles predate this derived display field; never require it in stored JSON.
+    public['format']='fill' if d.get('prefix') or d.get('suffix') else 'program'
     public['samples']=[dict(input=t['input'],expected=t['expected'],files=t['files'],environment=t.get('environment',{}),expected_files=t.get('expected_files',[])) for t in d['tests'] if not t['hidden']]
     return jsonify(id=q.id,course=course_json(c),question=public,revision=fingerprint(d,c.language),status=q.status,submission_ready=any(t['hidden'] for t in d['tests']))
 

@@ -60,7 +60,7 @@ def convert(record):
     else:
         if len(record['tests'])%2:notes.append('Unpaired source test blocks: review required.')
         else:tests=[dict(input=record['tests'][i],expected=record['tests'][i+1],hidden=False,files={}) for i in range(0,len(record['tests']),2)]
-    content=dict(title=record['title'],statement=statement(record['statementHtml']),topic=record.get('topic',''),category='OPPE1' if exam=='oppe1' else 'OPPE2',difficulty='Medium',starter_code=record['starter'],prefix='',suffix='',reference_solution=reference,explanation=explanation,source=record['url'],setup_sql='',time_limit=3,entrypoint='Main',execution_mode='stdin',entry_function='',entry_functions=[],comparison='text',tests=tests,import_notes=notes)
+    content=dict(title=record['title'],statement=statement(record['statementHtml']),topic=record.get('topic',''),category='OPPE1' if exam=='oppe1' else 'OPPE2',difficulty='Medium',starter_code=record['starter'],prefix='',suffix='',format='program',reference_solution=reference,explanation=explanation,source=record['url'],setup_sql='',time_limit=3,entrypoint='Main',execution_mode='stdin',entry_function='',entry_functions=[],comparison='text',tests=tests,import_notes=notes)
     if 'source server currently unavailable' in content['statement']:notes.append('Original external diagram could not be downloaded. Keep this question in DRAFT until the diagram is restored.')
     if slug=='java':
         names=re.findall(r'public\s+(?:final\s+|abstract\s+)?class\s+([A-Za-z_$][\w$]*)',reference)

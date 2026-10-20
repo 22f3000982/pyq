@@ -128,3 +128,23 @@ def test_diagrams_remain_admin_only(client):
     assert r.mimetype=='image/png'
     assert r.headers['Cache-Control']=='no-store'
     assert client.get(BASE+'/assets/not-an-image.png').status_code==404
+
+
+def test_every_seeded_owner_question_opens_without_reimport(client):
+    import json
+    from pathlib import Path
+    from backend.oppe import OPPECourse
+    setup(client)
+    bundles=json.loads((Path(__file__).resolve().parents[1]/'backend/data/oppe/seed-bundles-20261020.json').read_text())
+    for bundle in bundles:
+        course=OPPECourse.query.filter_by(slug=bundle['course_slug']).one()
+        for entry in bundle['questions']:
+            # Exactly how the migration stores content: derived format can be absent.
+            content=deepcopy(entry['content']);content.pop('format',None)
+            q=OPPEQuestion(course_id=course.id,external_id=entry['external_id'],content=content)
+            db.session.add(q);db.session.flush()
+            response=client.get(BASE+'/questions/'+str(q.id))
+            assert response.status_code==200,(entry['external_id'],response.data)
+            assert response.json['question']['format']=='program'
+            assert 'reference_solution' not in response.json['question']
+    db.session.rollback()
