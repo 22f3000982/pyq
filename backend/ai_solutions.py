@@ -3,7 +3,7 @@ import hashlib,json,secrets,time
 from flask import Blueprint,jsonify,request,abort,send_file
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
-from .models import db,Question,Paper,AISolution,SolutionBatch,SolutionJob,Attempt,AttemptAnswer,IngestionFile
+from .models import db,Question,Paper,AISolution,SolutionBatch,SolutionJob,Attempt,AttemptAnswer,IngestionFile,Course,Term
 from .api import require_user,require_visitor,body,integer_argument
 from .engine import question_snapshot,grade
 from .exam_api import owned,question_with_image_urls,prepare_image_paths,use_paper_image_delivery
@@ -60,6 +60,21 @@ def solution_summary():
     query=db.session.query(Paper,counts.c.total).join(counts,counts.c.paper_id==Paper.id).filter(Paper.status!='ARCHIVED')
     for field,col in [('course_id',Paper.course_id),('exam_type_id',Paper.exam_type_id)]:
         if request.args.get(field):query=query.filter(col==integer_argument(field))
+    if request.args.get('level'):
+        level=request.args['level'].strip().lower()
+        if level not in ('foundation','diploma','degree'):abort(400,description='Invalid course level')
+        query=query.join(Course,Course.id==Paper.course_id).filter(func.lower(Course.level).in_([level,level+' level',level+'_level']))
+    if request.args.get('year') or request.args.get('month'):
+        query=query.join(Term,Term.id==Paper.term_id)
+        if request.args.get('year'):query=query.filter(Term.year==integer_argument('year'))
+        if request.args.get('month'):
+            month=integer_argument('month')
+            if not 1<=month<=12:abort(400,description='Invalid term month')
+            query=query.filter(Term.month==month)
+    if request.args.get('session'):
+        session=request.args['session'].upper()
+        if session not in ('FN','AN'):abort(400,description='Invalid exam session')
+        query=query.filter(Paper.session==session)
     records=query.options(selectinload(Paper.term),selectinload(Paper.exam_type),selectinload(Paper.course)).order_by(Paper.id.desc()).all()
     papers={p.id:dict(id=p.id,name=p.name,course=p.course.name,term=p.term.name,exam=p.exam_type.name,exam_type_id=p.exam_type_id,session=p.session or '',questions=total,uploaded=0,published=0,review=0,outdated=0) for p,total in records}
     if papers:
