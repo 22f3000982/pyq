@@ -153,10 +153,27 @@ class AnalyticsEvent(db.Model):
     course_name = db.Column(db.String(200), nullable=False)
     initial_mode = db.Column(db.String(20), nullable=False)
     completion_mode = db.Column(db.String(20))
+    score_percent = db.Column(db.Float)
+    exam_name = db.Column(db.String(80))
     device = db.Column(db.String(12), nullable=False)
     automatic = db.Column(db.Boolean, nullable=False, default=False)
     expires_at = db.Column(db.Float, nullable=False)
     __table_args__ = (db.Index('ix_analytics_event_course_day','course_key','start_day'),)
+
+class AnalyticsQuestionDay(db.Model):
+    """Daily outcome totals; never store responses or browser identifiers."""
+    day=db.Column(db.String(10),primary_key=True)
+    paper_key=db.Column(db.String(64),primary_key=True)
+    question_id=db.Column(db.Integer,primary_key=True)
+    version=db.Column(db.String(64),primary_key=True)
+    mode=db.Column(db.String(20),primary_key=True)
+    number=db.Column(db.String(40),nullable=False)
+    correct=db.Column(db.Integer,nullable=False,default=0)
+    partial=db.Column(db.Integer,nullable=False,default=0)
+    incorrect=db.Column(db.Integer,nullable=False,default=0)
+    skipped=db.Column(db.Integer,nullable=False,default=0)
+    ungraded=db.Column(db.Integer,nullable=False,default=0)
+    __table_args__=(db.Index('ix_analytics_question_day_question','question_id','day'),)
 
 class AnalyticsReceipt(db.Model):
     """Short-lived deduplication receipt, independent of temporary exam sessions."""

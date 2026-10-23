@@ -27,7 +27,7 @@ def analytics_report():
     from .analytics import cached_report,csv_report
     from flask import Response
     try:
-        result=cached_report(request.args.get('period','7d'),request.args.get('start'),request.args.get('end'))
+        result=cached_report(request.args.get('period','7d'),request.args.get('start'),request.args.get('end'),request.args.get('course'),request.args.get('mode'))
     except ValueError as e:abort(400,description=str(e))
     if request.args.get('format')=='csv':
         return Response(csv_report(result),mimetype='text/csv',headers={'Content-Disposition':'attachment; filename="mauryahub-usage.csv"'})

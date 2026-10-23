@@ -7,6 +7,7 @@ import SearchableSelect from './SearchableSelect.vue';
 import MathText from './MathText.vue';
 import QuestionContent from './QuestionContent.vue';
 import BusyFeedback from './BusyFeedback.vue';
+const props=defineProps({initialPaperId:[String,Number]});
 const courses=ref([]),exams=ref([]),papers=ref([]),statistics=ref({}),course=ref(''),exam=ref(''),paper=ref(''),page=ref(1),total=ref(0),items=ref([]),selected=ref([]),error=ref(''),busy=ref(false),loading=ref(false),preview=ref(null),editText=ref('');
 const bundlePapers=ref([]),courseExamIds=ref(null);
 const level=ref(''),year=ref(''),month=ref(''),session=ref(''),years=ref([]);
@@ -34,7 +35,7 @@ async function choosePaper(){page.value=1;selected.value=[];preview.value=null;i
 async function action(qid,action,text){await run(async()=>{await api('/admin/ai-solutions/'+qid,{method:'POST',body:{action,text}});await refresh();if(action==='edit')preview.value=null})}
 async function bulkPublish(){await run(async()=>{for(const id of selected.value)await api('/admin/ai-solutions/'+id,{method:'POST',body:{action:'publish'}});selected.value=[];await refresh()})}
 async function nextPage(delta){page.value+=delta;selected.value=[];await run(loadRows)}
-onMounted(()=>run(async()=>{const [catalog,meta]=await Promise.all([api('/catalog'),api('/metadata')]);courses.value=catalog.courses||[];exams.value=meta.exams||[];years.value=[...new Set((meta.terms||[]).map(t=>t.year))].sort((a,b)=>b-a);await loadSummary()}));
+onMounted(()=>run(async()=>{const [catalog,meta]=await Promise.all([api('/catalog'),api('/metadata')]);courses.value=catalog.courses||[];exams.value=meta.exams||[];years.value=[...new Set((meta.terms||[]).map(t=>t.year))].sort((a,b)=>b-a);if(props.initialPaperId){const p=await api('/papers/'+props.initialPaperId);course.value=p.course_id;exam.value=p.exam_type_id;paper.value=p.id}await loadSummary();if(paper.value)await loadRows()}));
 onUnmounted(()=>{stopped=true;++scopeVersion;++rowsVersion});
 </script>
 <template>

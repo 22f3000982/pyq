@@ -8,7 +8,7 @@ from test_engine import seed
 from conftest import login
 
 
-def test_permanent_browser_counts_admin_exclusion_and_modes(app,client):
+def test_permanent_browser_counts_include_admin_and_modes(app,client):
     p=seed();h=login(client)
     a=client.post('/api/attempts',headers={**h,'User-Agent':'Android Mobile'},json={'paper_id':p.id,'mode':'exam'}).json
     assert AnalyticsEvent.query.count()==1
@@ -26,7 +26,7 @@ def test_permanent_browser_counts_admin_exclusion_and_modes(app,client):
     assert client.get('/api/admin/analytics').status_code==401
     ah=login(client,True)
     assert client.post('/api/attempts',headers=ah,json={'paper_id':p.id}).status_code==201
-    assert AnalyticsEvent.query.count()==2
+    assert AnalyticsEvent.query.count()==3
     assert client.get('/api/admin/analytics?period=30d').status_code==200
     assert client.get('/api/admin/analytics?period=custom&start=bad&end=bad').status_code==400
     export=client.get('/api/admin/analytics?period=all&format=csv')
@@ -58,6 +58,7 @@ def test_ist_ranges_no_fabricated_history_expiry_and_new_browser(app,client):
     r=report('today',now=now)
     assert r['totals']['starts']==1 and r['totals']['abandoned']==1
     assert r['totals']['completions']==0 and r['totals']['average_seconds'] is None
+    row.start_day='2099-01-01';row.started_at=datetime(2099,1,1,tzinfo=timezone.utc).timestamp();db.session.commit()
     second=app.test_client();h2=login(second)
     assert second.post('/api/attempts',headers=h2,json={'paper_id':p.id}).status_code==201
     assert report('all')['totals']['active_browsers']==1 # future IST row outside today's range
